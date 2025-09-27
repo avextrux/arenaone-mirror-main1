@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Profile as UserProfile } from "@/pages/Dashboard"; // Importando o tipo Profile
 
 interface Post {
   id: string;
@@ -23,33 +24,25 @@ interface Post {
   };
 }
 
-const Feed = () => {
+interface FeedProps {
+  profile: UserProfile | null;
+}
+
+const Feed = ({ profile }: FeedProps) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [profile, setProfile] = useState<any>(null);
+  const [loadingFeed, setLoadingFeed] = useState(true); // Novo estado de carregamento para o feed
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
+    if (user && profile) { // Garante que o perfil está disponível
       fetchFeed();
       fetchLikedPosts();
     }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (data) setProfile(data);
-  };
+  }, [user, profile]); // Adiciona profile como dependência
 
   const fetchFeed = async () => {
+    setLoadingFeed(true);
     const { data, error } = await supabase
       .from('posts')
       .select(`
@@ -67,6 +60,7 @@ const Feed = () => {
     if (!error && data) {
       setPosts(data);
     }
+    setLoadingFeed(false);
   };
 
   const fetchLikedPosts = async () => {
@@ -140,7 +134,7 @@ const Feed = () => {
     }
   };
 
-  if (!profile) {
+  if (!profile || loadingFeed) { // Usa o profile da prop e o novo estado de carregamento
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -154,7 +148,7 @@ const Feed = () => {
         user={{
           name: profile.full_name,
           avatar: profile.avatar_url,
-          userType: profile.user_type
+          userType: profile.user_type || "player" // Fallback temporário, idealmente user_type nunca seria null aqui
         }}
         onPost={handleCreatePost}
       />
@@ -169,7 +163,7 @@ const Feed = () => {
                 name: post.profiles?.full_name || "Usuário Desconhecido", // Null check
                 username: post.profiles?.full_name?.toLowerCase().replace(/\s+/g, '') || "desconhecido", // Null check
                 avatar: post.profiles?.avatar_url, // Null check
-                userType: post.profiles?.user_type || "fan", // Null check
+                userType: post.profiles?.user_type || "player", // Null check
                 verified: post.profiles?.verified || false // Null check
               }}
               content={post.content}

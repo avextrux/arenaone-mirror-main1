@@ -23,7 +23,7 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
   return (
     <Routes>
       {/* Rota padrão para /dashboard, mostrando Feed (agora funcional) */}
-      <Route index element={<Feed />} /> 
+      <Route index element={<Feed profile={profile} />} /> 
       {/* Rotas explícitas, agora relativas ao caminho pai (/dashboard) */}
       <Route path="network" element={<UnderDevelopment page="Rede" />} /> 
       <Route path="market" element={<Market />} />
