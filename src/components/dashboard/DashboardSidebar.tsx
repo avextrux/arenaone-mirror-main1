@@ -75,64 +75,64 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
   // Menu items baseado no tipo de usuário
   const getMenuItems = (): MenuItem[] => { // Especifica o tipo de retorno como MenuItem[]
     const baseItems: MenuItem[] = [
-      { title: "Feed", url: "/", icon: Home, disabled: true }, // Caminho relativo
-      { title: "Rede", url: "/network", icon: Network, disabled: true }, // Caminho relativo
-      { title: "Mensagens", url: "/messages", icon: MessageSquare }, // Caminho relativo
-      { title: "Notificações", url: "/notifications", icon: Bell },
+      { title: "Feed", url: "", icon: Home, disabled: true }, // Caminho relativo para /dashboard
+      { title: "Rede", url: "network", icon: Network, disabled: true }, // Caminho relativo
+      { title: "Mensagens", url: "messages", icon: MessageSquare }, // Caminho relativo
+      { title: "Notificações", url: "notifications", icon: Bell },
     ];
 
     const userSpecificItems: Record<string, MenuItem[]> = { // Especifica o tipo para userSpecificItems
       player: [
-        { title: "Meu Perfil", url: "/profile", icon: User }, // Caminho relativo
-        { title: "Estatísticas", url: "/stats", icon: BarChart3, disabled: true },
-        { title: "Oportunidades", url: "/opportunities", icon: Briefcase, disabled: true },
+        { title: "Meu Perfil", url: "profile", icon: User }, // Caminho relativo
+        { title: "Estatísticas", url: "stats", icon: BarChart3, disabled: true },
+        { title: "Oportunidades", url: "opportunities", icon: Briefcase, disabled: true },
       ],
       club: [
-        { title: "Gestão do Clube", url: "/club", icon: Building }, // Caminho relativo
-        { title: "Jogadores", url: "/players", icon: Users }, // Caminho relativo
-        { title: "Staff", url: "/staff", icon: UserCheck, disabled: true },
-        { title: "Relatórios", url: "/reports", icon: FileText, disabled: true },
+        { title: "Gestão do Clube", url: "club", icon: Building }, // Caminho relativo
+        { title: "Jogadores", url: "players", icon: Users }, // Caminho relativo
+        { title: "Staff", url: "staff", icon: UserCheck, disabled: true },
+        { title: "Relatórios", url: "reports", icon: FileText, disabled: true },
       ],
       agent: [
-        { title: "Meus Clientes", url: "/clients", icon: Users, disabled: true },
-        { title: "Contratos", url: "/contracts", icon: FileText, disabled: true },
-        { title: "Mercado", url: "/market", icon: Trophy }, // Caminho relativo
+        { title: "Meus Clientes", url: "clients", icon: Users, disabled: true },
+        { title: "Contratos", url: "contracts", icon: FileText, disabled: true },
+        { title: "Mercado", url: "market", icon: Trophy }, // Caminho relativo
       ],
       coach: [
-        { title: "Minha Equipe", url: "/team", icon: Users, disabled: true },
-        { title: "Treinamentos", url: "/training", icon: Activity, disabled: true },
-        { title: "Táticas", url: "/tactics", icon: Target, disabled: true },
-        { title: "Jogadores", url: "/players", icon: Users }, // Caminho relativo
+        { title: "Minha Equipe", url: "team", icon: Users, disabled: true },
+        { title: "Treinamentos", url: "training", icon: Activity, disabled: true },
+        { title: "Táticas", url: "tactics", icon: Target, disabled: true },
+        { title: "Jogadores", url: "players", icon: Users }, // Caminho relativo
       ],
       scout: [
-        { title: "Relatórios", url: "/scout-reports", icon: FileText, disabled: true },
-        { title: "Jogadores", url: "/players", icon: Users }, // Caminho relativo
-        { title: "Análises", url: "/analysis", icon: BarChart3, disabled: true },
+        { title: "Relatórios", url: "scout-reports", icon: FileText, disabled: true },
+        { title: "Jogadores", url: "players", icon: Users }, // Caminho relativo
+        { title: "Análises", url: "analysis", icon: BarChart3, disabled: true },
       ],
       medical_staff: [
-        { title: "Jogadores", url: "/players", icon: Users }, // Caminho relativo
-        { title: "Histórico Médico", url: "/medical", icon: Stethoscope, disabled: true },
-        { title: "Exames", url: "/medical-exams", icon: Activity, disabled: true },
+        { title: "Jogadores", url: "players", icon: Users }, // Caminho relativo
+        { title: "Histórico Médico", url: "medical", icon: Stethoscope, disabled: true },
+        { title: "Exames", url: "medical-exams", icon: Activity, disabled: true },
       ],
       financial_staff: [
-        { title: "Jogadores", url: "/players", icon: Users }, // Caminho relativo
-        { title: "Contratos", url: "/contracts", icon: FileText, disabled: true },
-        { title: "Finanças", url: "/finances", icon: Calculator, disabled: true },
+        { title: "Jogadores", url: "players", icon: Users }, // Caminho relativo
+        { title: "Contratos", url: "contracts", icon: FileText, disabled: true },
+        { title: "Finanças", url: "finances", icon: Calculator, disabled: true },
       ],
       technical_staff: [
-        { title: "Jogadores", url: "/players", icon: Users }, // Caminho relativo
-        { title: "Análises", url: "/analysis", icon: BarChart3, disabled: true },
-        { title: "Relatórios", url: "/reports", icon: FileText, disabled: true },
+        { title: "Jogadores", url: "players", icon: Users }, // Caminho relativo
+        { title: "Análises", url: "analysis", icon: BarChart3, disabled: true },
+        { title: "Relatórios", url: "reports", icon: FileText, disabled: true },
       ],
       journalist: [
-        { title: "Artigos", url: "/articles", icon: FileText, disabled: true },
-        { title: "Entrevistas", url: "/interviews", icon: MessageSquare, disabled: true },
-        { title: "Eventos", url: "/events", icon: Calendar, disabled: true },
+        { title: "Artigos", url: "articles", icon: FileText, disabled: true },
+        { title: "Entrevistas", url: "interviews", icon: MessageSquare, disabled: true },
+        { title: "Eventos", url: "events", icon: Calendar, disabled: true },
       ],
       fan: [
-        { title: "Times Favoritos", url: "/teams", icon: Trophy, disabled: true },
-        { title: "Eventos", url: "/events", icon: Calendar, disabled: true },
-        { title: "Comunidades", url: "/communities", icon: Users, disabled: true },
+        { title: "Times Favoritos", url: "teams", icon: Trophy, disabled: true },
+        { title: "Eventos", url: "events", icon: Calendar, disabled: true },
+        { title: "Comunidades", url: "communities", icon: Users, disabled: true },
       ]
     };
 
@@ -215,7 +215,7 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink 
-                      to="/post" 
+                      to="post" 
                       className="flex items-center px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200"
                     >
                       <PlusCircle className="mr-3 h-4 w-4" />
@@ -226,7 +226,7 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink 
-                      to="/search" 
+                      to="search" 
                       className="flex items-center px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200"
                     >
                       <Search className="mr-3 h-4 w-4" />
@@ -237,7 +237,7 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink 
-                      to="/settings" 
+                      to="settings" 
                       className="flex items-center px-3 py-2 rounded-lg text-foreground hover:bg-primary/10 hover:text-primary transition-all duration-200"
                     >
                       <Settings className="mr-3 h-4 w-4" />
