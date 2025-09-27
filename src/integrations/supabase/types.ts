@@ -1,0 +1,1355 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
+  public: {
+    Tables: {
+      club_members: {
+        Row: {
+          accepted_at: string | null
+          club_id: string
+          created_at: string | null
+          department: Database["public"]["Enums"]["club_department"]
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          permission_level: Database["public"]["Enums"]["permission_level"]
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          club_id: string
+          created_at?: string | null
+          department: Database["public"]["Enums"]["club_department"]
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          permission_level?: Database["public"]["Enums"]["permission_level"]
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          club_id?: string
+          created_at?: string | null
+          department?: Database["public"]["Enums"]["club_department"]
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          permission_level?: Database["public"]["Enums"]["permission_level"]
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_privacy_settings: {
+        Row: {
+          club_id: string
+          created_at: string | null
+          id: string
+          public_player_stats: boolean | null
+          share_financial_info: boolean | null
+          share_medical_info: boolean | null
+          share_technical_reports: boolean | null
+          share_with_agents: boolean | null
+          share_with_clubs: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          club_id: string
+          created_at?: string | null
+          id?: string
+          public_player_stats?: boolean | null
+          share_financial_info?: boolean | null
+          share_medical_info?: boolean | null
+          share_technical_reports?: boolean | null
+          share_with_agents?: boolean | null
+          share_with_clubs?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          club_id?: string
+          created_at?: string | null
+          id?: string
+          public_player_stats?: boolean | null
+          share_financial_info?: boolean | null
+          share_medical_info?: boolean | null
+          share_technical_reports?: boolean | null
+          share_with_agents?: boolean | null
+          share_with_clubs?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_privacy_settings_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: true
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          country: string
+          created_at: string | null
+          founded_year: number | null
+          id: string
+          league: string | null
+          logo_url: string | null
+          manager_id: string | null
+          name: string
+          stadium: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          country: string
+          created_at?: string | null
+          founded_year?: number | null
+          id?: string
+          league?: string | null
+          logo_url?: string | null
+          manager_id?: string | null
+          name: string
+          stadium?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          country?: string
+          created_at?: string | null
+          founded_year?: number | null
+          id?: string
+          league?: string | null
+          logo_url?: string | null
+          manager_id?: string | null
+          name?: string
+          stadium?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clubs_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          post_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          post_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connections: {
+        Row: {
+          addressee_id: string
+          created_at: string | null
+          id: string
+          message: string | null
+          requester_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          requester_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          requester_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connections_addressee_id_fkey"
+            columns: ["addressee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connections_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          away_score: number | null
+          away_team_id: string
+          competition: string
+          created_at: string | null
+          home_score: number | null
+          home_team_id: string
+          id: string
+          match_date: string
+          season: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          away_score?: number | null
+          away_team_id: string
+          competition: string
+          created_at?: string | null
+          home_score?: number | null
+          home_team_id: string
+          id?: string
+          match_date: string
+          season: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          away_score?: number | null
+          away_team_id?: string
+          competition?: string
+          created_at?: string | null
+          home_score?: number | null
+          home_team_id?: string
+          id?: string
+          match_date?: string
+          season?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          read: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunities: {
+        Row: {
+          created_at: string | null
+          deadline: string | null
+          description: string
+          id: string
+          location: string | null
+          opportunity_type: string
+          poster_id: string
+          requirements: string[] | null
+          salary_range: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deadline?: string | null
+          description: string
+          id?: string
+          location?: string | null
+          opportunity_type: string
+          poster_id: string
+          requirements?: string[] | null
+          salary_range?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deadline?: string | null
+          description?: string
+          id?: string
+          location?: string | null
+          opportunity_type?: string
+          poster_id?: string
+          requirements?: string[] | null
+          salary_range?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_poster_id_fkey"
+            columns: ["poster_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opportunity_applications: {
+        Row: {
+          applicant_id: string
+          cover_letter: string | null
+          created_at: string | null
+          id: string
+          opportunity_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          applicant_id: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          opportunity_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          cover_letter?: string | null
+          created_at?: string | null
+          id?: string
+          opportunity_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_financial_info: {
+        Row: {
+          agent_commission: number | null
+          bonuses: Json | null
+          club_id: string
+          contract_value: number | null
+          created_at: string | null
+          created_by: string
+          id: string
+          insurance_value: number | null
+          payment_schedule: Json | null
+          player_id: string
+          salary: number | null
+          tax_information: Json | null
+          transfer_history: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_commission?: number | null
+          bonuses?: Json | null
+          club_id: string
+          contract_value?: number | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          insurance_value?: number | null
+          payment_schedule?: Json | null
+          player_id: string
+          salary?: number | null
+          tax_information?: Json | null
+          transfer_history?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_commission?: number | null
+          bonuses?: Json | null
+          club_id?: string
+          contract_value?: number | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          insurance_value?: number | null
+          payment_schedule?: Json | null
+          player_id?: string
+          salary?: number | null
+          tax_information?: Json | null
+          transfer_history?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_financial_info_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_financial_info_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_medical_info: {
+        Row: {
+          allergies: string[] | null
+          blood_type: string | null
+          chronic_conditions: string[] | null
+          club_id: string
+          created_at: string | null
+          created_by: string
+          emergency_contact: Json | null
+          fitness_level: number | null
+          id: string
+          injuries_history: Json | null
+          last_medical_exam: string | null
+          medical_history: string | null
+          player_id: string
+          updated_at: string | null
+          vaccination_record: Json | null
+        }
+        Insert: {
+          allergies?: string[] | null
+          blood_type?: string | null
+          chronic_conditions?: string[] | null
+          club_id: string
+          created_at?: string | null
+          created_by: string
+          emergency_contact?: Json | null
+          fitness_level?: number | null
+          id?: string
+          injuries_history?: Json | null
+          last_medical_exam?: string | null
+          medical_history?: string | null
+          player_id: string
+          updated_at?: string | null
+          vaccination_record?: Json | null
+        }
+        Update: {
+          allergies?: string[] | null
+          blood_type?: string | null
+          chronic_conditions?: string[] | null
+          club_id?: string
+          created_at?: string | null
+          created_by?: string
+          emergency_contact?: Json | null
+          fitness_level?: number | null
+          id?: string
+          injuries_history?: Json | null
+          last_medical_exam?: string | null
+          medical_history?: string | null
+          player_id?: string
+          updated_at?: string | null
+          vaccination_record?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_medical_info_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_medical_info_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_stats: {
+        Row: {
+          assists: number | null
+          created_at: string | null
+          games_played: number | null
+          goals: number | null
+          id: string
+          interceptions: number | null
+          minutes_played: number | null
+          pass_accuracy: number | null
+          player_id: string
+          red_cards: number | null
+          season: string
+          shots_on_target: number | null
+          tackles: number | null
+          updated_at: string | null
+          yellow_cards: number | null
+        }
+        Insert: {
+          assists?: number | null
+          created_at?: string | null
+          games_played?: number | null
+          goals?: number | null
+          id?: string
+          interceptions?: number | null
+          minutes_played?: number | null
+          pass_accuracy?: number | null
+          player_id: string
+          red_cards?: number | null
+          season: string
+          shots_on_target?: number | null
+          tackles?: number | null
+          updated_at?: string | null
+          yellow_cards?: number | null
+        }
+        Update: {
+          assists?: number | null
+          created_at?: string | null
+          games_played?: number | null
+          goals?: number | null
+          id?: string
+          interceptions?: number | null
+          minutes_played?: number | null
+          pass_accuracy?: number | null
+          player_id?: string
+          red_cards?: number | null
+          season?: string
+          shots_on_target?: number | null
+          tackles?: number | null
+          updated_at?: string | null
+          yellow_cards?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_stats_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_technical_evaluations: {
+        Row: {
+          assists_contribution: number | null
+          club_id: string
+          created_at: string | null
+          development_plan: string | null
+          discipline: number | null
+          evaluation_period: string | null
+          evaluator_id: string
+          goals_contribution: number | null
+          id: string
+          improvement_areas: string[] | null
+          leadership: number | null
+          minutes_played: number | null
+          notes: string | null
+          performance_rating: number | null
+          player_id: string
+          tactical_flexibility: Json | null
+          team_chemistry: number | null
+          training_attitude: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          assists_contribution?: number | null
+          club_id: string
+          created_at?: string | null
+          development_plan?: string | null
+          discipline?: number | null
+          evaluation_period?: string | null
+          evaluator_id: string
+          goals_contribution?: number | null
+          id?: string
+          improvement_areas?: string[] | null
+          leadership?: number | null
+          minutes_played?: number | null
+          notes?: string | null
+          performance_rating?: number | null
+          player_id: string
+          tactical_flexibility?: Json | null
+          team_chemistry?: number | null
+          training_attitude?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          assists_contribution?: number | null
+          club_id?: string
+          created_at?: string | null
+          development_plan?: string | null
+          discipline?: number | null
+          evaluation_period?: string | null
+          evaluator_id?: string
+          goals_contribution?: number | null
+          id?: string
+          improvement_areas?: string[] | null
+          leadership?: number | null
+          minutes_played?: number | null
+          notes?: string | null
+          performance_rating?: number | null
+          player_id?: string
+          tactical_flexibility?: Json | null
+          team_chemistry?: number | null
+          training_attitude?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_technical_evaluations_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_technical_evaluations_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_technical_reports: {
+        Row: {
+          club_id: string
+          created_at: string | null
+          detailed_notes: string | null
+          id: string
+          match_observed: string | null
+          mental_attributes: Json | null
+          overall_rating: number | null
+          physical_attributes: Json | null
+          player_id: string
+          potential_rating: number | null
+          recommendation: string | null
+          scout_id: string
+          strengths: string[] | null
+          tactical_understanding: Json | null
+          technical_skills: Json | null
+          updated_at: string | null
+          video_analysis_url: string | null
+          weaknesses: string[] | null
+        }
+        Insert: {
+          club_id: string
+          created_at?: string | null
+          detailed_notes?: string | null
+          id?: string
+          match_observed?: string | null
+          mental_attributes?: Json | null
+          overall_rating?: number | null
+          physical_attributes?: Json | null
+          player_id: string
+          potential_rating?: number | null
+          recommendation?: string | null
+          scout_id: string
+          strengths?: string[] | null
+          tactical_understanding?: Json | null
+          technical_skills?: Json | null
+          updated_at?: string | null
+          video_analysis_url?: string | null
+          weaknesses?: string[] | null
+        }
+        Update: {
+          club_id?: string
+          created_at?: string | null
+          detailed_notes?: string | null
+          id?: string
+          match_observed?: string | null
+          mental_attributes?: Json | null
+          overall_rating?: number | null
+          physical_attributes?: Json | null
+          player_id?: string
+          potential_rating?: number | null
+          recommendation?: string | null
+          scout_id?: string
+          strengths?: string[] | null
+          tactical_understanding?: Json | null
+          technical_skills?: Json | null
+          updated_at?: string | null
+          video_analysis_url?: string | null
+          weaknesses?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_technical_reports_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_technical_reports_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          contract_end: string | null
+          contract_start: string | null
+          created_at: string | null
+          current_club_id: string | null
+          date_of_birth: string
+          first_name: string
+          height: number | null
+          id: string
+          last_name: string
+          market_value: number | null
+          nationality: string
+          position: string
+          preferred_foot: string | null
+          profile_id: string | null
+          updated_at: string | null
+          weight: number | null
+        }
+        Insert: {
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string | null
+          current_club_id?: string | null
+          date_of_birth: string
+          first_name: string
+          height?: number | null
+          id?: string
+          last_name: string
+          market_value?: number | null
+          nationality: string
+          position: string
+          preferred_foot?: string | null
+          profile_id?: string | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Update: {
+          contract_end?: string | null
+          contract_start?: string | null
+          created_at?: string | null
+          current_club_id?: string | null
+          date_of_birth?: string
+          first_name?: string
+          height?: number | null
+          id?: string
+          last_name?: string
+          market_value?: number | null
+          nationality?: string
+          position?: string
+          preferred_foot?: string | null
+          profile_id?: string | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_current_club_id_fkey"
+            columns: ["current_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "players_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          comments_count: number | null
+          content: string
+          created_at: string | null
+          id: string
+          likes_count: number | null
+          media_urls: string[] | null
+          post_type: string | null
+          shares_count: number | null
+          updated_at: string | null
+          user_id: string
+          visibility: string | null
+        }
+        Insert: {
+          comments_count?: number | null
+          content: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number | null
+          media_urls?: string[] | null
+          post_type?: string | null
+          shares_count?: number | null
+          updated_at?: string | null
+          user_id: string
+          visibility?: string | null
+        }
+        Update: {
+          comments_count?: number | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          likes_count?: number | null
+          media_urls?: string[] | null
+          post_type?: string | null
+          shares_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string
+          followers_count: number | null
+          following_count: number | null
+          full_name: string | null
+          id: string
+          location: string | null
+          posts_count: number | null
+          role: string | null
+          updated_at: string | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
+          verified: boolean | null
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email: string
+          followers_count?: number | null
+          following_count?: number | null
+          full_name?: string | null
+          id: string
+          location?: string | null
+          posts_count?: number | null
+          role?: string | null
+          updated_at?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
+          verified?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string
+          followers_count?: number | null
+          following_count?: number | null
+          full_name?: string | null
+          id?: string
+          location?: string | null
+          posts_count?: number | null
+          role?: string | null
+          updated_at?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"] | null
+          verified?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      scout_reports: {
+        Row: {
+          created_at: string | null
+          id: string
+          mental_rating: number | null
+          notes: string | null
+          overall_rating: number | null
+          physical_rating: number | null
+          player_id: string
+          report_date: string
+          scout_id: string
+          tactical_rating: number | null
+          technical_rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mental_rating?: number | null
+          notes?: string | null
+          overall_rating?: number | null
+          physical_rating?: number | null
+          player_id: string
+          report_date?: string
+          scout_id: string
+          tactical_rating?: number | null
+          technical_rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mental_rating?: number | null
+          notes?: string | null
+          overall_rating?: number | null
+          physical_rating?: number | null
+          player_id?: string
+          report_date?: string
+          scout_id?: string
+          tactical_rating?: number | null
+          technical_rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scout_reports_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scout_reports_scout_id_fkey"
+            columns: ["scout_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transfers: {
+        Row: {
+          contract_length: number | null
+          created_at: string | null
+          fee: number | null
+          from_club_id: string | null
+          id: string
+          player_id: string
+          to_club_id: string
+          transfer_date: string
+        }
+        Insert: {
+          contract_length?: number | null
+          created_at?: string | null
+          fee?: number | null
+          from_club_id?: string | null
+          id?: string
+          player_id: string
+          to_club_id: string
+          transfer_date?: string
+        }
+        Update: {
+          contract_length?: number | null
+          created_at?: string | null
+          fee?: number | null
+          from_club_id?: string | null
+          id?: string
+          player_id?: string
+          to_club_id?: string
+          transfer_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfers_from_club_id_fkey"
+            columns: ["from_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfers_to_club_id_fkey"
+            columns: ["to_club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      has_department_permission: {
+        Args: {
+          club_id: string
+          department: Database["public"]["Enums"]["club_department"]
+          min_permission?: Database["public"]["Enums"]["permission_level"]
+          user_id: string
+        }
+        Returns: boolean
+      }
+      is_club_member: {
+        Args: { club_id: string; user_id: string }
+        Returns: boolean
+      }
+    }
+    Enums: {
+      club_department:
+        | "medical"
+        | "scouting"
+        | "technical"
+        | "financial"
+        | "management"
+        | "admin"
+      permission_level: "read" | "write" | "admin"
+      user_type:
+        | "player"
+        | "club"
+        | "agent"
+        | "coach"
+        | "scout"
+        | "journalist"
+        | "fan"
+        | "referee"
+        | "medical_staff"
+        | "financial_staff"
+        | "technical_staff"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      club_department: [
+        "medical",
+        "scouting",
+        "technical",
+        "financial",
+        "management",
+        "admin",
+      ],
+      permission_level: ["read", "write", "admin"],
+      user_type: [
+        "player",
+        "club",
+        "agent",
+        "coach",
+        "scout",
+        "journalist",
+        "fan",
+        "referee",
+        "medical_staff",
+        "financial_staff",
+        "technical_staff",
+      ],
+    },
+  },
+} as const

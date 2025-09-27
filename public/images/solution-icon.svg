@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <style>
+    .gear {
+      fill: #0039FF;
+      transform-origin: center;
+      transition: transform 0.5s ease;
+    }
+    .gear:hover {
+      transform: rotate(45deg);
+    }
+    .light {
+      fill: #00C2FF;
+      opacity: 0.8;
+      transition: all 0.3s ease;
+    }
+    .light:hover {
+      opacity: 1;
+      fill: #FFD700;
+    }
+  </style>
+  <circle cx="50" cy="50" r="40" fill="#f5f5f5" stroke="#001A73" stroke-width="2" />
+  <path class="gear" d="M50 25 L54 25 L55 32 C57.5 32.5 60 33.5 62 35 L68 31 L71 34 L67 40 C68.5 42 69.5 44.5 70 47 L77 48 L77 52 L70 53 C69.5 55.5 68.5 58 67 60 L71 66 L68 69 L62 65 C60 66.5 57.5 67.5 55 68 L54 75 L50 75 L49 68 C46.5 67.5 44 66.5 42 65 L36 69 L33 66 L37 60 C35.5 58 34.5 55.5 34 53 L27 52 L27 48 L34 47 C34.5 44.5 35.5 42 37 40 L33 34 L36 31 L42 35 C44 33.5 46.5 32.5 49 32 L50 25 Z" />
+  <circle class="light" cx="50" cy="50" r="15" />
+</svg>

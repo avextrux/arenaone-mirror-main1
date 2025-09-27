@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <style>
+    .bar {
+      fill: #0039FF;
+      transition: all 0.3s ease;
+    }
+    .bar:hover {
+      fill: #00C2FF;
+      transform: translateY(-5px);
+    }
+    .circle {
+      fill: #001A73;
+      transition: all 0.3s ease;
+    }
+    .circle:hover {
+      fill: #00C2FF;
+      r: 8;
+    }
+  </style>
+  <rect class="bar" x="10" y="60" width="15" height="30" rx="2" />
+  <rect class="bar" x="35" y="40" width="15" height="50" rx="2" />
+  <rect class="bar" x="60" y="30" width="15" height="60" rx="2" />
+  <circle class="circle" cx="17.5" cy="60" r="5" />
+  <circle class="circle" cx="42.5" cy="40" r="5" />
+  <circle class="circle" cx="67.5" cy="30" r="5" />
+  <path d="M17.5 60 L42.5 40 L67.5 30" stroke="#0039FF" stroke-width="2" fill="none" />
+</svg>

@@ -1,0 +1,410 @@
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Building, Users, Trophy, TrendingUp, Calendar, Star, MapPin, Phone, Mail, Globe, Edit, Plus, BarChart3 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Player {
+  id: string;
+  first_name: string;
+  last_name: string;
+  position: string;
+  nationality: string;
+  date_of_birth: string;
+  market_value: number;
+}
+
+const ClubManagement = () => {
+  const { user } = useAuth();
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [clubInfo, setClubInfo] = useState({
+    name: "Meu Clube FC",
+    founded: 1950,
+    stadium: "Estádio Principal",
+    league: "Primeira Divisão",
+    country: "Brasil",
+    website: "www.meuclube.com",
+    phone: "+55 11 9999-9999",
+    email: "contato@meuclube.com"
+  });
+
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  const fetchPlayers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .limit(20);
+
+      if (error) {
+        console.error('Error fetching players:', error);
+        return;
+      }
+
+      setPlayers(data || []);
+    } catch (error) {
+      console.error('Error fetching players:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateAge = (birthDate: string) => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const getPositionColor = (position: string) => {
+    const colors = {
+      'Goleiro': 'bg-yellow-100 text-yellow-800',
+      'Zagueiro': 'bg-blue-100 text-blue-800',
+      'Lateral': 'bg-green-100 text-green-800',
+      'Volante': 'bg-purple-100 text-purple-800',
+      'Meio-campo': 'bg-orange-100 text-orange-800',
+      'Atacante': 'bg-red-100 text-red-800'
+    };
+    return colors[position as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando informações do clube...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            <Building className="w-6 h-6" />
+            Gestão do Clube
+          </h1>
+          <p className="text-muted-foreground">
+            Gerencie todos os aspectos do seu clube
+          </p>
+        </div>
+        <Button>
+          <Edit className="w-4 h-4 mr-2" />
+          Editar Clube
+        </Button>
+      </div>
+
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="squad">Elenco</TabsTrigger>
+          <TabsTrigger value="staff">Staff</TabsTrigger>
+          <TabsTrigger value="facilities">Instalações</TabsTrigger>
+          <TabsTrigger value="finances">Finanças</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* Club Info Card */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Main Club Info */}
+            <Card className="md:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="w-5 h-5" />
+                  Informações do Clube
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center gap-6">
+                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Building className="w-12 h-12 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">{clubInfo.name}</h2>
+                    <p className="text-muted-foreground">Fundado em {clubInfo.founded}</p>
+                    <Badge className="mt-2">{clubInfo.league}</Badge>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Trophy className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Estádio:</span>
+                      <span className="font-medium">{clubInfo.stadium}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">País:</span>
+                      <span className="font-medium">{clubInfo.country}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Website:</span>
+                      <span className="font-medium text-primary">{clubInfo.website}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Telefone:</span>
+                      <span className="font-medium">{clubInfo.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Email:</span>
+                      <span className="font-medium">{clubInfo.email}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Estatísticas Rápidas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-primary">28</p>
+                  <p className="text-xs text-muted-foreground">Jogadores no Elenco</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-green-600">€45M</p>
+                  <p className="text-xs text-muted-foreground">Valor do Elenco</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-blue-600">23</p>
+                  <p className="text-xs text-muted-foreground">Idade Média</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-600">12</p>
+                  <p className="text-xs text-muted-foreground">Nacionalidades</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Performance Overview */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Performance da Temporada
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Vitórias</span>
+                    <span>18/30 (60%)</span>
+                  </div>
+                  <Progress value={60} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Empates</span>
+                    <span>8/30 (27%)</span>
+                  </div>
+                  <Progress value={27} className="h-2" />
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Derrotas</span>
+                    <span>4/30 (13%)</span>
+                  </div>
+                  <Progress value={13} className="h-2" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Próximos Jogos
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">vs Barcelona FC</p>
+                    <p className="text-xs text-muted-foreground">Camp Nou • 15:00</p>
+                  </div>
+                  <Badge variant="outline">Dom 29/09</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">Real Madrid</p>
+                    <p className="text-xs text-muted-foreground">Casa • 20:00</p>
+                  </div>
+                  <Badge variant="outline">Qua 02/10</Badge>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">vs Atletico Madrid</p>
+                    <p className="text-xs text-muted-foreground">Fora • 16:30</p>
+                  </div>
+                  <Badge variant="outline">Sab 05/10</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="squad" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Elenco Principal</h2>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Jogador
+            </Button>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {players.map((player) => (
+              <Card key={player.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback>
+                        {player.first_name[0]}{player.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h4 className="font-semibold">{player.first_name} {player.last_name}</h4>
+                      <p className="text-sm text-muted-foreground">{calculateAge(player.date_of_birth)} anos</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge className={getPositionColor(player.position)}>
+                        {player.position}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{player.nationality}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Valor de Mercado:</span>
+                      <span className="font-semibold text-primary">
+                        {formatCurrency(player.market_value)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 mt-4">
+                    <Button size="sm" variant="outline" className="flex-1">
+                      Ver Perfil
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {players.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold text-lg mb-2">Nenhum jogador cadastrado</h3>
+                <p className="text-muted-foreground mb-4">
+                  Comece adicionando jogadores ao seu elenco
+                </p>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Primeiro Jogador
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="staff">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Gestão de Staff</h3>
+              <p className="text-muted-foreground mb-4">
+                Gerencie técnicos, preparadores e staff administrativo
+              </p>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Membro do Staff
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="facilities">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Building className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Instalações do Clube</h3>
+              <p className="text-muted-foreground mb-4">
+                Gerencie estádio, centro de treinamento e outras instalações
+              </p>
+              <Button>
+                <Edit className="w-4 h-4 mr-2" />
+                Gerenciar Instalações
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="finances">
+          <Card>
+            <CardContent className="p-12 text-center">
+              <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Gestão Financeira</h3>
+              <p className="text-muted-foreground mb-4">
+                Controle orçamento, receitas e despesas do clube
+              </p>
+              <Button>
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Ver Relatórios Financeiros
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default ClubManagement;
