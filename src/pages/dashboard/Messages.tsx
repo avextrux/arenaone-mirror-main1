@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Send, Search, Plus } from "lucide-react";
+import { MessageSquare, Send, Search, Plus, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile hook
+import NewConversationDialog from "@/components/dashboard/NewConversationDialog"; // Import new component
 
 // Define types based on Supabase schema
 interface Profile {
@@ -77,9 +78,19 @@ const Messages = () => {
             table: 'messages',
             filter: `conversation_id=eq.${selectedConversationId}`,
           },
-          (payload) => {
+          async (payload) => {
             const newMessage = payload.new as Message;
-            setMessages((prev) => [...prev, newMessage]);
+            // Fetch sender profile for the new message
+            const { data: senderProfile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url, user_type')
+              .eq('id', newMessage.sender_id)
+              .single();
+
+            if (profileError) console.error('Error fetching sender profile for new message:', profileError);
+
+            setMessages((prev) => [...prev, { ...newMessage, profiles: senderProfile || undefined }]);
+            
             // Mark new message as read if it's from the other user and conversation is open
             if (newMessage.sender_id !== user?.id) {
               markMessagesAsRead(selectedConversationId);
@@ -262,50 +273,9 @@ const Messages = () => {
     }
   };
 
-  const startNewConversation = async (otherUserId: string) => {
-    if (!user || !otherUserId || user.id === otherUserId) return;
-
-    setLoading(true);
-    try {
-      // Check if conversation already exists
-      const { data: existingConv, error: existingConvError } = await supabase
-        .from('conversations')
-        .select('id')
-        .or(`and(user1_id.eq.${user.id},user2_id.eq.${otherUserId}),and(user1_id.eq.${otherUserId},user2_id.eq.${user.id})`)
-        .single();
-
-      if (existingConvError && existingConvError.code !== 'PGRST116') throw existingConvError; // PGRST116 means no rows found
-
-      let conversationId = existingConv?.id;
-
-      if (!conversationId) {
-        // Create new conversation
-        const { data: newConv, error: createError } = await supabase
-          .from('conversations')
-          .insert([{ user1_id: user.id, user2_id: otherUserId }])
-          .select('id')
-          .single();
-
-        if (createError) throw createError;
-        conversationId = newConv.id;
-      }
-
-      await fetchConversations(); // Re-fetch to include new conversation
-      setSelectedConversationId(conversationId);
-      toast({
-        title: "Conversa iniciada!",
-        description: "Você pode começar a enviar mensagens.",
-      });
-    } catch (error) {
-      console.error('Error starting new conversation:', error);
-      toast({
-        title: "Erro ao iniciar conversa",
-        description: "Não foi possível iniciar uma nova conversa.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleConversationStarted = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    fetchConversations(); // Re-fetch conversations to update the list
   };
 
   const getUserTypeColor = (userType: string) => {
@@ -378,9 +348,7 @@ const Messages = () => {
                     <MessageSquare className="w-5 h-5" />
                     Mensagens
                   </span>
-                  <Button size="sm" variant="outline" onClick={() => toast({ title: "Funcionalidade em desenvolvimento", description: "Iniciar nova conversa com busca de usuários." })}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
+                  <NewConversationDialog onConversationStarted={handleConversationStarted} />
                 </CardTitle>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
