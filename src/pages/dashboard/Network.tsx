@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Users, UserPlus, MessageCircle } from "lucide-react";
+import { Search, Users, UserPlus, MessageCircle, Verified } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 interface Profile {
   id: string;
@@ -20,30 +21,42 @@ interface Profile {
 
 const Network = () => {
   const { user } = useAuth();
+  const { toast } = useToast(); // Initialize useToast
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProfiles();
-  }, []);
+  }, [user]); // Re-fetch if user changes
 
   const fetchProfiles = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .neq('id', user?.id || '')
-        .limit(20);
+        .neq('id', user?.id || '') // Exclude current user's profile
+        .limit(20); // Limit to 20 profiles for initial load
 
       if (error) {
         console.error('Error fetching profiles:', error);
+        toast({
+          title: "Erro ao carregar perfis",
+          description: "Não foi possível carregar a rede de profissionais.",
+          variant: "destructive",
+        });
         return;
       }
 
       setProfiles(data || []);
     } catch (error) {
       console.error('Error fetching profiles:', error);
+      toast({
+        title: "Erro ao carregar perfis",
+        description: "Ocorreu um erro inesperado ao carregar a rede.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -80,6 +93,22 @@ const Network = () => {
     profile.user_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     profile.location?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleConnect = (profileId: string) => {
+    // Implement connection logic here
+    toast({
+      title: "Conectar",
+      description: `Solicitação de conexão enviada para ${profileId}. (Funcionalidade em desenvolvimento)`,
+    });
+  };
+
+  const handleMessage = (profileId: string) => {
+    // Implement message logic here, potentially navigating to messages page with pre-selected user
+    toast({
+      title: "Mensagem",
+      description: `Iniciando conversa com ${profileId}. (Funcionalidade em desenvolvimento)`,
+    });
+  };
 
   if (loading) {
     return (
@@ -135,7 +164,12 @@ const Network = () => {
                   </AvatarFallback>
                 </Avatar>
                 
-                <h3 className="font-semibold text-lg mb-2">{profile.full_name}</h3>
+                <h3 className="font-semibold text-lg mb-2 flex items-center justify-center gap-2">
+                  {profile.full_name}
+                  {profile.verified && (
+                    <Verified className="w-4 h-4 text-blue-500 fill-blue-500" />
+                  )}
+                </h3>
                 
                 <Badge className={`mb-3 ${getUserTypeColor(profile.user_type)}`}>
                   {getUserTypeLabel(profile.user_type)}
@@ -154,11 +188,11 @@ const Network = () => {
                 )}
                 
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1">
+                  <Button size="sm" className="flex-1" onClick={() => handleConnect(profile.id)}>
                     <UserPlus className="w-4 h-4 mr-2" />
                     Conectar
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={() => handleMessage(profile.id)}>
                     <MessageCircle className="w-4 h-4" />
                   </Button>
                 </div>
