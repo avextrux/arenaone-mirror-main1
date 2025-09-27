@@ -6,12 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Image, Video, MapPin, Smile, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { UserType } from "@/integrations/supabase/types"; // Importando UserType
 
 interface CreatePostProps {
   user: {
     name: string;
     avatar?: string;
-    userType: string;
+    userType: UserType; // Usando o tipo UserType
   };
   onPost: (content: string, postType: string, visibility: string) => Promise<void>;
 }
@@ -66,12 +67,12 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
     }
   };
 
-  const getPostTypeOptions = (userType: string) => {
+  const getPostTypeOptions = (userType: UserType) => { // Usando UserType
     const baseOptions = [
       { value: "post", label: "Post Normal" }
     ];
 
-    const userTypeOptions = {
+    const userTypeOptions: Record<UserType, { value: string; label: string }[]> = {
       player: [
         { value: "training", label: "Treinamento" },
         { value: "match_result", label: "Resultado da Partida" }
@@ -89,12 +90,18 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
       ],
       scout: [
         { value: "match_result", label: "Análise da Partida" }
-      ]
+      ],
+      journalist: [], // Jornalistas podem ter opções específicas no futuro
+      fan: [], // Fãs podem ter opções específicas no futuro
+      referee: [], // Árbitros podem ter opções específicas no futuro
+      medical_staff: [], // Staff médico pode ter opções específicas no futuro
+      financial_staff: [], // Staff financeiro pode ter opções específicas no futuro
+      technical_staff: [], // Staff técnico pode ter opções específicas no futuro
     };
 
     return [
       ...baseOptions,
-      ...(userTypeOptions[userType as keyof typeof userTypeOptions] || [])
+      ...(userTypeOptions[userType] || [])
     ];
   };
 
