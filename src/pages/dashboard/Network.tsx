@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
-import { Tables, UserType } from "@/integrations/supabase/types"; // Importando Tables e UserType para tipagem
+import { Tables } from "@/integrations/supabase/types"; // Importando Tables para tipagem
+import { useNavigate } from "react-router-dom"; // Importando useNavigate
 
 // Get the base row type from Supabase
 type ProfileRow = Tables<'profiles'>;
@@ -30,6 +31,7 @@ interface Connection extends Tables<'connections'> {} // Tipo para conexões
 const Network = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate(); // Inicializando useNavigate
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -61,8 +63,7 @@ const Network = () => {
         return;
       }
 
-      // Cast data to Profile[] after fetching, assuming non-nullable fields are present
-      setProfiles(data as Profile[] || []);
+      setProfiles(data || []);
     } catch (error) {
       console.error('Error fetching profiles:', error);
       toast({
@@ -228,11 +229,7 @@ const Network = () => {
   };
 
   const handleMessage = (profileId: string) => {
-    // Implement message logic here, potentially navigating to messages page with pre-selected user
-    toast({
-      title: "Mensagem",
-      description: `Iniciando conversa com ${profileId}. (Funcionalidade em desenvolvimento)`,
-    });
+    navigate('/dashboard/messages', { state: { targetUserId: profileId } });
   };
 
   const filteredProfiles = profiles.filter(profile =>

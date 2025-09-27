@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile hook
 import NewConversationDialog from "@/components/dashboard/NewConversationDialog"; // Import new component
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
+import { useLocation, useNavigate } from "react-router-dom"; // Import useLocation and useNavigate
 
 // Define types based on Supabase schema
 interface Profile {
@@ -45,6 +46,9 @@ const Messages = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile(); // Use the hook
+  const location = useLocation(); // Get location object
+  const navigate = useNavigate(); // Get navigate object
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -57,11 +61,141 @@ const Messages = () => {
     (conv) => conv.id === selectedConversationId
   );
 
+  const fetchConversations = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      // Fetch conversations where current user is user1 or user2
+      const { data: convsData, error: convsError } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          created_at,
+          user1_id,
+          user2_id,
+          last_message_at
+        `)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .order('last_message_at', { ascending: false, nullsFirst: false });
+
+      if (convsError) throw convsError;
+
+      const conversationsWithProfiles: Conversation[] = [];
+      for (const conv of convsData || []) {
+        const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
+        
+        const { data: otherUserProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, user_type')
+          .eq('id', otherUserId)
+          .single();
+
+        if (profileError) console.error('Error fetching other user profile:', profileError);
+
+        // Fetch last message content
+        const { data: lastMessageData, error: lastMessageError } = await supabase
+          .from('messages')
+          .select('content')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (lastMessageError && lastMessageError.code !== 'PGRST116') console.error('Error fetching last message:', lastMessageError); // PGRST116 means no rows found
+
+        // Fetch unread count
+        const { count: unreadCount, error: unreadError } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact' })
+          .eq('conversation_id', conv.id)
+          .eq('read', false)
+          .neq('sender_id', user.id); // Only count messages sent by others
+
+        if (unreadError) console.error('Error fetching unread count:', unreadError);
+
+        conversationsWithProfiles.push({
+          ...conv,
+          other_user_profile: otherUserProfile || undefined,
+          last_message_content: lastMessageData?.content || 'Nenhuma mensagem',
+          unread_count: unreadCount || 0,
+        });
+      }
+      setConversations(conversationsWithProfiles);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      toast({
+        title: "Erro ao carregar conversas",
+        description: "Não foi possível carregar a lista de conversas.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [user, toast]);
+
+  const startNewConversationWithUser = useCallback(async (otherUserId: string) => {
+    if (!user || !otherUserId) return;
+
+    try {
+      // Check if conversation already exists
+      const { data: existingConv, error: existingConvError } = await supabase
+        .from('conversations')
+        .select('id')
+        .or(`and(user1_id.eq.${user.id},user2_id.eq.${otherUserId}),and(user1_id.eq.${otherUserId},user2_id.eq.${user.id})`)
+        .single();
+
+      if (existingConvError && existingConvError.code !== 'PGRST116') throw existingConvError;
+
+      let conversationId = existingConv?.id;
+
+      if (!conversationId) {
+        const { data: newConv, error: createError } = await supabase
+          .from('conversations')
+          .insert([{ user1_id: user.id, user2_id: otherUserId }])
+          .select('id')
+          .single();
+
+        if (createError) throw createError;
+        conversationId = newConv.id;
+      }
+      
+      setSelectedConversationId(conversationId);
+      fetchConversations(); // Re-fetch to include the new conversation in the list
+    } catch (error) {
+      console.error('Error starting new conversation with user:', error);
+      toast({
+        title: "Erro ao iniciar conversa",
+        description: "Não foi possível iniciar uma nova conversa com este usuário.",
+        variant: "destructive",
+      });
+    }
+  }, [user, fetchConversations, toast]);
+
   useEffect(() => {
     if (user) {
       fetchConversations();
     }
-  }, [user]);
+  }, [user, fetchConversations]);
+
+  // Handle navigation state for starting a new conversation
+  useEffect(() => {
+    if (user && conversations.length > 0 && location.state?.targetUserId) {
+      const targetUserId = location.state.targetUserId;
+      const existingConversation = conversations.find(
+        (conv) => conv.user1_id === targetUserId || conv.user2_id === targetUserId
+      );
+
+      if (existingConversation) {
+        setSelectedConversationId(existingConversation.id);
+      } else {
+        startNewConversationWithUser(targetUserId);
+      }
+
+      // Clear the state to prevent re-triggering on subsequent renders
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [user, conversations, location.state, navigate, startNewConversationWithUser]);
+
 
   useEffect(() => {
     if (selectedConversationId) {
@@ -202,7 +336,7 @@ const Messages = () => {
     return () => {
         supabase.removeChannel(messagesSubscription);
     };
-}, [user, selectedConversationId]); // Depend on selectedConversationId to correctly handle unread counts
+}, [user, selectedConversationId, fetchConversations]);
 
 
   useEffect(() => {
@@ -211,78 +345,6 @@ const Messages = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchConversations = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      // Fetch conversations where current user is user1 or user2
-      const { data: convsData, error: convsError } = await supabase
-        .from('conversations')
-        .select(`
-          id,
-          created_at,
-          user1_id,
-          user2_id,
-          last_message_at
-        `)
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .order('last_message_at', { ascending: false, nullsFirst: false });
-
-      if (convsError) throw convsError;
-
-      const conversationsWithProfiles: Conversation[] = [];
-      for (const conv of convsData || []) {
-        const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
-        
-        const { data: otherUserProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, user_type')
-          .eq('id', otherUserId)
-          .single();
-
-        if (profileError) console.error('Error fetching other user profile:', profileError);
-
-        // Fetch last message content
-        const { data: lastMessageData, error: lastMessageError } = await supabase
-          .from('messages')
-          .select('content')
-          .eq('conversation_id', conv.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (lastMessageError && lastMessageError.code !== 'PGRST116') console.error('Error fetching last message:', lastMessageError); // PGRST116 means no rows found
-
-        // Fetch unread count
-        const { count: unreadCount, error: unreadError } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact' })
-          .eq('conversation_id', conv.id)
-          .eq('read', false)
-          .neq('sender_id', user.id); // Only count messages sent by others
-
-        if (unreadError) console.error('Error fetching unread count:', unreadError);
-
-        conversationsWithProfiles.push({
-          ...conv,
-          other_user_profile: otherUserProfile || undefined,
-          last_message_content: lastMessageData?.content || 'Nenhuma mensagem',
-          unread_count: unreadCount || 0,
-        });
-      }
-      setConversations(conversationsWithProfiles);
-    } catch (error) {
-      console.error('Error fetching conversations:', error);
-      toast({
-        title: "Erro ao carregar conversas",
-        description: "Não foi possível carregar a lista de conversas.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   const fetchMessages = async (conversationId: string) => {
@@ -389,7 +451,7 @@ const Messages = () => {
   };
 
   const filteredConversations = conversations.filter(conv =>
-    conv.other_user_profile?.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    conv.other_user_profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -440,9 +502,9 @@ const Messages = () => {
                     >
                       <div className="flex items-center gap-3">
                         <Avatar className="w-10 h-10">
-                          <AvatarImage src={conversation.other_user_profile?.avatar_url} />
+                          <AvatarImage src={conversation.other_user_profile?.avatar_url || undefined} />
                           <AvatarFallback>
-                            {conversation.other_user_profile?.full_name.split(' ').map(n => n[0]).join('')}
+                            {conversation.other_user_profile?.full_name?.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -494,9 +556,9 @@ const Messages = () => {
                       </Button>
                     )}
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={selectedConversation.other_user_profile?.avatar_url} />
+                      <AvatarImage src={selectedConversation.other_user_profile?.avatar_url || undefined} />
                       <AvatarFallback>
-                        {selectedConversation.other_user_profile?.full_name.split(' ').map(n => n[0]).join('')}
+                        {selectedConversation.other_user_profile?.full_name?.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     <div>
