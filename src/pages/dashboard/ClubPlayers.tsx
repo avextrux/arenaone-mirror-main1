@@ -13,6 +13,7 @@ import { Search, Plus, User, MapPin, Calendar, Stethoscope, Calculator, FileText
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
 
 interface Player {
   id: string;
@@ -32,11 +33,37 @@ interface Player {
 
 interface ClubMembership {
   club_id: string;
-  department: string;
-  permission_level: string;
+  department: ClubDepartment; // Use imported type
+  permission_level: PermissionLevel; // Use imported type
   clubs: {
     name: string;
   };
+}
+
+interface PlayerMedicalInfo {
+  id?: string;
+  blood_type: string | null;
+  allergies: string[] | null;
+  medical_history: string | null;
+  last_medical_exam: string | null;
+  fitness_level: number | null;
+}
+
+interface PlayerFinancialInfo {
+  id?: string;
+  salary: number | null;
+  contract_value: number | null;
+  agent_commission: number | null;
+  bonuses: any | null; // JSON type
+}
+
+interface PlayerTechnicalReport {
+  id?: string;
+  overall_rating: number | null;
+  technical_skills: any | null; // JSON type
+  strengths: string[] | null;
+  weaknesses: string[] | null;
+  detailed_notes: string | null;
 }
 
 const ClubPlayers = () => {
@@ -48,31 +75,30 @@ const ClubPlayers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("basic");
-  const [showMedicalInfo, setShowMedicalInfo] = useState(false);
-  const [showFinancialInfo, setShowFinancialInfo] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form states for different types of information
-  const [medicalForm, setMedicalForm] = useState({
+  const [medicalForm, setMedicalForm] = useState<PlayerMedicalInfo>({
     blood_type: "",
-    allergies: "",
+    allergies: [],
     medical_history: "",
     last_medical_exam: "",
     fitness_level: 5
   });
 
-  const [financialForm, setFinancialForm] = useState({
-    salary: "",
-    contract_value: "",
-    agent_commission: "",
-    bonuses: ""
+  const [financialForm, setFinancialForm] = useState<PlayerFinancialInfo>({
+    salary: null,
+    contract_value: null,
+    agent_commission: null,
+    bonuses: null
   });
 
-  const [technicalForm, setTechnicalForm] = useState({
+  const [technicalForm, setTechnicalForm] = useState<PlayerTechnicalReport>({
     overall_rating: 5,
-    technical_skills: "",
-    strengths: "",
-    weaknesses: "",
-    notes: ""
+    technical_skills: null,
+    strengths: [],
+    weaknesses: [],
+    detailed_notes: ""
   });
 
   useEffect(() => {
@@ -86,6 +112,38 @@ const ClubPlayers = () => {
       fetchPlayers();
     }
   }, [clubMemberships]);
+
+  useEffect(() => {
+    if (selectedPlayer) {
+      fetchPlayerDetails(selectedPlayer.id);
+    } else {
+      // Reset forms when no player is selected or dialog closes
+      resetForms();
+    }
+  }, [selectedPlayer]);
+
+  const resetForms = () => {
+    setMedicalForm({
+      blood_type: "",
+      allergies: [],
+      medical_history: "",
+      last_medical_exam: "",
+      fitness_level: 5
+    });
+    setFinancialForm({
+      salary: null,
+      contract_value: null,
+      agent_commission: null,
+      bonuses: null
+    });
+    setTechnicalForm({
+      overall_rating: 5,
+      technical_skills: null,
+      strengths: [],
+      weaknesses: [],
+      detailed_notes: ""
+    });
+  };
 
   const fetchClubMemberships = async () => {
     if (!user) return;
@@ -135,13 +193,84 @@ const ClubPlayers = () => {
     }
   };
 
-  const hasPermission = (department: string, minLevel: string = 'read') => {
+  const fetchPlayerDetails = async (playerId: string) => {
+    if (!user) return;
+
+    // Fetch Medical Info
+    if (canViewMedical()) {
+      const { data: medicalData, error: medicalError } = await supabase
+        .from('player_medical_info')
+        .select('*')
+        .eq('player_id', playerId)
+        .single();
+      if (medicalError && medicalError.code !== 'PGRST116') console.error('Error fetching medical info:', medicalError); // PGRST116 means no rows found
+      if (medicalData) {
+        setMedicalForm({
+          id: medicalData.id,
+          blood_type: medicalData.blood_type,
+          allergies: medicalData.allergies || [],
+          medical_history: medicalData.medical_history,
+          last_medical_exam: medicalData.last_medical_exam,
+          fitness_level: medicalData.fitness_level || 5
+        });
+      } else {
+        setMedicalForm(prev => ({ ...prev, id: undefined })); // Reset ID if no data
+      }
+    }
+
+    // Fetch Financial Info
+    if (canViewFinancial()) {
+      const { data: financialData, error: financialError } = await supabase
+        .from('player_financial_info')
+        .select('*')
+        .eq('player_id', playerId)
+        .single();
+      if (financialError && financialError.code !== 'PGRST116') console.error('Error fetching financial info:', financialError);
+      if (financialData) {
+        setFinancialForm({
+          id: financialData.id,
+          salary: financialData.salary,
+          contract_value: financialData.contract_value,
+          agent_commission: financialData.agent_commission,
+          bonuses: financialData.bonuses
+        });
+      } else {
+        setFinancialForm(prev => ({ ...prev, id: undefined })); // Reset ID if no data
+      }
+    }
+
+    // Fetch Technical Reports (latest one)
+    if (canViewTechnical()) {
+      const { data: technicalData, error: technicalError } = await supabase
+        .from('player_technical_reports')
+        .select('*')
+        .eq('player_id', playerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (technicalError && technicalError.code !== 'PGRST116') console.error('Error fetching technical report:', technicalError);
+      if (technicalData) {
+        setTechnicalForm({
+          id: technicalData.id,
+          overall_rating: technicalData.overall_rating || 5,
+          technical_skills: technicalData.technical_skills,
+          strengths: technicalData.strengths || [],
+          weaknesses: technicalData.weaknesses || [],
+          detailed_notes: technicalData.detailed_notes || ""
+        });
+      } else {
+        setTechnicalForm(prev => ({ ...prev, id: undefined })); // Reset ID if no data
+      }
+    }
+  };
+
+  const hasPermission = (department: ClubDepartment, minLevel: PermissionLevel = 'read') => {
     const membership = clubMemberships.find(m => m.department === department);
     if (!membership) return false;
 
-    const levels = { read: 1, write: 2, admin: 3 };
-    const userLevel = levels[membership.permission_level as keyof typeof levels] || 0;
-    const requiredLevel = levels[minLevel as keyof typeof levels] || 1;
+    const levels: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
+    const userLevel = levels[membership.permission_level] || 0;
+    const requiredLevel = levels[minLevel] || 1;
 
     return userLevel >= requiredLevel;
   };
@@ -154,21 +283,25 @@ const ClubPlayers = () => {
   const canEditTechnical = () => hasPermission('technical', 'write') || hasPermission('scouting', 'write');
 
   const handleSaveMedicalInfo = async () => {
-    if (!selectedPlayer || !canEditMedical()) return;
+    if (!selectedPlayer || !canEditMedical() || clubMemberships.length === 0) return;
 
+    setIsSaving(true);
     try {
+      const payload = {
+        player_id: selectedPlayer.id,
+        club_id: clubMemberships[0].club_id,
+        blood_type: medicalForm.blood_type,
+        allergies: medicalForm.allergies,
+        medical_history: medicalForm.medical_history,
+        last_medical_exam: medicalForm.last_medical_exam || null,
+        fitness_level: medicalForm.fitness_level,
+        created_by: user?.id,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('player_medical_info')
-        .upsert({
-          player_id: selectedPlayer.id,
-          club_id: clubMemberships[0].club_id,
-          blood_type: medicalForm.blood_type,
-          allergies: medicalForm.allergies.split(',').map(a => a.trim()).filter(Boolean),
-          medical_history: medicalForm.medical_history,
-          last_medical_exam: medicalForm.last_medical_exam || null,
-          fitness_level: medicalForm.fitness_level,
-          created_by: user?.id
-        });
+        .upsert(medicalForm.id ? { ...payload, id: medicalForm.id } : payload, { onConflict: 'player_id' });
 
       if (error) throw error;
 
@@ -176,6 +309,7 @@ const ClubPlayers = () => {
         title: "Informações médicas salvas",
         description: "As informações foram atualizadas com sucesso.",
       });
+      fetchPlayerDetails(selectedPlayer.id); // Re-fetch to update ID if it was an insert
     } catch (error) {
       console.error('Error saving medical info:', error);
       toast({
@@ -183,24 +317,30 @@ const ClubPlayers = () => {
         description: "Não foi possível salvar as informações médicas.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleSaveFinancialInfo = async () => {
-    if (!selectedPlayer || !canEditFinancial()) return;
+    if (!selectedPlayer || !canEditFinancial() || clubMemberships.length === 0) return;
 
+    setIsSaving(true);
     try {
+      const payload = {
+        player_id: selectedPlayer.id,
+        club_id: clubMemberships[0].club_id,
+        salary: financialForm.salary,
+        contract_value: financialForm.contract_value,
+        agent_commission: financialForm.agent_commission,
+        bonuses: financialForm.bonuses,
+        created_by: user?.id,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('player_financial_info')
-        .upsert({
-          player_id: selectedPlayer.id,
-          club_id: clubMemberships[0].club_id,
-          salary: financialForm.salary ? parseInt(financialForm.salary) * 100 : null, // Convert to cents
-          contract_value: financialForm.contract_value ? parseInt(financialForm.contract_value) * 100 : null,
-          agent_commission: financialForm.agent_commission ? parseFloat(financialForm.agent_commission) : null,
-          bonuses: financialForm.bonuses ? { description: financialForm.bonuses } : null,
-          created_by: user?.id
-        });
+        .upsert(financialForm.id ? { ...payload, id: financialForm.id } : payload, { onConflict: 'player_id' });
 
       if (error) throw error;
 
@@ -208,6 +348,7 @@ const ClubPlayers = () => {
         title: "Informações financeiras salvas",
         description: "As informações foram atualizadas com sucesso.",
       });
+      fetchPlayerDetails(selectedPlayer.id); // Re-fetch to update ID if it was an insert
     } catch (error) {
       console.error('Error saving financial info:', error);
       toast({
@@ -215,26 +356,35 @@ const ClubPlayers = () => {
         description: "Não foi possível salvar as informações financeiras.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleSaveTechnicalInfo = async () => {
-    if (!selectedPlayer || !canEditTechnical()) return;
+    if (!selectedPlayer || !canEditTechnical() || clubMemberships.length === 0) return;
 
+    setIsSaving(true);
     try {
+      const payload = {
+        player_id: selectedPlayer.id,
+        club_id: clubMemberships[0].club_id,
+        scout_id: user?.id, // Assuming the current user is the scout/evaluator
+        overall_rating: technicalForm.overall_rating,
+        technical_skills: technicalForm.technical_skills,
+        strengths: technicalForm.strengths,
+        weaknesses: technicalForm.weaknesses,
+        detailed_notes: technicalForm.detailed_notes,
+        recommendation: 'monitor', // Default recommendation
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // For technical reports, we usually insert a new one rather than upserting an existing one,
+      // as each report is a new evaluation.
       const { error } = await supabase
         .from('player_technical_reports')
-        .insert({
-          player_id: selectedPlayer.id,
-          club_id: clubMemberships[0].club_id,
-          scout_id: user?.id,
-          overall_rating: technicalForm.overall_rating,
-          technical_skills: { description: technicalForm.technical_skills },
-          strengths: technicalForm.strengths.split(',').map(s => s.trim()).filter(Boolean),
-          weaknesses: technicalForm.weaknesses.split(',').map(w => w.trim()).filter(Boolean),
-          detailed_notes: technicalForm.notes,
-          recommendation: 'monitor'
-        });
+        .insert([payload]);
 
       if (error) throw error;
 
@@ -243,14 +393,15 @@ const ClubPlayers = () => {
         description: "O relatório foi criado com sucesso.",
       });
 
-      // Reset form
+      // Reset form for new report
       setTechnicalForm({
         overall_rating: 5,
-        technical_skills: "",
-        strengths: "",
-        weaknesses: "",
-        notes: ""
+        technical_skills: null,
+        strengths: [],
+        weaknesses: [],
+        detailed_notes: ""
       });
+      fetchPlayerDetails(selectedPlayer.id); // Re-fetch to show the new report if needed
     } catch (error) {
       console.error('Error saving technical info:', error);
       toast({
@@ -258,6 +409,8 @@ const ClubPlayers = () => {
         description: "Não foi possível salvar o relatório técnico.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -292,7 +445,8 @@ const ClubPlayers = () => {
     return age;
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | null) => {
+    if (value === null) return 'N/A';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'EUR',
@@ -401,7 +555,7 @@ const ClubPlayers = () => {
                 </div>
               )}
 
-              <Dialog>
+              <Dialog onOpenChange={(open) => !open && setSelectedPlayer(null)}>
                 <DialogTrigger asChild>
                   <Button 
                     className="w-full" 
@@ -414,7 +568,7 @@ const ClubPlayers = () => {
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                       <User className="w-5 h-5" />
-                      {player.first_name} {player.last_name}
+                      {selectedPlayer?.first_name} {selectedPlayer?.last_name}
                     </DialogTitle>
                     <DialogDescription>
                       Informações completas do jogador
@@ -442,44 +596,44 @@ const ClubPlayers = () => {
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <Label>Nome Completo</Label>
-                          <p className="text-sm text-muted-foreground">{player.first_name} {player.last_name}</p>
+                          <p className="text-sm text-muted-foreground">{selectedPlayer?.first_name} {selectedPlayer?.last_name}</p>
                         </div>
                         <div>
                           <Label>Posição</Label>
-                          <Badge className={getPositionColor(player.position)}>
-                            {player.position}
+                          <Badge className={getPositionColor(selectedPlayer?.position || '')}>
+                            {selectedPlayer?.position}
                           </Badge>
                         </div>
                         <div>
                           <Label>Nacionalidade</Label>
-                          <p className="text-sm text-muted-foreground">{player.nationality}</p>
+                          <p className="text-sm text-muted-foreground">{selectedPlayer?.nationality}</p>
                         </div>
                         <div>
                           <Label>Idade</Label>
-                          <p className="text-sm text-muted-foreground">{calculateAge(player.date_of_birth)} anos</p>
+                          <p className="text-sm text-muted-foreground">{calculateAge(selectedPlayer?.date_of_birth || '')} anos</p>
                         </div>
-                        {player.height && (
+                        {selectedPlayer?.height && (
                           <div>
                             <Label>Altura</Label>
-                            <p className="text-sm text-muted-foreground">{player.height} cm</p>
+                            <p className="text-sm text-muted-foreground">{selectedPlayer?.height} cm</p>
                           </div>
                         )}
-                        {player.weight && (
+                        {selectedPlayer?.weight && (
                           <div>
                             <Label>Peso</Label>
-                            <p className="text-sm text-muted-foreground">{player.weight} kg</p>
+                            <p className="text-sm text-muted-foreground">{selectedPlayer?.weight} kg</p>
                           </div>
                         )}
-                        {player.preferred_foot && (
+                        {selectedPlayer?.preferred_foot && (
                           <div>
                             <Label>Pé Preferido</Label>
-                            <p className="text-sm text-muted-foreground">{player.preferred_foot}</p>
+                            <p className="text-sm text-muted-foreground">{selectedPlayer?.preferred_foot}</p>
                           </div>
                         )}
-                        {player.market_value && (
+                        {selectedPlayer?.market_value && (
                           <div>
                             <Label>Valor de Mercado</Label>
-                            <p className="text-sm font-semibold text-primary">{formatCurrency(player.market_value)}</p>
+                            <p className="text-sm font-semibold text-primary">{formatCurrency(selectedPlayer?.market_value)}</p>
                           </div>
                         )}
                       </div>
@@ -492,29 +646,22 @@ const ClubPlayers = () => {
                           Informações Médicas
                         </h3>
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowMedicalInfo(!showMedicalInfo)}
-                          >
-                            {showMedicalInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </Button>
                           {canEditMedical() && (
-                            <Button size="sm" onClick={handleSaveMedicalInfo}>
-                              Salvar
+                            <Button size="sm" onClick={handleSaveMedicalInfo} disabled={isSaving}>
+                              {isSaving ? "Salvando..." : "Salvar"}
                             </Button>
                           )}
                         </div>
                       </div>
 
-                      {showMedicalInfo && (
+                      {canViewMedical() ? (
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>Tipo Sanguíneo</Label>
                             <Select 
-                              value={medicalForm.blood_type} 
+                              value={medicalForm.blood_type || ""} 
                               onValueChange={(value) => setMedicalForm(prev => ({ ...prev, blood_type: value }))}
-                              disabled={!canEditMedical()}
+                              disabled={!canEditMedical() || isSaving}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Selecione" />
@@ -536,9 +683,9 @@ const ClubPlayers = () => {
                             <Label>Último Exame Médico</Label>
                             <Input
                               type="date"
-                              value={medicalForm.last_medical_exam}
+                              value={medicalForm.last_medical_exam || ""}
                               onChange={(e) => setMedicalForm(prev => ({ ...prev, last_medical_exam: e.target.value }))}
-                              disabled={!canEditMedical()}
+                              disabled={!canEditMedical() || isSaving}
                             />
                           </div>
 
@@ -546,18 +693,18 @@ const ClubPlayers = () => {
                             <Label>Alergias</Label>
                             <Input
                               placeholder="Separar por vírgulas"
-                              value={medicalForm.allergies}
-                              onChange={(e) => setMedicalForm(prev => ({ ...prev, allergies: e.target.value }))}
-                              disabled={!canEditMedical()}
+                              value={medicalForm.allergies?.join(', ') || ""}
+                              onChange={(e) => setMedicalForm(prev => ({ ...prev, allergies: e.target.value.split(',').map(a => a.trim()).filter(Boolean) }))}
+                              disabled={!canEditMedical() || isSaving}
                             />
                           </div>
 
                           <div className="space-y-2">
                             <Label>Nível de Condicionamento (1-10)</Label>
                             <Select 
-                              value={medicalForm.fitness_level.toString()} 
+                              value={medicalForm.fitness_level?.toString() || "5"} 
                               onValueChange={(value) => setMedicalForm(prev => ({ ...prev, fitness_level: parseInt(value) }))}
-                              disabled={!canEditMedical()}
+                              disabled={!canEditMedical() || isSaving}
                             >
                               <SelectTrigger>
                                 <SelectValue />
@@ -576,19 +723,17 @@ const ClubPlayers = () => {
                             <Label>Histórico Médico</Label>
                             <Textarea
                               placeholder="Histórico de lesões, cirurgias, etc..."
-                              value={medicalForm.medical_history}
+                              value={medicalForm.medical_history || ""}
                               onChange={(e) => setMedicalForm(prev => ({ ...prev, medical_history: e.target.value }))}
-                              disabled={!canEditMedical()}
+                              disabled={!canEditMedical() || isSaving}
                               className="min-h-[100px]"
                             />
                           </div>
                         </div>
-                      )}
-
-                      {!showMedicalInfo && (
+                      ) : (
                         <div className="text-center py-8">
                           <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                          <p className="text-muted-foreground">Informações médicas protegidas</p>
+                          <p className="text-muted-foreground">Você não tem permissão para visualizar informações médicas.</p>
                         </div>
                       )}
                     </TabsContent>
@@ -600,31 +745,24 @@ const ClubPlayers = () => {
                           Informações Financeiras
                         </h3>
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowFinancialInfo(!showFinancialInfo)}
-                          >
-                            {showFinancialInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </Button>
                           {canEditFinancial() && (
-                            <Button size="sm" onClick={handleSaveFinancialInfo}>
-                              Salvar
+                            <Button size="sm" onClick={handleSaveFinancialInfo} disabled={isSaving}>
+                              {isSaving ? "Salvando..." : "Salvar"}
                             </Button>
                           )}
                         </div>
                       </div>
 
-                      {showFinancialInfo && (
+                      {canViewFinancial() ? (
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label>Salário Mensal (€)</Label>
                             <Input
                               type="number"
                               placeholder="50000"
-                              value={financialForm.salary}
-                              onChange={(e) => setFinancialForm(prev => ({ ...prev, salary: e.target.value }))}
-                              disabled={!canEditFinancial()}
+                              value={financialForm.salary !== null ? financialForm.salary.toString() : ""}
+                              onChange={(e) => setFinancialForm(prev => ({ ...prev, salary: e.target.value ? parseInt(e.target.value) : null }))}
+                              disabled={!canEditFinancial() || isSaving}
                             />
                           </div>
 
@@ -633,9 +771,9 @@ const ClubPlayers = () => {
                             <Input
                               type="number"
                               placeholder="5000000"
-                              value={financialForm.contract_value}
-                              onChange={(e) => setFinancialForm(prev => ({ ...prev, contract_value: e.target.value }))}
-                              disabled={!canEditFinancial()}
+                              value={financialForm.contract_value !== null ? financialForm.contract_value.toString() : ""}
+                              onChange={(e) => setFinancialForm(prev => ({ ...prev, contract_value: e.target.value ? parseInt(e.target.value) : null }))}
+                              disabled={!canEditFinancial() || isSaving}
                             />
                           </div>
 
@@ -645,9 +783,9 @@ const ClubPlayers = () => {
                               type="number"
                               step="0.1"
                               placeholder="10.0"
-                              value={financialForm.agent_commission}
-                              onChange={(e) => setFinancialForm(prev => ({ ...prev, agent_commission: e.target.value }))}
-                              disabled={!canEditFinancial()}
+                              value={financialForm.agent_commission !== null ? financialForm.agent_commission.toString() : ""}
+                              onChange={(e) => setFinancialForm(prev => ({ ...prev, agent_commission: e.target.value ? parseFloat(e.target.value) : null }))}
+                              disabled={!canEditFinancial() || isSaving}
                             />
                           </div>
 
@@ -655,18 +793,16 @@ const ClubPlayers = () => {
                             <Label>Bônus e Premiações</Label>
                             <Input
                               placeholder="Descrição dos bônus"
-                              value={financialForm.bonuses}
-                              onChange={(e) => setFinancialForm(prev => ({ ...prev, bonuses: e.target.value }))}
-                              disabled={!canEditFinancial()}
+                              value={financialForm.bonuses?.description || ""}
+                              onChange={(e) => setFinancialForm(prev => ({ ...prev, bonuses: { description: e.target.value } }))}
+                              disabled={!canEditFinancial() || isSaving}
                             />
                           </div>
                         </div>
-                      )}
-
-                      {!showFinancialInfo && (
+                      ) : (
                         <div className="text-center py-8">
                           <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                          <p className="text-muted-foreground">Informações financeiras protegidas</p>
+                          <p className="text-muted-foreground">Você não tem permissão para visualizar informações financeiras.</p>
                         </div>
                       )}
                     </TabsContent>
@@ -678,74 +814,81 @@ const ClubPlayers = () => {
                           Avaliação Técnica
                         </h3>
                         {canEditTechnical() && (
-                          <Button size="sm" onClick={handleSaveTechnicalInfo}>
-                            Salvar Relatório
+                          <Button size="sm" onClick={handleSaveTechnicalInfo} disabled={isSaving}>
+                            {isSaving ? "Salvando..." : "Salvar Relatório"}
                           </Button>
                         )}
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>Avaliação Geral (1-10)</Label>
-                          <Select 
-                            value={technicalForm.overall_rating.toString()} 
-                            onValueChange={(value) => setTechnicalForm(prev => ({ ...prev, overall_rating: parseInt(value) }))}
-                            disabled={!canEditTechnical()}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {[...Array(10)].map((_, i) => (
-                                <SelectItem key={i + 1} value={(i + 1).toString()}>
-                                  {i + 1}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                      {canViewTechnical() ? (
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Avaliação Geral (1-10)</Label>
+                            <Select 
+                              value={technicalForm.overall_rating?.toString() || "5"} 
+                              onValueChange={(value) => setTechnicalForm(prev => ({ ...prev, overall_rating: parseInt(value) }))}
+                              disabled={!canEditTechnical() || isSaving}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[...Array(10)].map((_, i) => (
+                                  <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                    {i + 1}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label>Habilidades Técnicas</Label>
-                          <Input
-                            placeholder="Descrição das habilidades"
-                            value={technicalForm.technical_skills}
-                            onChange={(e) => setTechnicalForm(prev => ({ ...prev, technical_skills: e.target.value }))}
-                            disabled={!canEditTechnical()}
-                          />
-                        </div>
+                          <div className="space-y-2">
+                            <Label>Habilidades Técnicas</Label>
+                            <Input
+                              placeholder="Descrição das habilidades"
+                              value={technicalForm.technical_skills?.description || ""}
+                              onChange={(e) => setTechnicalForm(prev => ({ ...prev, technical_skills: { description: e.target.value } }))}
+                              disabled={!canEditTechnical() || isSaving}
+                            />
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label>Pontos Fortes</Label>
-                          <Input
-                            placeholder="Separar por vírgulas"
-                            value={technicalForm.strengths}
-                            onChange={(e) => setTechnicalForm(prev => ({ ...prev, strengths: e.target.value }))}
-                            disabled={!canEditTechnical()}
-                          />
-                        </div>
+                          <div className="space-y-2">
+                            <Label>Pontos Fortes</Label>
+                            <Input
+                              placeholder="Separar por vírgulas"
+                              value={technicalForm.strengths?.join(', ') || ""}
+                              onChange={(e) => setTechnicalForm(prev => ({ ...prev, strengths: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                              disabled={!canEditTechnical() || isSaving}
+                            />
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label>Pontos a Melhorar</Label>
-                          <Input
-                            placeholder="Separar por vírgulas"
-                            value={technicalForm.weaknesses}
-                            onChange={(e) => setTechnicalForm(prev => ({ ...prev, weaknesses: e.target.value }))}
-                            disabled={!canEditTechnical()}
-                          />
-                        </div>
+                          <div className="space-y-2">
+                            <Label>Pontos a Melhorar</Label>
+                            <Input
+                              placeholder="Separar por vírgulas"
+                              value={technicalForm.weaknesses?.join(', ') || ""}
+                              onChange={(e) => setTechnicalForm(prev => ({ ...prev, weaknesses: e.target.value.split(',').map(w => w.trim()).filter(Boolean) }))}
+                              disabled={!canEditTechnical() || isSaving}
+                            />
+                          </div>
 
-                        <div className="md:col-span-2 space-y-2">
-                          <Label>Observações</Label>
-                          <Textarea
-                            placeholder="Observações detalhadas sobre o jogador..."
-                            value={technicalForm.notes}
-                            onChange={(e) => setTechnicalForm(prev => ({ ...prev, notes: e.target.value }))}
-                            disabled={!canEditTechnical()}
-                            className="min-h-[100px]"
-                          />
+                          <div className="md:col-span-2 space-y-2">
+                            <Label>Observações</Label>
+                            <Textarea
+                              placeholder="Observações detalhadas sobre o jogador..."
+                              value={technicalForm.detailed_notes || ""}
+                              onChange={(e) => setTechnicalForm(prev => ({ ...prev, detailed_notes: e.target.value }))}
+                              disabled={!canEditTechnical() || isSaving}
+                              className="min-h-[100px]"
+                            />
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-muted-foreground">Você não tem permissão para visualizar relatórios técnicos.</p>
+                        </div>
+                      )}
                     </TabsContent>
                   </Tabs>
                 </DialogContent>

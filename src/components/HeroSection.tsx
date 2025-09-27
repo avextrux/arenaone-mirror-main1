@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const HeroSection = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [counts, setCounts] = useState({ clubs: 0, athletes: 0, countries: 0 });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     setIsVisible(true);
@@ -94,11 +96,9 @@ const HeroSection = () => {
               <Button 
                 size="lg" 
                 className="group relative bg-primary hover:bg-primary-hover text-primary-foreground font-heading font-semibold px-8 py-4 text-lg hover:scale-105 hover:shadow-xl transition-all duration-300 overflow-hidden"
+                onClick={() => navigate("/dashboard")} // Navigate to dashboard
               >
-                <span className="flex items-center justify-center">
-                  <span className="mr-2">🚀</span>
-                  Conheça a Plataforma
-                </span>
+                <span>🚀 Conheça a Plataforma</span>
                 {/* Hover tooltip */}
                 <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-foreground text-background px-3 py-1 rounded-md text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap">
                   Explore nosso ecossistema completo
@@ -108,11 +108,9 @@ const HeroSection = () => {
                 size="lg" 
                 variant="outline"
                 className="group relative bg-blue-600 border-2 border-blue-600 text-white hover:bg-blue-700 hover:border-blue-700 font-heading font-semibold px-8 py-4 text-lg hover:scale-105 hover:shadow-lg transition-all duration-200 ease-in-out overflow-hidden"
+                onClick={() => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })} // Scroll to contact section
               >
-                <span className="flex items-center justify-center">
-                  <span className="mr-2">📞</span>
-                  Solicitar Demo
-                </span>
+                <span>📞 Solicitar Demo</span>
                 {/* Hover tooltip */}
                 <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-foreground text-background px-3 py-1 rounded-md text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap z-10">
                   Agende uma demonstração personalizada

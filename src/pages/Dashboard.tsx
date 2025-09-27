@@ -59,6 +59,23 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (profile && !showSetup && !showClubSetup) {
+      // Redirect logic for club members
+      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(profile.user_type);
+      const isAlreadyOnClubPage = location.pathname.startsWith('/dashboard/club') || location.pathname.startsWith('/dashboard/players');
+
+      if (isClubRelatedUser && clubMemberships.length > 0 && location.pathname === '/dashboard') {
+        navigate('/dashboard/club', { replace: true });
+      } else if (location.pathname === '/dashboard' && profile.user_type === 'player') {
+        navigate('/dashboard/profile', { replace: true });
+      } else if (location.pathname === '/dashboard' && profile.user_type === 'agent') {
+        navigate('/dashboard/market', { replace: true });
+      }
+    }
+  }, [profile, clubMemberships, showSetup, showClubSetup, location.pathname, navigate]);
+
+
   const fetchProfile = async () => {
     if (!user) return;
 

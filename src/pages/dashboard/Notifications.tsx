@@ -5,6 +5,8 @@ import { Bell, CheckCircle, Archive, Trash2, MessageSquare, UserPlus, TrendingUp
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client"; // Import supabase
+import { useAuth } from "@/hooks/useAuth"; // Import useAuth
 
 interface Notification {
   id: string;
@@ -18,67 +20,57 @@ interface Notification {
 
 const Notifications = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching notifications
-    const fetchNotifications = async () => {
-      setLoading(true);
-      // Dummy data for notifications
-      const dummyNotifications: Notification[] = [
-        {
-          id: "1",
-          type: "message",
-          title: "Nova Mensagem de João Silva",
-          description: "Você recebeu uma nova mensagem de João Silva: 'Olá, como vai?'",
-          timestamp: "2024-07-20T10:00:00Z",
-          read: false,
-          related_entity_id: "conv_123"
-        },
-        {
-          id: "2",
-          type: "connection_request",
-          title: "Pedido de Conexão de Maria Souza",
-          description: "Maria Souza enviou um pedido de conexão. Aceitar ou rejeitar?",
-          timestamp: "2024-07-19T15:30:00Z",
-          read: false,
-          related_entity_id: "profile_456"
-        },
-        {
-          id: "3",
-          type: "opportunity",
-          title: "Nova Oportunidade de Transferência",
-          description: "Uma nova oportunidade de transferência para um clube na Espanha foi publicada.",
-          timestamp: "2024-07-18T09:00:00Z",
-          read: true,
-          related_entity_id: "opp_789"
-        },
-        {
-          id: "4",
-          type: "club_invite",
-          title: "Convite para o FC Barcelona",
-          description: "Você foi convidado para se juntar ao departamento de scouting do FC Barcelona.",
-          timestamp: "2024-07-17T11:45:00Z",
-          read: false,
-          related_entity_id: "club_101"
-        },
-        {
-          id: "5",
-          type: "system",
-          title: "Atualização da Plataforma",
-          description: "Novos recursos foram adicionados à ArenaOne! Confira as novidades.",
-          timestamp: "2024-07-16T14:00:00Z",
-          read: true,
-        },
-      ];
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-      setNotifications(dummyNotifications);
+    if (user) {
+      fetchNotifications();
+    } else {
       setLoading(false);
-    };
+    }
+  }, [user]);
 
-    fetchNotifications();
-  }, []);
+  const fetchNotifications = async () => {
+    setLoading(true);
+    // This is where you would fetch real notifications from Supabase.
+    // For now, we'll use a placeholder message.
+    // Example:
+    // const { data, error } = await supabase
+    //   .from('notifications')
+    //   .select('*')
+    //   .eq('user_id', user.id)
+    //   .order('created_at', { ascending: false });
+    // if (error) {
+    //   console.error('Error fetching notifications:', error);
+    //   toast({ title: "Erro", description: "Não foi possível carregar notificações.", variant: "destructive" });
+    // } else {
+    //   setNotifications(data || []);
+    // }
+
+    // Placeholder for real data fetching
+    const placeholderNotifications: Notification[] = [
+      {
+        id: "1",
+        type: "system",
+        title: "Bem-vindo à ArenaOne!",
+        description: "Explore seu novo dashboard e comece a se conectar.",
+        timestamp: new Date().toISOString(),
+        read: false,
+      },
+      {
+        id: "2",
+        type: "system",
+        title: "Funcionalidade de Notificações",
+        description: "A integração com o Supabase para notificações em tempo real está em desenvolvimento.",
+        timestamp: new Date(Date.now() - 3600 * 1000).toISOString(), // 1 hour ago
+        read: false,
+      },
+    ];
+    setNotifications(placeholderNotifications);
+    setLoading(false);
+  };
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 
@@ -88,6 +80,7 @@ const Notifications = () => {
       title: "Notificação marcada como lida",
       description: "Esta notificação não aparecerá mais como não lida.",
     });
+    // In a real app, you'd update Supabase here
   };
 
   const archiveNotification = (id: string) => {
@@ -96,6 +89,7 @@ const Notifications = () => {
       title: "Notificação arquivada",
       description: "A notificação foi removida da sua lista.",
     });
+    // In a real app, you'd delete from Supabase here
   };
 
   const getNotificationIcon = (type: Notification['type']) => {
@@ -224,7 +218,7 @@ const Notifications = () => {
                         <p className="text-sm mt-1">{notif.description}</p>
                         <div className="flex gap-2 mt-3">
                           <Button variant="ghost" size="sm" onClick={() => archiveNotification(notif.id)}>
-                            <Archive className="w-3 h-3 mr-1" /> Arquivar
+                            <Trash2 className="w-3 h-3 mr-1" /> Excluir
                           </Button>
                         </div>
                       </div>
