@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
+import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard"; // Import ClubMembership from Dashboard
 
 interface Player {
   id: string;
@@ -29,15 +30,6 @@ interface Player {
   contract_start: string | null;
   contract_end: string | null;
   preferred_foot: string | null;
-}
-
-interface ClubMembership {
-  club_id: string;
-  department: ClubDepartment; // Use imported type
-  permission_level: PermissionLevel; // Use imported type
-  clubs: {
-    name: string;
-  };
 }
 
 interface PlayerMedicalInfo {
@@ -66,11 +58,14 @@ interface PlayerTechnicalReport {
   detailed_notes: string | null;
 }
 
-const ClubPlayers = () => {
+interface ClubPlayersProps {
+  clubMemberships: DashboardClubMembership[]; // Use the imported type
+}
+
+const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [players, setPlayers] = useState<Player[]>([]);
-  const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -102,16 +97,13 @@ const ClubPlayers = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      fetchClubMemberships();
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (clubMemberships.length > 0) {
       fetchPlayers();
+    } else {
+      setPlayers([]); // Clear players if no club membership
+      setLoading(false);
     }
-  }, [clubMemberships]);
+  }, [clubMemberships]); // Depend on clubMemberships prop
 
   useEffect(() => {
     if (selectedPlayer) {
@@ -145,30 +137,12 @@ const ClubPlayers = () => {
     });
   };
 
-  const fetchClubMemberships = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('club_members')
-        .select(`
-          club_id,
-          department,
-          permission_level,
-          clubs (name)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'accepted');
-
-      if (error) throw error;
-      setClubMemberships(data || []);
-    } catch (error) {
-      console.error('Error fetching club memberships:', error);
-    }
-  };
-
   const fetchPlayers = async () => {
-    if (clubMemberships.length === 0) return;
+    if (clubMemberships.length === 0) {
+      setPlayers([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const clubIds = clubMemberships.map(m => m.club_id);

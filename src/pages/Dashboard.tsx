@@ -50,7 +50,7 @@ const Dashboard = () => {
   const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUserTypeSetup, setShowUserTypeSetup] = useState(false);
-  const [showClubInviteSetup, setShowClubInviteSetup] = useState(false);
+  const [showClubInviteSetup, setShowClubInvite] = useState(false);
   const [showCreateClubDialog, setShowCreateClubDialog] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -114,45 +114,40 @@ const Dashboard = () => {
       return;
     }
 
+    let needsUserTypeSetup = false;
+    let needsClubCreation = false;
+    let needsClubInvite = false;
+
     // 1. User Type Setup
     if (!currentProfile.user_type) {
-      setShowUserTypeSetup(true);
-      setShowCreateClubDialog(false);
-      setShowClubInviteSetup(false);
-      setLoading(false);
-      return;
+      needsUserTypeSetup = true;
+    } else {
+      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
+      
+      // 2. Club Creation (for user_type 'club')
+      if (currentProfile.user_type === 'club') {
+        const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
+        if (!userOwnsClub) {
+          needsClubCreation = true;
+        }
+      }
+      // 3. Club Invite Setup (for staff-related user_types, excluding 'club' type)
+      else if (isClubRelatedUser) { // currentProfile.user_type !== 'club' is implicit here
+        if (!currentMemberships || currentMemberships.length === 0) {
+          needsClubInvite = true;
+        }
+      }
     }
-    setShowUserTypeSetup(false); // Hide if user_type is set
 
-    const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
+    setShowUserTypeSetup(needsUserTypeSetup);
+    setShowCreateClubDialog(needsClubCreation);
+    setShowClubInvite(needsClubInvite);
     
-    // 2. Club Creation (for user_type 'club')
-    if (currentProfile.user_type === 'club') {
-      const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
-      if (!userOwnsClub) {
-        setShowCreateClubDialog(true);
-        setShowClubInviteSetup(false);
-        setLoading(false);
-        return;
-      }
-    }
-    setShowCreateClubDialog(false); // Hide if not 'club' or club already owned
-
-    // 3. Club Invite Setup (for staff-related user_types)
-    if (isClubRelatedUser && currentProfile.user_type !== 'club') { // Exclude 'club' type as they create, not join
-      if (!currentMemberships || currentMemberships.length === 0) {
-        setShowClubInviteSetup(true);
-        setLoading(false);
-        return;
-      }
-    }
-    setShowClubInviteSetup(false); // Hide if not staff-related or already a member
-
     setLoading(false);
 
-    // After onboarding is complete, handle initial redirection if on root dashboard path
-    if (location.pathname === '/dashboard') {
-      if (isClubRelatedUser && currentMemberships && currentMemberships.length > 0) {
+    // Only redirect if no onboarding is needed AND we are on the base dashboard path
+    if (!needsUserTypeSetup && !needsClubCreation && !needsClubInvite && location.pathname === '/dashboard') {
+      if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
         navigate('/dashboard/club', { replace: true });
       } else if (currentProfile.user_type === 'player') {
         navigate('/dashboard/profile', { replace: true });
@@ -290,7 +285,7 @@ const Dashboard = () => {
     return <CreateClubDialog open={showCreateClubDialog} onOpenChange={setShowCreateClubDialog} onClubCreated={handleClubCreated} />;
   }
 
-  if (showClubInviteSetup) {
+  if (showClubInvite) {
     return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
   }
 
@@ -374,7 +369,7 @@ const Dashboard = () => {
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
-              <DashboardRouter />
+              <DashboardRouter profile={profile} clubMemberships={clubMemberships} />
             </div>
           </main>
         </div>

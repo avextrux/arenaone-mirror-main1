@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
+import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard"; // Import ClubMembership from Dashboard
 
 interface Player {
   id: string;
@@ -20,16 +21,6 @@ interface Player {
   nationality: string;
   date_of_birth: string;
   market_value: number;
-}
-
-interface ClubMembership {
-  club_id: string;
-  department: ClubDepartment;
-  permission_level: PermissionLevel;
-  clubs: {
-    name: string;
-    logo_url?: string;
-  };
 }
 
 interface ClubDetails {
@@ -43,41 +34,16 @@ interface ClubDetails {
   // Adicione outros campos do clube conforme necessário
 }
 
-const ClubManagement = () => {
+interface ClubManagementProps {
+  clubMemberships: DashboardClubMembership[]; // Use the imported type
+}
+
+const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-  const [clubInfo, setClubInfo] = useState<ClubDetails | null>(null); // Alterado para null e tipo ClubDetails
-  const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
-
-  const fetchClubMemberships = useCallback(async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase
-        .from('club_members')
-        .select(`
-          club_id,
-          department,
-          permission_level,
-          clubs (name, logo_url)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'accepted');
-
-      if (error) throw error;
-      setClubMemberships(data || []);
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching club memberships:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar suas afiliações de clube.",
-        variant: "destructive",
-      });
-      return [];
-    }
-  }, [user, toast]);
+  const [clubInfo, setClubInfo] = useState<ClubDetails | null>(null);
 
   const fetchClubDetails = useCallback(async (clubId: string) => {
     try {
@@ -121,9 +87,8 @@ const ClubManagement = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      const memberships = await fetchClubMemberships();
-      if (memberships.length > 0) {
-        const primaryClubId = memberships[0].club_id; // Assume o primeiro clube como o principal
+      if (clubMemberships.length > 0) {
+        const primaryClubId = clubMemberships[0].club_id; // Assume o primeiro clube como o principal
         await fetchClubDetails(primaryClubId);
         await fetchPlayers(primaryClubId);
       } else {
@@ -132,7 +97,7 @@ const ClubManagement = () => {
       setLoading(false);
     };
     loadData();
-  }, [fetchClubMemberships, fetchClubDetails, fetchPlayers]);
+  }, [clubMemberships, fetchClubDetails, fetchPlayers]); // Depend on clubMemberships prop
 
   const calculateAge = (birthDate: string) => {
     const today = new Date();

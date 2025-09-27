@@ -9,8 +9,14 @@ import ClubPlayers from "@/pages/dashboard/ClubPlayers";
 import Notifications from "@/pages/dashboard/Notifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Construction } from "lucide-react";
+import { Profile as UserProfile, ClubMembership } from "@/pages/Dashboard"; // Import types from Dashboard
 
-const DashboardRouter = () => {
+interface DashboardRouterProps {
+  profile: UserProfile | null;
+  clubMemberships: ClubMembership[];
+}
+
+const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => {
   const location = useLocation();
   console.log("DashboardRouter current path:", location.pathname); // Para depuração
 
@@ -23,8 +29,8 @@ const DashboardRouter = () => {
       <Route path="market" element={<Market />} />
       <Route path="messages" element={<Messages />} /> {/* Rota de Mensagens agora funcional */}
       <Route path="profile" element={<Profile />} />
-      <Route path="club" element={<ClubManagement />} />
-      <Route path="players" element={<ClubPlayers />} />
+      <Route path="club" element={<ClubManagement clubMemberships={clubMemberships} />} />
+      <Route path="players" element={<ClubPlayers clubMemberships={clubMemberships} />} />
       <Route path="notifications" element={<Notifications />} />
       
       {/* Páginas em desenvolvimento */}
