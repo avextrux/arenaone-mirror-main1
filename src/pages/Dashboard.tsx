@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // Added useCallback
 import { useNavigate, useLocation } from "react-router-dom";  
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -12,15 +12,16 @@ import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardRouter from "@/components/dashboard/DashboardRouter";
 import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
-import CreateClubDialog from "@/components/dashboard/CreateClubDialog"; // Import new component
+import CreateClubDialog from "@/components/dashboard/CreateClubDialog";
 import { LogOut, Bell, Settings, Search, Users, Building, TrendingUp, MessageSquare } from "lucide-react";
+import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
 
 interface Profile {
   id: string;
   full_name: string;
   email: string;
   avatar_url?: string;
-  user_type: string | null; // user_type can be null initially
+  user_type: UserType | null; // user_type can be null initially
   bio?: string;
   location?: string;
   website?: string;
@@ -33,8 +34,8 @@ interface Profile {
 interface ClubMembership {
   id: string;
   club_id: string;
-  department: string;
-  permission_level: string;
+  department: ClubDepartment;
+  permission_level: PermissionLevel;
   status: string;
   clubs: {
     name: string;
@@ -49,70 +50,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showUserTypeSetup, setShowUserTypeSetup] = useState(false);
   const [showClubInviteSetup, setShowClubInviteSetup] = useState(false);
-  const [showCreateClubDialog, setShowCreateClubDialog] = useState(false); // State for new dialog
+  const [showCreateClubDialog, setShowCreateClubDialog] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-      fetchClubMemberships();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!loading && profile) {
-      // Onboarding flow logic
-      if (!profile.user_type) {
-        setShowUserTypeSetup(true);
-        return;
-      }
-
-      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(profile.user_type);
-      
-      if (profile.user_type === 'club') {
-        // If user is a club, check if they own a club
-        const userOwnsClub = clubMemberships.some(m => m.permission_level === 'admin' && m.department === 'management');
-        if (!userOwnsClub) {
-          setShowCreateClubDialog(true);
-          return;
-        }
-      } else if (isClubRelatedUser) {
-        // If user is staff-related, check if they are part of any club
-        if (clubMemberships.length === 0) {
-          setShowClubInviteSetup(true);
-          return;
-        }
-      }
-
-      // If onboarding is complete, handle redirection
-      const isAlreadyOnClubPage = location.pathname.startsWith('/dashboard/club') || location.pathname.startsWith('/dashboard/players');
-      const isAlreadyOnProfilePage = location.pathname.startsWith('/dashboard/profile');
-      const isAlreadyOnMarketPage = location.pathname.startsWith('/dashboard/market');
-      const isAlreadyOnMessagesPage = location.pathname.startsWith('/dashboard/messages');
-      const isAlreadyOnNotificationsPage = location.pathname.startsWith('/dashboard/notifications');
-      const isAlreadyOnFeedPage = location.pathname === '/dashboard';
-
-
-      if (isClubRelatedUser && clubMemberships.length > 0 && location.pathname === '/dashboard') {
-        navigate('/dashboard/club', { replace: true });
-      } else if (profile.user_type === 'player' && location.pathname === '/dashboard') {
-        navigate('/dashboard/profile', { replace: true });
-      } else if (profile.user_type === 'agent' && location.pathname === '/dashboard') {
-        navigate('/dashboard/market', { replace: true });
-      } else if (profile.user_type === 'journalist' && location.pathname === '/dashboard') {
-        navigate('/dashboard/notifications', { replace: true }); // Example for journalist
-      } else if (profile.user_type === 'fan' && location.pathname === '/dashboard') {
-        navigate('/dashboard/messages', { replace: true }); // Example for fan
-      }
-    }
-  }, [loading, profile, clubMemberships, showUserTypeSetup, showClubInviteSetup, showCreateClubDialog, location.pathname, navigate]);
-
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -122,22 +66,18 @@ const Dashboard = () => {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        return;
+        return null;
       }
-
-      if (data) {
-        setProfile(data);
-      }
+      setProfile(data);
+      return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
+      return null;
     }
-  };
+  }, [user]);
 
-  const fetchClubMemberships = async () => {
+  const fetchClubMemberships = useCallback(async () => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('club_members')
@@ -153,23 +93,91 @@ const Dashboard = () => {
 
       if (error) {
         console.error('Error fetching club memberships:', error);
-        return;
+        return null;
       }
-
       setClubMemberships(data || []);
+      return data || [];
     } catch (error) {
       console.error('Error fetching club memberships:', error);
+      return null;
     }
-  };
+  }, [user]);
+
+  const checkOnboardingStatus = useCallback(async () => {
+    setLoading(true);
+    const currentProfile = await fetchProfile();
+    const currentMemberships = await fetchClubMemberships();
+
+    if (!currentProfile) {
+      setLoading(false);
+      return;
+    }
+
+    // 1. User Type Setup
+    if (!currentProfile.user_type) {
+      setShowUserTypeSetup(true);
+      setShowCreateClubDialog(false);
+      setShowClubInviteSetup(false);
+      setLoading(false);
+      return;
+    }
+    setShowUserTypeSetup(false); // Hide if user_type is set
+
+    const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
+    
+    // 2. Club Creation (for user_type 'club')
+    if (currentProfile.user_type === 'club') {
+      const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
+      if (!userOwnsClub) {
+        setShowCreateClubDialog(true);
+        setShowClubInviteSetup(false);
+        setLoading(false);
+        return;
+      }
+    }
+    setShowCreateClubDialog(false); // Hide if not 'club' or club already owned
+
+    // 3. Club Invite Setup (for staff-related user_types)
+    if (isClubRelatedUser && currentProfile.user_type !== 'club') { // Exclude 'club' type as they create, not join
+      if (!currentMemberships || currentMemberships.length === 0) {
+        setShowClubInviteSetup(true);
+        setLoading(false);
+        return;
+      }
+    }
+    setShowClubInviteSetup(false); // Hide if not staff-related or already a member
+
+    setLoading(false);
+
+    // After onboarding is complete, handle initial redirection if on root dashboard path
+    if (location.pathname === '/dashboard') {
+      if (isClubRelatedUser && currentMemberships && currentMemberships.length > 0) {
+        navigate('/dashboard/club', { replace: true });
+      } else if (currentProfile.user_type === 'player') {
+        navigate('/dashboard/profile', { replace: true });
+      } else if (currentProfile.user_type === 'agent') {
+        navigate('/dashboard/market', { replace: true });
+      } else if (currentProfile.user_type === 'journalist') {
+        navigate('/dashboard/notifications', { replace: true });
+      } else if (currentProfile.user_type === 'fan') {
+        navigate('/dashboard/messages', { replace: true });
+      }
+    }
+  }, [user, fetchProfile, fetchClubMemberships, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      checkOnboardingStatus();
+    }
+  }, [user, checkOnboardingStatus]);
 
   const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
     if (!user) return;
-
     try {
       const { error } = await supabase
         .from('profiles')
         .update({
-          user_type: userType as any,
+          user_type: userType as UserType,
           bio: profileData.bio,
           location: profileData.location,
           website: profileData.website
@@ -185,30 +193,30 @@ const Dashboard = () => {
         });
         return;
       }
-
-      setShowUserTypeSetup(false);
-      await fetchProfile(); // Re-fetch profile to update user_type in state
-      await fetchClubMemberships(); // Re-fetch memberships as user_type might affect them
-      
       toast({
         title: "Perfil configurado!",
         description: "Seu perfil foi configurado com sucesso.",
       });
+      checkOnboardingStatus(); // Re-check status to proceed to next step if any
     } catch (error) {
       console.error('Error in handleUserTypeSetup:', error);
     }
   };
 
   const handleClubInviteSetupComplete = async () => {
-    setShowClubInviteSetup(false);
-    await fetchProfile();
-    await fetchClubMemberships();
+    toast({
+      title: "Afiliação ao clube!",
+      description: "Você agora está vinculado a um clube.",
+    });
+    checkOnboardingStatus(); // Re-check status
   };
 
   const handleClubCreated = async () => {
-    setShowCreateClubDialog(false);
-    await fetchProfile();
-    await fetchClubMemberships();
+    toast({
+      title: "Clube criado!",
+      description: "Seu perfil de clube foi criado com sucesso.",
+    });
+    checkOnboardingStatus(); // Re-check status
   };
 
   const handleSignOut = async () => {
@@ -216,7 +224,7 @@ const Dashboard = () => {
     navigate('/');
   };
 
-  const getUserTypeColor = (userType: string | null) => {
+  const getUserTypeColor = (userType: UserType | null) => {
     if (!userType) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     const colors = {
       player: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -233,7 +241,7 @@ const Dashboard = () => {
     return colors[userType as keyof typeof colors] || colors.fan;
   };
 
-  const getUserTypeLabel = (userType: string | null) => {
+  const getUserTypeLabel = (userType: UserType | null) => {
     if (!userType) return "Não Definido";
     const labels = {
       player: "Jogador",
