@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, Search, Bell, CirclePlus as PlusCircle, Network, Target, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Shield } from "lucide-react";
+import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Bell, CirclePlus as PlusCircle, Network, Target, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Shield, Heart, Flag } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -73,7 +73,7 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
 
   const getMenuItems = (): MenuItem[] => {
     const baseItems: MenuItem[] = [
-      { title: "Feed", url: "/dashboard", icon: Home, disabled: true }, // Caminho absoluto para /dashboard
+      { title: "Feed", url: "/dashboard", icon: Home }, // Habilitado
       { title: "Rede", url: "/dashboard/network", icon: Network, disabled: true }, // Caminho absoluto
       { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare }, // Caminho absoluto
       { title: "Notificações", url: "/dashboard/notifications", icon: Bell },
