@@ -17,7 +17,7 @@ import { LogOut, Bell, Settings, Search, Users, Building, TrendingUp, MessageSqu
 import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
 
-interface Profile {
+export interface Profile { // Exportado para ser usado em outros componentes
   id: string;
   full_name: string;
   email: string;
@@ -51,7 +51,7 @@ const Dashboard = () => {
   const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUserTypeSetup, setShowUserTypeSetup] = useState(false);
-  const [showClubInviteSetup, setShowClubInvite] = useState(false);
+  const [showClubInviteSetup, setShowClubInviteSetup] = useState(false); // Corrigido o nome da variável
   const [showCreateClubDialog, setShowCreateClubDialog] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -142,7 +142,7 @@ const Dashboard = () => {
 
     setShowUserTypeSetup(needsUserTypeSetup);
     setShowCreateClubDialog(needsClubCreation);
-    setShowClubInvite(needsClubInvite);
+    setShowClubInviteSetup(needsClubInvite); // Corrigido o nome da variável
     
     setLoading(false);
 
@@ -252,7 +252,7 @@ const Dashboard = () => {
     return <CreateClubDialog open={showCreateClubDialog} onOpenChange={setShowCreateClubDialog} onClubCreated={handleClubCreated} />;
   }
 
-  if (showClubInvite) {
+  if (showClubInviteSetup) { // Corrigido o nome da variável
     return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
   }
 
