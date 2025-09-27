@@ -12,51 +12,50 @@ import { Construction } from "lucide-react";
 
 const DashboardRouter = () => {
   const location = useLocation();
-  // const currentPath = location.pathname; // No longer needed for special Feed handling
+  console.log("DashboardRouter current path:", location.pathname); // Para depuração
 
   return (
     <Routes>
-      {/* Marked as Under Development */}
-      <Route path="/" element={<UnderDevelopment page="Feed" />} /> {/* Feed is now under development */}
-      <Route path="/network" element={<UnderDevelopment page="Rede" />} /> {/* Network is now under development */}
-      
-      {/* Existing functional routes */}
-      <Route path="/market" element={<Market />} />
-      <Route path="/messages" element={<Messages />} /> {/* Rota de Mensagens agora funcional */}
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/club" element={<ClubManagement />} />
-      <Route path="/players" element={<ClubPlayers />} />
-      <Route path="/notifications" element={<Notifications />} />
+      {/* Rota padrão para /dashboard, mostrando Feed (em desenvolvimento) */}
+      <Route index element={<UnderDevelopment page="Feed" />} /> 
+      {/* Rotas explícitas, agora relativas ao caminho pai (/dashboard) */}
+      <Route path="network" element={<UnderDevelopment page="Rede" />} /> 
+      <Route path="market" element={<Market />} />
+      <Route path="messages" element={<Messages />} /> {/* Rota de Mensagens agora funcional */}
+      <Route path="profile" element={<Profile />} />
+      <Route path="club" element={<ClubManagement />} />
+      <Route path="players" element={<ClubPlayers />} />
+      <Route path="notifications" element={<Notifications />} />
       
       {/* Páginas em desenvolvimento */}
-      <Route path="/stats" element={<UnderDevelopment page="Estatísticas" />} />
-      <Route path="/transfers" element={<UnderDevelopment page="Transferências" />} />
-      <Route path="/training" element={<UnderDevelopment page="Treinamentos" />} />
-      <Route path="/opportunities" element={<UnderDevelopment page="Oportunidades" />} />
-      <Route path="/scouts" element={<UnderDevelopment page="Scout Reports" />} />
-      <Route path="/scout-reports" element={<UnderDevelopment page="Scout Reports" />} />
-      <Route path="/medical" element={<UnderDevelopment page="Histórico Médico" />} />
-      <Route path="/medical-exams" element={<UnderDevelopment page="Exames Médicos" />} />
-      <Route path="/finances" element={<UnderDevelopment page="Finanças" />} />
-      <Route path="/staff" element={<UnderDevelopment page="Staff do Clube" />} />
-      <Route path="/calendar" element={<UnderDevelopment page="Calendário" />} />
-      <Route path="/jobs" element={<UnderDevelopment page="Vagas" />} />
-      <Route path="/clients" element={<UnderDevelopment page="Meus Clientes" />} />
-      <Route path="/contracts" element={<UnderDevelopment page="Contratos" />} />
-      <Route path="/reports" element={<UnderDevelopment page="Relatórios" />} />
-      <Route path="/team" element={<UnderDevelopment page="Minha Equipe" />} />
-      <Route path="/tactics" element={<UnderDevelopment page="Táticas" />} />
-      <Route path="/matches" element={<UnderDevelopment page="Partidas" />} />
-      <Route path="/analysis" element={<UnderDevelopment page="Análises" />} />
-      <Route path="/articles" element={<UnderDevelopment page="Artigos" />} />
-      <Route path="/interviews" element={<UnderDevelopment page="Entrevistas" />} />
-      <Route path="/events" element={<UnderDevelopment page="Eventos" />} />
-      <Route path="/contacts" element={<UnderDevelopment page="Contatos" />} />
-      <Route path="/teams" element={<UnderDevelopment page="Times Favoritos" />} />
-      <Route path="/communities" element={<UnderDevelopment page="Comunidades" />} />
-      <Route path="/post" element={<UnderDevelopment page="Novo Post" />} />
-      <Route path="/search" element={<UnderDevelopment page="Pesquisar" />} />
-      <Route path="/settings" element={<UnderDevelopment page="Configurações" />} />
+      <Route path="stats" element={<UnderDevelopment page="Estatísticas" />} />
+      <Route path="transfers" element={<UnderDevelopment page="Transferências" />} />
+      <Route path="training" element={<UnderDevelopment page="Treinamentos" />} />
+      <Route path="opportunities" element={<UnderDevelopment page="Oportunidades" />} />
+      <Route path="scouts" element={<UnderDevelopment page="Scout Reports" />} />
+      <Route path="scout-reports" element={<UnderDevelopment page="Scout Reports" />} />
+      <Route path="medical" element={<UnderDevelopment page="Histórico Médico" />} />
+      <Route path="medical-exams" element={<UnderDevelopment page="Exames Médicos" />} />
+      <Route path="finances" element={<UnderDevelopment page="Finanças" />} />
+      <Route path="staff" element={<UnderDevelopment page="Staff do Clube" />} />
+      <Route path="calendar" element={<UnderDevelopment page="Calendário" />} />
+      <Route path="jobs" element={<UnderDevelopment page="Vagas" />} />
+      <Route path="clients" element={<UnderDevelopment page="Meus Clientes" />} />
+      <Route path="contracts" element={<UnderDevelopment page="Contratos" />} />
+      <Route path="reports" element={<UnderDevelopment page="Relatórios" />} />
+      <Route path="team" element={<UnderDevelopment page="Minha Equipe" />} />
+      <Route path="tactics" element={<UnderDevelopment page="Táticas" />} />
+      <Route path="matches" element={<UnderDevelopment page="Partidas" />} />
+      <Route path="analysis" element={<UnderDevelopment page="Análises" />} />
+      <Route path="articles" element={<UnderDevelopment page="Artigos" />} />
+      <Route path="interviews" element={<UnderDevelopment page="Entrevistas" />} />
+      <Route path="events" element={<UnderDevelopment page="Eventos" />} />
+      <Route path="contacts" element={<UnderDevelopment page="Contatos" />} />
+      <Route path="teams" element={<UnderDevelopment page="Times Favoritos" />} />
+      <Route path="communities" element={<UnderDevelopment page="Comunidades" />} />
+      <Route path="post" element={<UnderDevelopment page="Novo Post" />} />
+      <Route path="search" element={<UnderDevelopment page="Pesquisar" />} />
+      <Route path="settings" element={<UnderDevelopment page="Configurações" />} />
       
       {/* Rota padrão para qualquer outra rota não encontrada no dashboard */}
       <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
