@@ -10,7 +10,7 @@ import { Building, Users, Trophy, TrendingUp, Calendar, Star, MapPin, Phone, Mai
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
+import { ClubDepartment, PermissionLevel, Tables } from "@/integrations/supabase/types"; // Import Tables
 import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard";
 import { format } from 'date-fns'; // Importado para formatar datas
 
@@ -35,15 +35,8 @@ interface ClubDetails {
   // Adicione outros campos do clube conforme necessário
 }
 
-interface Match {
-  id: string;
-  home_team_id: string;
-  away_team_id: string;
-  home_score: number | null;
-  away_score: number | null;
-  match_date: string;
-  competition: string;
-  // Joined data for club names
+// Atualizando a interface Match para estender Tables<'matches'>
+interface Match extends Tables<'matches'> {
   home_clubs: { name: string } | null;
   away_clubs: { name: string } | null;
 }
@@ -114,7 +107,7 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
         .limit(3); // Show next 3 matches
 
       if (error) throw error;
-      setUpcomingMatches(data as Match[] || []); // <-- Correção aplicada aqui
+      setUpcomingMatches(data || []);
     } catch (error) {
       console.error('Error fetching upcoming matches:', error);
       toast({
