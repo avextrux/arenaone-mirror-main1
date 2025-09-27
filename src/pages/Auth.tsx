@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ const authSchema = z.object({
   fullName: z.string().optional().refine((val) => !val || (val.trim().length >= 2 && val.length <= 100), {
     message: "Nome deve ter entre 2 e 100 caracteres"
   }),
+  // userType is now optional and will be set via invite or UserTypeSetup
   userType: z.string().optional() 
 });
 
@@ -26,40 +27,117 @@ const Auth = () => {
     email: "",
     password: "",
     fullName: "",
-    userType: "" 
+    userType: "" // This will not be directly set in signup form anymore
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
 
-  const { signUp, signIn, resendConfirmation, user } = useAuth(); 
+  const { signUp, signIn, resendConfirmation, user } = useAuth(); // Removed signInWithGoogle, signInWithLinkedIn
   const navigate = useNavigate();
 
+  // Redirect if already authenticated
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
     }
   }, [user, navigate]);
 
+  // User types for display purposes, not for direct selection during signup
+  const userTypes = [
+    {
+      value: "player",
+      label: "Jogador",
+      icon: User,
+      description: "Atleta profissional ou amador",
+      color: "bg-blue-50 border-blue-200 hover:bg-blue-100"
+    },
+    {
+      value: "club",
+      label: "Clube/Organização",
+      icon: Building,
+      description: "Representante de clube esportivo",
+      color: "bg-red-50 border-red-200 hover:bg-red-100"
+    },
+    {
+      value: "agent",
+      label: "Agente",
+      icon: Briefcase,
+      description: "Empresário de jogadores",
+      color: "bg-green-50 border-green-200 hover:bg-green-100"
+    },
+    {
+      value: "coach",
+      label: "Técnico",
+      icon: Target,
+      description: "Treinador ou preparador",
+      color: "bg-purple-50 border-purple-200 hover:bg-purple-100"
+    },
+    {
+      value: "scout",
+      label: "Olheiro",
+      icon: Trophy,
+      description: "Observador de talentos",
+      color: "bg-orange-50 border-orange-200 hover:bg-orange-100"
+    },
+    {
+      value: "medical_staff",
+      label: "Staff Médico",
+      icon: Stethoscope,
+      description: "Profissional de saúde esportiva",
+      color: "bg-teal-50 border-teal-200 hover:bg-teal-100"
+    },
+    {
+      value: "financial_staff",
+      label: "Staff Financeiro",
+      icon: Calculator,
+      description: "Profissional financeiro",
+      color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100"
+    },
+    {
+      value: "technical_staff",
+      label: "Staff Técnico",
+      icon: Activity,
+      description: "Analista ou preparador técnico",
+      color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100"
+    },
+    {
+      value: "journalist",
+      label: "Jornalista",
+      icon: PenTool,
+      description: "Profissional de mídia esportiva",
+      color: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
+    },
+    {
+      value: "fan",
+      label: "Torcedor",
+      icon: Heart,
+      description: "Fã do futebol",
+      color: "bg-pink-50 border-pink-200 hover:bg-pink-100"
+    }
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
-    setShowResendButton(false); // Reset resend button visibility
 
     try {
+      // Validate form data
       const validationData = isSignUp 
-        ? { ...formData, fullName: formData.fullName.trim() || undefined }
+        ? { ...formData, fullName: formData.fullName.trim() || undefined } // userType is not selected here
         : { email: formData.email, password: formData.password };
         
       authSchema.parse(validationData);
 
       let result;
       if (isSignUp) {
+        // userType is not passed during initial signup, it will be set in UserTypeSetup or via invite
         result = await signUp(formData.email.trim(), formData.password, formData.fullName.trim());
       } else {
         result = await signIn(formData.email.trim(), formData.password);
         
+        // Show resend button if email not confirmed error
         if (result.error && (
           result.error.message.includes("Email not confirmed") || 
           result.error.message.includes("email_not_confirmed")
@@ -88,6 +166,7 @@ const Auth = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
@@ -101,12 +180,14 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-primary/5 rounded-full blur-2xl"></div>
       </div>
 
+      {/* Back to home button */}
       <Button
         variant="ghost" 
         className="absolute top-8 left-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -237,13 +318,40 @@ const Auth = () => {
                       {loading ? "Reenviando..." : "Reenviar Email de Confirmação"}
                     </Button>
                   )}
-
-                  <div className="text-center mt-4">
-                    <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                      Esqueceu a senha?
-                    </Link>
-                  </div>
                 </form>
+
+                {/* Removed social login section */}
+                {/* <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Ou continue com
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithGoogle}
+                    disabled={loading}
+                  >
+                    <Chrome className="w-4 h-4" />
+                    Entrar com Google
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithLinkedIn}
+                    disabled={loading}
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    Entrar com LinkedIn
+                  </Button>
+                </div> */}
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-6">
@@ -319,6 +427,44 @@ const Auth = () => {
                     )}
                   </div>
 
+                  {/* Removed userType selection from signup form as it will be handled by invite or UserTypeSetup */}
+                  {/* <div className="space-y-3">
+                    <Label className="text-sm font-medium">Tipo de Perfil *</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {userTypes.map((type) => {
+                        const Icon = type.icon;
+                        return (
+                          <div
+                            key={type.value}
+                            className={`
+                              relative cursor-pointer rounded-lg border-2 p-4 transition-all duration-200
+                              ${formData.userType === type.value 
+                                ? 'border-primary bg-primary/5 shadow-md' 
+                                : `border-border ${type.color}`
+                              }
+                            `}
+                            onClick={() => handleInputChange("userType", type.value)}
+                          >
+                            <div className="flex flex-col items-center text-center space-y-2">
+                              <Icon className={`w-6 h-6 ${formData.userType === type.value ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <div>
+                                <p className={`text-sm font-medium ${formData.userType === type.value ? 'text-primary' : 'text-foreground'}`}>
+                                  {type.label}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {type.description}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {errors.userType && (
+                      <p className="text-sm text-destructive">{errors.userType}</p>
+                    )}
+                  </div> */}
+
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 font-semibold py-2.5"
@@ -334,15 +480,48 @@ const Auth = () => {
                     )}
                   </Button>
                 </form>
+
+                {/* Removed social login section */}
+                {/* <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Ou continue com
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithGoogle}
+                    disabled={loading}
+                  >
+                    <Chrome className="w-4 h-4" />
+                    Registrar com Google
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithLinkedIn}
+                    disabled={loading}
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    Registrar com LinkedIn
+                  </Button>
+                </div> */}
               </TabsContent>
             </Tabs>
 
             <div className="mt-6 text-center">
               <p className="text-xs text-muted-foreground">
                 Ao criar uma conta, você concorda com nossos{" "}
-                <Link to="/terms-of-service" className="text-primary hover:underline">Termos de Uso</Link>{" "}
+                <a href="#" className="text-primary hover:underline">Termos de Uso</a>{" "}
                 e{" "}
-                <Link to="/privacy-policy" className="text-primary hover:underline">Política de Privacidade</Link>
+                <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
               </p>
             </div>
           </CardContent>

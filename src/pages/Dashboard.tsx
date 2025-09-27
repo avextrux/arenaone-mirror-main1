@@ -12,7 +12,6 @@ import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardRouter from "@/components/dashboard/DashboardRouter";
 import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
-import { ThemeToggle } from "@/components/ThemeToggle"; // Import ThemeToggle
 import { LogOut, Bell, Settings, Search, Users, Building, TrendingUp, MessageSquare } from "lucide-react";
 
 interface Profile {
@@ -77,9 +76,12 @@ const Dashboard = () => {
 
       if (data) {
         setProfile(data);
+        // Se o usuário não tem tipo definido, mostrar setup
         if (!data.user_type) {
           setShowSetup(true);
-        } else if (['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach'].includes(data.user_type)) {
+        }
+        // Se é staff de clube mas não tem clube associado, mostrar setup de clube
+        else if (['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach'].includes(data.user_type)) {
           const { data: memberships } = await supabase
             .from('club_members')
             .select('*')
@@ -271,8 +273,6 @@ const Dashboard = () => {
                   </Button>
                 </div>
                 
-                <ThemeToggle /> {/* Add ThemeToggle here */}
-
                 <div className="flex items-center gap-2 md:gap-3">
                   <Avatar className="w-7 h-7 md:w-8 md:h-8 ring-2 ring-primary/20">
                     <AvatarImage src={profile.avatar_url} />

@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 const Footer = () => {
   return (
     <footer className="bg-primary-dark text-primary-foreground py-12 relative overflow-hidden">
@@ -48,12 +46,10 @@ const Footer = () => {
           <div className="animate-fade-in-up animate-stagger-2">
             <h3 className="font-semibold mb-4 hover:text-accent transition-colors">Empresa</h3>
             <ul className="space-y-2 text-sm opacity-80">
-              <li><Link to="/terms-of-service" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Termos de Serviço</Link></li>
-              <li><Link to="/privacy-policy" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Política de Privacidade</Link></li>
               <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Sobre</a></li>
               <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Carreiras</a></li>
               <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Imprensa</a></li>
-              <li><a href="#contato" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Contato</a></li>
+              <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Contato</a></li>
             </ul>
           </div>
         </div>
