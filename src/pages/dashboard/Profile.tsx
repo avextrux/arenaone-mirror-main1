@@ -45,7 +45,7 @@ const Profile = () => {
     bio: "",
     location: "",
     website: "",
-    user_type: "" as UserType | "",
+    user_type: "" as UserType | "", // <-- Aqui está a definição do tipo
     specialization: "", // NEW FIELD
     experience: "",     // NEW FIELD
     achievements: ""    // NEW FIELD
@@ -104,7 +104,7 @@ const Profile = () => {
           bio: formData.bio,
           location: formData.location,
           website: formData.website,
-          user_type: formData.userType as UserType, // Usando o tipo UserType
+          user_type: formData.user_type as UserType, // CORREÇÃO 1: userType -> user_type
           specialization: formData.specialization, // NEW FIELD
           experience: formData.experience,         // NEW FIELD
           achievements: formData.achievements      // NEW FIELD
@@ -278,7 +278,10 @@ const Profile = () => {
                 <div>
                   <Label htmlFor="user_type">Função</Label>
                   {editMode ? (
-                    <Select value={formData.userType} onValueChange={(value) => setFormData(prev => ({ ...prev, user_type: value }))}>
+                    <Select 
+                      value={formData.user_type} // CORREÇÃO 2: userType -> user_type
+                      onValueChange={(value: UserType) => setFormData(prev => ({ ...prev, user_type: value }))} // CORREÇÃO 3: Adicionado tipagem explícita para 'value'
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
