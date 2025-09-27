@@ -111,6 +111,99 @@ const Messages = () => {
     }
   }, [selectedConversationId, user]);
 
+  // Global subscription for new messages to update conversations list
+  useEffect(() => {
+    if (!user) return;
+
+    const messagesSubscription = supabase
+        .channel('global-messages-updates')
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'messages',
+            },
+            async (payload) => {
+                const newMessage = payload.new as Message;
+
+                // Check if this message belongs to a conversation the current user is part of
+                const { data: conversation, error: convError } = await supabase
+                    .from('conversations')
+                    .select('id, user1_id, user2_id')
+                    .eq('id', newMessage.conversation_id)
+                    .single();
+
+                if (convError) {
+                    console.error('Error fetching conversation for new message:', convError);
+                    return;
+                }
+
+                if (conversation && (conversation.user1_id === user.id || conversation.user2_id === user.id)) {
+                    // If it's the currently selected conversation, the other subscription handles the message display
+                    // But we still need to update the conversations list for last message content/time
+                    if (newMessage.conversation_id === selectedConversationId) {
+                        setConversations(prev => {
+                            const updatedConvs = prev.map(conv => {
+                                if (conv.id === newMessage.conversation_id) {
+                                    return {
+                                        ...conv,
+                                        last_message_content: newMessage.content,
+                                        last_message_at: newMessage.created_at,
+                                        // If it's from another user and not yet read, increment unread count
+                                        unread_count: newMessage.sender_id !== user.id && !newMessage.read ? (conv.unread_count || 0) + 1 : conv.unread_count
+                                    };
+                                }
+                                return conv;
+                            });
+                            // Sort to bring the updated conversation to the top
+                            return updatedConvs.sort((a, b) => 
+                                new Date(b.last_message_at || b.created_at).getTime() - 
+                                new Date(a.last_message_at || a.created_at).getTime()
+                            );
+                        });
+                    } else {
+                        // For non-selected conversations, update the list item
+                        setConversations(prev => {
+                            const existingConvIndex = prev.findIndex(c => c.id === newMessage.conversation_id);
+                            let updatedConvs = [...prev];
+                            let updatedConvItem: Conversation;
+
+                            if (existingConvIndex > -1) {
+                                // Update existing conversation
+                                updatedConvItem = {
+                                    ...prev[existingConvIndex],
+                                    last_message_content: newMessage.content,
+                                    last_message_at: newMessage.created_at,
+                                    unread_count: newMessage.sender_id !== user.id && !newMessage.read ? (prev[existingConvIndex].unread_count || 0) + 1 : prev[existingConvIndex].unread_count
+                                };
+                                updatedConvs.splice(existingConvIndex, 1); // Remove old item
+                            } else {
+                                // This case should ideally not happen if fetchConversations is robust,
+                                // but as a fallback, fetch the full conversation details
+                                console.warn("New message for a conversation not in current list. Re-fetching all conversations.");
+                                fetchConversations(); // Re-fetch all to ensure consistency
+                                return prev; // Return previous state to avoid flickering while re-fetching
+                            }
+
+                            // Add the updated conversation to the top and sort
+                            return [updatedConvItem, ...updatedConvs].sort((a, b) => 
+                                new Date(b.last_message_at || b.created_at).getTime() - 
+                                new Date(a.last_message_at || a.created_at).getTime()
+                            );
+                        });
+                    }
+                }
+            }
+        )
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(messagesSubscription);
+    };
+}, [user, selectedConversationId]); // Depend on selectedConversationId to correctly handle unread counts
+
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
