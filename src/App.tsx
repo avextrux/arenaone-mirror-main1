@@ -9,7 +9,9 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
-import SupabaseTest from "@/components/SupabaseTest"; // Import the test component
+import SupabaseTest from "@/components/SupabaseTest";
+import PrivacyPolicy from "./pages/PrivacyPolicy"; // Import new page
+import TermsOfService from "./pages/TermsOfService"; // Import new page
 
 const queryClient = new QueryClient();
 
@@ -23,6 +25,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* New route */}
+            <Route path="/terms-of-service" element={<TermsOfService />} /> {/* New route */}
             <Route 
               path="/dashboard" 
               element={
@@ -76,7 +80,7 @@ const App = () => (
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </BrowserRouter>
-        <SupabaseTest /> {/* Add the test component here */}
+        <SupabaseTest />
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

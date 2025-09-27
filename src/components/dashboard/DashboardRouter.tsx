@@ -6,28 +6,27 @@ import Messages from "@/pages/dashboard/Messages";
 import Profile from "@/pages/dashboard/Profile";
 import ClubManagement from "@/pages/dashboard/ClubManagement";
 import ClubPlayers from "@/pages/dashboard/ClubPlayers";
-import Notifications from "@/pages/dashboard/Notifications"; // Import the new Notifications component
+import Notifications from "@/pages/dashboard/Notifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Construction } from "lucide-react";
 
 const DashboardRouter = () => {
   const location = useLocation();
-  const currentPath = location.pathname;
-
-  // Se estiver na rota principal do dashboard, mostrar o Feed
-  if (currentPath === "/dashboard") {
-    return <Feed />;
-  }
+  // const currentPath = location.pathname; // No longer needed for special Feed handling
 
   return (
     <Routes>
-      <Route path="/network" element={<Network />} />
+      {/* Marked as Under Development */}
+      <Route path="/" element={<UnderDevelopment page="Feed" />} /> {/* Feed is now under development */}
+      <Route path="/network" element={<UnderDevelopment page="Rede" />} /> {/* Network is now under development */}
+      
+      {/* Existing functional routes */}
       <Route path="/market" element={<Market />} />
       <Route path="/messages" element={<Messages />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/club" element={<ClubManagement />} />
       <Route path="/players" element={<ClubPlayers />} />
-      <Route path="/notifications" element={<Notifications />} /> {/* New route for Notifications */}
+      <Route path="/notifications" element={<Notifications />} />
       
       {/* Páginas em desenvolvimento */}
       <Route path="/stats" element={<UnderDevelopment page="Estatísticas" />} />
@@ -59,8 +58,8 @@ const DashboardRouter = () => {
       <Route path="/search" element={<UnderDevelopment page="Pesquisar" />} />
       <Route path="/settings" element={<UnderDevelopment page="Configurações" />} />
       
-      {/* Rota padrão - Feed */}
-      <Route path="*" element={<Feed />} />
+      {/* Rota padrão para qualquer outra rota não encontrada no dashboard */}
+      <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
     </Routes>
   );
 };

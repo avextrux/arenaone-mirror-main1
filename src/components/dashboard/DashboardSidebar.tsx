@@ -65,10 +65,10 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
   // Menu items baseado no tipo de usuário
   const getMenuItems = () => {
     const baseItems = [
-      { title: "Feed", url: "/dashboard", icon: Home },
-      { title: "Rede", url: "/dashboard/network", icon: Network },
+      { title: "Feed", url: "/dashboard", icon: Home, disabled: true }, // Marked as disabled
+      { title: "Rede", url: "/dashboard/network", icon: Network, disabled: true }, // Marked as disabled
       { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare },
-      { title: "Notificações", url: "/dashboard/notifications", icon: Bell }, // Added Notifications
+      { title: "Notificações", url: "/dashboard/notifications", icon: Bell },
     ];
 
     const userSpecificItems = {
@@ -176,11 +176,17 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
                     <NavLink 
                       to={item.url} 
                       className={({ isActive }) => 
-                        `flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 ${getNavCls({ isActive })}`
+                        `flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 ${getNavCls({ isActive })} ${item.disabled ? 'opacity-50 cursor-not-allowed' : ''}`
                       }
+                      aria-disabled={item.disabled}
+                      tabIndex={item.disabled ? -1 : undefined}
+                      onClick={(e) => item.disabled && e.preventDefault()}
                     >
                       <item.icon className={`h-4 w-4 ${!collapsed ? 'mr-3' : ''}`} />
                       {!collapsed && <span className="font-medium">{item.title}</span>}
+                      {item.disabled && !collapsed && (
+                        <Badge variant="outline" className="ml-auto text-xs">Em Breve</Badge>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -49,7 +49,8 @@ const Footer = () => {
               <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Sobre</a></li>
               <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Carreiras</a></li>
               <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Imprensa</a></li>
-              <li><a href="#" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Contato</a></li>
+              <li><a href="/privacy-policy" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Política de Privacidade</a></li> {/* Updated link */}
+              <li><a href="/terms-of-service" className="hover:text-accent transition-all duration-300 hover:translate-x-2 block py-1">Termos de Serviço</a></li> {/* Updated link */}
             </ul>
           </div>
         </div>

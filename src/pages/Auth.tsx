@@ -255,7 +255,9 @@ const Auth = () => {
                       />
                     </div>
                     {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
+                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                        <span className="text-lg leading-none">›</span> {errors.email}
+                      </p>
                     )}
                   </div>
 
@@ -288,7 +290,9 @@ const Auth = () => {
                       </Button>
                     </div>
                     {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
+                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                        <span className="text-lg leading-none">›</span> {errors.password}
+                      </p>
                     )}
                   </div>
 
@@ -371,7 +375,9 @@ const Auth = () => {
                       />
                     </div>
                     {errors.fullName && (
-                      <p className="text-sm text-destructive">{errors.fullName}</p>
+                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                        <span className="text-lg leading-none">›</span> {errors.fullName}
+                      </p>
                     )}
                   </div>
 
@@ -390,7 +396,9 @@ const Auth = () => {
                       />
                     </div>
                     {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email}</p>
+                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                        <span className="text-lg leading-none">›</span> {errors.email}
+                      </p>
                     )}
                   </div>
 
@@ -423,7 +431,9 @@ const Auth = () => {
                       </Button>
                     </div>
                     {errors.password && (
-                      <p className="text-sm text-destructive">{errors.password}</p>
+                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                        <span className="text-lg leading-none">›</span> {errors.password}
+                      </p>
                     )}
                   </div>
 
@@ -519,9 +529,9 @@ const Auth = () => {
             <div className="mt-6 text-center">
               <p className="text-xs text-muted-foreground">
                 Ao criar uma conta, você concorda com nossos{" "}
-                <a href="#" className="text-primary hover:underline">Termos de Uso</a>{" "}
+                <a href="/terms-of-service" className="text-primary hover:underline">Termos de Uso</a>{" "}
                 e{" "}
-                <a href="#" className="text-primary hover:underline">Política de Privacidade</a>
+                <a href="/privacy-policy" className="text-primary hover:underline">Política de Privacidade</a>
               </p>
             </div>
           </CardContent>
