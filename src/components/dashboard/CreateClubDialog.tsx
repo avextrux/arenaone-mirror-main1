@@ -179,6 +179,7 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
         onClubCreated(newClub, { // Create a dummy membership for state update
           id: uuidv4(), // Generate a temporary ID
           club_id: newClub.id,
+          user_id: user.id, // Adicionado user_id aqui
           department: 'management',
           permission_level: 'admin',
           status: 'accepted',
