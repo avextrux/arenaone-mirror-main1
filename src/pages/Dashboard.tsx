@@ -28,6 +28,9 @@ export interface Profile {
   followers_count: number;
   following_count: number;
   posts_count: number;
+  specialization?: string;
+  experience?: string;
+  achievements?: string;
 }
 
 export interface ClubMembership {
@@ -45,13 +48,17 @@ export interface ClubMembership {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const { loading, onboardingStep, profile, clubMemberships, refetchStatus } = useOnboardingStatus();
+  const { loading, onboardingStep, profile, clubMemberships, unreadNotificationCount, refetchStatus } = useOnboardingStatus();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+
+  const handleNotificationsClick = () => {
+    navigate('/dashboard/notifications');
   };
 
   if (loading) {
@@ -65,7 +72,6 @@ const Dashboard = () => {
     );
   }
 
-  // Se o onboarding não estiver completo, renderiza o OnboardingFlow
   if (onboardingStep !== "complete") {
     return (
       <OnboardingFlow 
@@ -77,11 +83,7 @@ const Dashboard = () => {
     );
   }
 
-  // Se chegamos aqui, onboardingStep é "complete".
-  // Neste ponto, profile e profile.user_type devem ser válidos.
   if (!profile || !profile.user_type) {
-    // Isso deve ser um caso raro, pois o useOnboardingStatus deveria garantir que o perfil está completo
-    // antes de definir o passo como "complete".
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -119,9 +121,18 @@ const Dashboard = () => {
                   <Button variant="ghost" size="sm" className="hover:bg-primary/10">
                     <Search className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="hover:bg-primary/10 relative">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="hover:bg-primary/10 relative"
+                    onClick={handleNotificationsClick}
+                  >
                     <Bell className="w-4 h-4" />
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    {unreadNotificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-red-500 text-white text-xs rounded-full">
+                        {unreadNotificationCount}
+                      </span>
+                    )}
                   </Button>
                   <Button variant="ghost" size="sm" className="hover:bg-primary/10">
                     <Settings className="w-4 h-4" />

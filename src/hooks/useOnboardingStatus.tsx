@@ -11,6 +11,7 @@ interface UseOnboardingStatusResult {
   onboardingStep: OnboardingStep;
   profile: Profile | null;
   clubMemberships: ClubMembership[];
+  unreadNotificationCount: number; // Adicionado: contagem de notificações não lidas
   refetchStatus: () => Promise<void>;
 }
 
@@ -22,6 +23,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0); // Novo estado
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("complete");
 
   const fetchProfile = useCallback(async () => {
@@ -54,22 +56,35 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     return data || [];
   }, [user]);
 
+  const fetchUnreadNotificationCount = useCallback(async () => {
+    if (!user) return 0;
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false);
+    
+    if (error) {
+      console.error('Error fetching unread notification count:', error);
+      return 0;
+    }
+    setUnreadNotificationCount(count || 0);
+    return count || 0;
+  }, [user]);
+
   const checkOnboardingStatus = useCallback(async () => {
     setLoading(true);
     const currentProfile = await fetchProfile();
     const currentMemberships = await fetchClubMemberships();
+    await fetchUnreadNotificationCount(); // Buscar contagem de notificações
 
     if (!currentProfile) {
       setLoading(false);
-      // This case should ideally be handled by ProtectedRoute, but as a fallback
-      // if user is null here, it means they are not authenticated or session expired.
-      // ProtectedRoute will redirect to /auth.
       return;
     }
 
     let nextStep: OnboardingStep = "complete";
 
-    // Se o user_type já foi definido no registro, pulamos a etapa userTypeSetup
     if (!currentProfile.user_type) {
       nextStep = "userTypeSetup";
     } else {
@@ -90,7 +105,6 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     setOnboardingStep(nextStep);
     setLoading(false);
 
-    // Handle redirects if onboarding is complete and on base dashboard path
     if (nextStep === "complete" && location.pathname === '/dashboard') {
       if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
         navigate('/dashboard/club', { replace: true });
@@ -100,19 +114,19 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
         navigate('/dashboard/market', { replace: true });
       } else if (currentProfile.user_type === 'journalist') {
         navigate('/dashboard/notifications', { replace: true });
-      } else { // Fallback para qualquer outro tipo de usuário que não tenha um redirecionamento específico
+      } else {
         navigate('/dashboard/profile', { replace: true });
       }
     }
-  }, [user, navigate, location.pathname]);
+  }, [user, navigate, location.pathname, fetchProfile, fetchClubMemberships, fetchUnreadNotificationCount]);
 
   useEffect(() => {
     if (user) {
       checkOnboardingStatus();
     } else {
-      setLoading(false); // If no user, ProtectedRoute will handle redirect
+      setLoading(false);
     }
   }, [user, checkOnboardingStatus]);
 
-  return { loading, onboardingStep, profile, clubMemberships, refetchStatus: checkOnboardingStatus };
+  return { loading, onboardingStep, profile, clubMemberships, unreadNotificationCount, refetchStatus: checkOnboardingStatus };
 };

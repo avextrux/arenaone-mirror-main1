@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus"; // Import useOnboardingStatus
 
 interface Notification {
   id: string;
@@ -22,6 +23,7 @@ interface Notification {
 const Notifications = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { refetchStatus } = useOnboardingStatus(); // Use refetchStatus from the hook
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,6 +48,7 @@ const Notifications = () => {
               title: newNotification.title,
               description: newNotification.description,
             });
+            refetchStatus(); // Re-fetch status to update unread count
           }
         )
         .subscribe();
@@ -56,7 +59,7 @@ const Notifications = () => {
     } else {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, refetchStatus]);
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -99,6 +102,7 @@ const Notifications = () => {
         title: "Notificação marcada como lida",
         description: "Esta notificação não aparecerá mais como não lida.",
       });
+      refetchStatus(); // Re-fetch status to update unread count
     } catch (error) {
       console.error('Error marking notification as read:', error);
       toast({ title: "Erro", description: "Não foi possível marcar como lida.", variant: "destructive" });
@@ -106,6 +110,7 @@ const Notifications = () => {
   };
 
   const archiveNotification = async (id: string) => {
+    const notificationToArchive = notifications.find(notif => notif.id === id);
     setNotifications(prev => prev.filter(notif => notif.id !== id));
     try {
       const { error } = await supabase
@@ -117,6 +122,9 @@ const Notifications = () => {
         title: "Notificação arquivada",
         description: "A notificação foi removida da sua lista.",
       });
+      if (notificationToArchive && !notificationToArchive.read) {
+        refetchStatus(); // Re-fetch status if an unread notification was archived
+      }
     } catch (error) {
       console.error('Error archiving notification:', error);
       toast({ title: "Erro", description: "Não foi possível arquivar a notificação.", variant: "destructive" });
@@ -137,6 +145,7 @@ const Notifications = () => {
         title: "Todas as notificações marcadas como lidas",
         description: "Sua caixa de entrada está limpa!",
       });
+      refetchStatus(); // Re-fetch status to update unread count
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       toast({ title: "Erro", description: "Não foi possível marcar todas como lidas.", variant: "destructive" });
