@@ -6,12 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Building, Users, Trophy, TrendingUp, Calendar, Star, MapPin, Phone, Mail, Globe, Edit, Plus, BarChart3 } from "lucide-react";
+import { Building, Users, Trophy, TrendingUp, Calendar, Star, MapPin, Phone, Mail, Globe, Edit, Plus, BarChart3, Construction } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
-import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard"; // Import ClubMembership from Dashboard
+import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
+import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard";
+import { format } from 'date-fns'; // Importado para formatar datas
 
 interface Player {
   id: string;
@@ -34,8 +35,21 @@ interface ClubDetails {
   // Adicione outros campos do clube conforme necessário
 }
 
+interface Match {
+  id: string;
+  home_team_id: string;
+  away_team_id: string;
+  home_score: number | null;
+  away_score: number | null;
+  match_date: string;
+  competition: string;
+  // Joined data for club names
+  home_clubs: { name: string } | null;
+  away_clubs: { name: string } | null;
+}
+
 interface ClubManagementProps {
-  clubMemberships: DashboardClubMembership[]; // Use the imported type
+  clubMemberships: DashboardClubMembership[];
 }
 
 const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
@@ -44,6 +58,7 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [clubInfo, setClubInfo] = useState<ClubDetails | null>(null);
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]); // Novo estado para próximos jogos
 
   const fetchClubDetails = useCallback(async (clubId: string) => {
     try {
@@ -84,20 +99,48 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
     }
   }, []);
 
+  const fetchUpcomingMatches = useCallback(async (clubId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select(`
+          *,
+          home_clubs:home_team_id (name),
+          away_clubs:away_team_id (name)
+        `)
+        .or(`home_team_id.eq.${clubId},away_team_id.eq.${clubId}`)
+        .gte('match_date', format(new Date(), 'yyyy-MM-dd')) // Only future matches
+        .order('match_date', { ascending: true })
+        .limit(3); // Show next 3 matches
+
+      if (error) throw error;
+      setUpcomingMatches(data || []);
+    } catch (error) {
+      console.error('Error fetching upcoming matches:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os próximos jogos.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       if (clubMemberships.length > 0) {
-        const primaryClubId = clubMemberships[0].club_id; // Assume o primeiro clube como o principal
+        const primaryClubId = clubMemberships[0].club_id;
         await fetchClubDetails(primaryClubId);
         await fetchPlayers(primaryClubId);
+        await fetchUpcomingMatches(primaryClubId); // Fetch matches
       } else {
-        setClubInfo(null); // Nenhuma afiliação de clube encontrada
+        setClubInfo(null);
+        setUpcomingMatches([]); // Clear matches if no club
       }
       setLoading(false);
     };
     loadData();
-  }, [clubMemberships, fetchClubDetails, fetchPlayers]); // Depend on clubMemberships prop
+  }, [clubMemberships, fetchClubDetails, fetchPlayers, fetchUpcomingMatches]);
 
   const calculateAge = (birthDate: string) => {
     const today = new Date();
@@ -289,28 +332,13 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
                   Performance da Temporada
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Vitórias</span>
-                    <span>18/30 (60%)</span>
-                  </div>
-                  <Progress value={60} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Empates</span>
-                    <span>8/30 (27%)</span>
-                  </div>
-                  <Progress value={27} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Derrotas</span>
-                    <span>4/30 (13%)</span>
-                  </div>
-                  <Progress value={13} className="h-2" />
-                </div>
+              <CardContent className="space-y-4 text-center py-8">
+                <Construction className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Dados de performance da temporada em desenvolvimento.
+                  <br />
+                  Serão integrados de resultados de partidas e análises.
+                </p>
               </CardContent>
             </Card>
 
@@ -322,27 +350,27 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">vs Barcelona FC</p>
-                    <p className="text-xs text-muted-foreground">Camp Nou • 15:00</p>
+                {upcomingMatches.length > 0 ? (
+                  upcomingMatches.map((match) => (
+                    <div key={match.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">
+                          {match.home_clubs?.name} vs {match.away_clubs?.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {match.competition} • {format(new Date(match.match_date), 'dd/MM/yyyy')}
+                        </p>
+                      </div>
+                      <Badge variant="outline">
+                        {format(new Date(match.match_date), 'EEE dd/MM')}
+                      </Badge>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    Nenhum jogo futuro encontrado.
                   </div>
-                  <Badge variant="outline">Dom 29/09</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">Real Madrid</p>
-                    <p className="text-xs text-muted-foreground">Casa • 20:00</p>
-                  </div>
-                  <Badge variant="outline">Qua 02/10</Badge>
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="font-medium">vs Atletico Madrid</p>
-                    <p className="text-xs text-muted-foreground">Fora • 16:30</p>
-                  </div>
-                  <Badge variant="outline">Sab 05/10</Badge>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
