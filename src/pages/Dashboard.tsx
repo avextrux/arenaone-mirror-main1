@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardRouter from "@/components/dashboard/DashboardRouter";
+import DashboardRouter from "@/components/dashboard/DashboardRouter"; // Importação corrigida
 import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
 import CreateClubDialog from "@/components/dashboard/CreateClubDialog";

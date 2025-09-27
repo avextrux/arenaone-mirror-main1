@@ -17,18 +17,7 @@ import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { getUserTypeColor, getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils";
 import { UserType } from "@/integrations/supabase/types";
 import { useDashboardNavigation } from "@/hooks/useDashboardNavigation"; // Importando o novo hook
-
-interface ClubMembership {
-  id: string;
-  club_id: string;
-  department: string;
-  permission_level: string;
-  status: string;
-  clubs: {
-    name: string;
-    logo_url?: string;
-  };
-}
+import { ClubMembership } from "@/pages/Dashboard"; // Importando ClubMembership de Dashboard
 
 interface DashboardSidebarProps {
   userType: UserType;

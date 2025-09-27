@@ -92,9 +92,6 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
         { value: "match_result", label: "Análise da Partida" }
       ],
       journalist: [],
-      referee: [
-        { value: "match_result", label: "Relatório da Partida" }
-      ],
       medical_staff: [],
       financial_staff: [],
       technical_staff: [],

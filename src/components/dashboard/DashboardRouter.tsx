@@ -132,7 +132,7 @@ const UnderDevelopment = ({ page }: { page: string }) => (
         </p>
       </CardContent>
     </Card>
-  );
-};
+  </div>
+);
 
 export default DashboardRouter;
