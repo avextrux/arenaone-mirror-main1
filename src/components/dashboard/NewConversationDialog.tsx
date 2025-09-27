@@ -168,8 +168,8 @@ const NewConversationDialog = ({ onConversationStarted }: NewConversationDialogP
                     </Avatar>
                     <div>
                       <p className="font-semibold text-sm">{profile.full_name}</p>
-                      <Badge className={`text-xs mt-1 ${getUserTypeColor(profile.user_type)}`}>
-                        {getUserTypeLabel(profile.user_type)}
+                      <Badge className={`text-xs mt-1 ${getUserTypeColor(profile.user_type || null)}`}>
+                        {getUserTypeLabel(profile.user_type || null)}
                       </Badge>
                     </div>
                   </div>

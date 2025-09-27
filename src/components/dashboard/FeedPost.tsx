@@ -98,8 +98,8 @@ const FeedPost = ({
                 {author.verified && (
                   <Verified className="w-4 h-4 text-blue-500 fill-blue-500" />
                 )}
-                <Badge variant="secondary" className={`text-xs ${getUserTypeColor(author.userType)}`}>
-                  {getUserTypeLabel(author.userType)}
+                <Badge variant="secondary" className={`text-xs ${getUserTypeColor(author.userType || null)}`}>
+                  {getUserTypeLabel(author.userType || null)}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">

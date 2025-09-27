@@ -464,8 +464,8 @@ const Messages = () => {
                               </Badge>
                             )}
                           </div>
-                          <Badge className={`text-xs mt-1 ${getUserTypeColor(conversation.other_user_profile?.user_type || 'fan')}`}>
-                            {getUserTypeLabel(conversation.other_user_profile?.user_type || 'fan')}
+                          <Badge className={`text-xs mt-1 ${getUserTypeColor(conversation.other_user_profile?.user_type || null)}`}>
+                            {getUserTypeLabel(conversation.other_user_profile?.user_type || null)}
                           </Badge>
                         </div>
                       </div>
@@ -503,8 +503,8 @@ const Messages = () => {
                       <h3 className="font-semibold">
                         {selectedConversation.other_user_profile?.full_name}
                       </h3>
-                      <Badge className={`text-xs ${getUserTypeColor(selectedConversation.other_user_profile?.user_type || 'fan')}`}>
-                        {getUserTypeLabel(selectedConversation.other_user_profile?.user_type || 'fan')}
+                      <Badge className={`text-xs ${getUserTypeColor(selectedConversation.other_user_profile?.user_type || null)}`}>
+                        {getUserTypeLabel(selectedConversation.other_user_profile?.user_type || null)}
                       </Badge>
                     </div>
                   </CardHeader>
