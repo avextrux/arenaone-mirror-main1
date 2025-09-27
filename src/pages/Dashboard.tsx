@@ -56,7 +56,7 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   const fetchProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -77,7 +77,7 @@ const Dashboard = () => {
   }, [user]);
 
   const fetchClubMemberships = useCallback(async () => {
-    if (!user) return;
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('club_members')
@@ -103,10 +103,10 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const checkOnboardingStatus = useCallback(async () => {
+  const checkOnboardingStatus = useCallback(async (latestProfile?: Profile | null, latestMemberships?: ClubMembership[] | null) => {
     setLoading(true);
-    const currentProfile = await fetchProfile();
-    const currentMemberships = await fetchClubMemberships();
+    const currentProfile = latestProfile !== undefined ? latestProfile : await fetchProfile();
+    const currentMemberships = latestMemberships !== undefined ? latestMemberships : await fetchClubMemberships();
 
     if (!currentProfile) {
       setLoading(false);
@@ -197,7 +197,10 @@ const Dashboard = () => {
         title: "Perfil configurado!",
         description: "Seu perfil foi configurado com sucesso.",
       });
-      checkOnboardingStatus(); // Re-check status to proceed to next step if any
+      // Update local profile state immediately
+      const updatedProfile = profile ? { ...profile, user_type: userType as UserType } : null;
+      setProfile(updatedProfile);
+      checkOnboardingStatus(updatedProfile, clubMemberships); // Pass updated profile
     } catch (error) {
       console.error('Error in handleUserTypeSetup:', error);
     }
@@ -211,16 +214,21 @@ const Dashboard = () => {
     checkOnboardingStatus(); // Re-check status
   };
 
-  const handleClubCreated = async (newClub: any, newMembership: ClubMembership) => { // Updated signature
+  const handleClubCreated = async (newClub: any, newMembership: ClubMembership) => {
     toast({
       title: "Clube criado!",
       description: "Seu perfil de clube foi criado com sucesso.",
     });
-    // Directly update clubMemberships state to reflect the new membership immediately
-    setClubMemberships(prev => [...prev, newMembership]);
-    // Also update the profile's user_type if it was just set to 'club'
-    setProfile(prev => prev ? { ...prev, user_type: 'club' } : null);
-    checkOnboardingStatus(); // Re-check status, now with the new membership in state
+    
+    // Update local state directly
+    const updatedMemberships = [...clubMemberships, newMembership];
+    setClubMemberships(updatedMemberships);
+    
+    const updatedProfile = profile ? { ...profile, user_type: 'club' as UserType } : null;
+    setProfile(updatedProfile);
+
+    // Pass updated state to checkOnboardingStatus
+    checkOnboardingStatus(updatedProfile, updatedMemberships); 
   };
 
   const handleSignOut = async () => {
