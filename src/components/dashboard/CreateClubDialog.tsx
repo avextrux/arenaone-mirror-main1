@@ -64,11 +64,20 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
   };
 
   const uploadLogo = async (file: File) => {
-    if (!user) throw new Error("Usuário não autenticado.");
+    if (!user) {
+      toast({
+        title: "Erro de Autenticação",
+        description: "Você precisa estar logado para fazer upload de arquivos.",
+        variant: "destructive",
+      });
+      throw new Error("Usuário não autenticado.");
+    }
 
     const fileExtension = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExtension}`;
     const filePath = `club_logos/${user.id}/${fileName}`; // Store under user's ID
+
+    console.log("Attempting to upload file:", filePath);
 
     const { data, error } = await supabase.storage
       .from('club-logos') // Ensure you have a bucket named 'club-logos' in Supabase
@@ -78,14 +87,33 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
       });
 
     if (error) {
+      console.error("Supabase Storage Upload Error:", error);
+      toast({
+        title: "Erro no Upload da Logo",
+        description: `Não foi possível fazer upload da logo: ${error.message}. Verifique as políticas de RLS do seu bucket 'club-logos'.`,
+        variant: "destructive",
+      });
       throw new Error(`Erro ao fazer upload da logo: ${error.message}`);
     }
+
+    console.log("Upload successful, data:", data);
 
     // Get public URL
     const { data: publicUrlData } = supabase.storage
       .from('club-logos')
       .getPublicUrl(filePath);
 
+    if (!publicUrlData.publicUrl) {
+      console.error("Supabase Public URL Error: No public URL returned.");
+      toast({
+        title: "Erro ao obter URL",
+        description: "O upload foi feito, mas não foi possível obter a URL pública da logo.",
+        variant: "destructive",
+      });
+      throw new Error("Não foi possível obter a URL pública da logo.");
+    }
+
+    console.log("Public URL obtained:", publicUrlData.publicUrl);
     return publicUrlData.publicUrl;
   };
 
