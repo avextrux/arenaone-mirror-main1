@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Building, Users, Trophy, TrendingUp, Calendar, Star, MapPin, Phone, Mail, Globe, Edit, Plus, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
 
 interface Player {
   id: string;
@@ -20,30 +22,89 @@ interface Player {
   market_value: number;
 }
 
+interface ClubMembership {
+  club_id: string;
+  department: ClubDepartment;
+  permission_level: PermissionLevel;
+  clubs: {
+    name: string;
+    logo_url?: string;
+  };
+}
+
+interface ClubDetails {
+  id: string;
+  name: string;
+  founded_year: number;
+  stadium: string;
+  league: string;
+  country: string;
+  logo_url?: string;
+  // Adicione outros campos do clube conforme necessário
+}
+
 const ClubManagement = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-  const [clubInfo, setClubInfo] = useState({
-    name: "Meu Clube FC",
-    founded: 1950,
-    stadium: "Estádio Principal",
-    league: "Primeira Divisão",
-    country: "Brasil",
-    website: "www.meuclube.com",
-    phone: "+55 11 9999-9999",
-    email: "contato@meuclube.com"
-  });
+  const [clubInfo, setClubInfo] = useState<ClubDetails | null>(null); // Alterado para null e tipo ClubDetails
+  const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
 
-  useEffect(() => {
-    fetchPlayers();
-  }, []);
+  const fetchClubMemberships = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('club_members')
+        .select(`
+          club_id,
+          department,
+          permission_level,
+          clubs (name, logo_url)
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'accepted');
 
-  const fetchPlayers = async () => {
+      if (error) throw error;
+      setClubMemberships(data || []);
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching club memberships:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar suas afiliações de clube.",
+        variant: "destructive",
+      });
+      return [];
+    }
+  }, [user, toast]);
+
+  const fetchClubDetails = useCallback(async (clubId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('clubs')
+        .select('*')
+        .eq('id', clubId)
+        .single();
+
+      if (error) throw error;
+      setClubInfo(data as ClubDetails);
+    } catch (error) {
+      console.error('Error fetching club details:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os detalhes do clube.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  const fetchPlayers = useCallback(async (clubId: string) => {
     try {
       const { data, error } = await supabase
         .from('players')
         .select('*')
+        .eq('current_club_id', clubId)
         .limit(20);
 
       if (error) {
@@ -54,10 +115,24 @@ const ClubManagement = () => {
       setPlayers(data || []);
     } catch (error) {
       console.error('Error fetching players:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      const memberships = await fetchClubMemberships();
+      if (memberships.length > 0) {
+        const primaryClubId = memberships[0].club_id; // Assume o primeiro clube como o principal
+        await fetchClubDetails(primaryClubId);
+        await fetchPlayers(primaryClubId);
+      } else {
+        setClubInfo(null); // Nenhuma afiliação de clube encontrada
+      }
+      setLoading(false);
+    };
+    loadData();
+  }, [fetchClubMemberships, fetchClubDetails, fetchPlayers]);
 
   const calculateAge = (birthDate: string) => {
     const today = new Date();
@@ -102,6 +177,21 @@ const ClubManagement = () => {
     );
   }
 
+  if (!clubInfo) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <Building className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-semibold text-lg mb-2">Nenhum clube encontrado</h3>
+          <p className="text-muted-foreground mb-4">
+            Você precisa estar vinculado a um clube para gerenciar suas informações.
+          </p>
+          {/* Poderíamos adicionar um botão para criar/solicitar acesso aqui, se necessário */}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -143,12 +233,16 @@ const ClubManagement = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center gap-6">
-                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Building className="w-12 h-12 text-primary" />
+                  <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
+                    {clubInfo.logo_url ? (
+                      <img src={clubInfo.logo_url} alt={`${clubInfo.name} Logo`} className="w-full h-full object-contain p-2" />
+                    ) : (
+                      <Building className="w-12 h-12 text-primary" />
+                    )}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">{clubInfo.name}</h2>
-                    <p className="text-muted-foreground">Fundado em {clubInfo.founded}</p>
+                    <p className="text-muted-foreground">Fundado em {clubInfo.founded_year}</p>
                     <Badge className="mt-2">{clubInfo.league}</Badge>
                   </div>
                 </div>
@@ -158,30 +252,29 @@ const ClubManagement = () => {
                     <div className="flex items-center gap-2 text-sm">
                       <Trophy className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Estádio:</span>
-                      <span className="font-medium">{clubInfo.stadium}</span>
+                      <span className="font-medium">{clubInfo.stadium || 'Não informado'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">País:</span>
                       <span className="font-medium">{clubInfo.country}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
+                    {/* Adicionar website, phone, email se existirem na tabela clubs */}
+                    {/* <div className="flex items-center gap-2 text-sm">
                       <Globe className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Website:</span>
-                      <span className="font-medium text-primary">{clubInfo.website}</span>
+                      <span className="font-medium text-primary">{clubInfo.website || 'Não informado'}</span>
                     </div>
-                  </div>
-                  <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Telefone:</span>
-                      <span className="font-medium">{clubInfo.phone}</span>
+                      <span className="font-medium">{clubInfo.phone || 'Não informado'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Mail className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Email:</span>
-                      <span className="font-medium">{clubInfo.email}</span>
-                    </div>
+                      <span className="font-medium">{clubInfo.email || 'Não informado'}</span>
+                    </div> */}
                   </div>
                 </div>
               </CardContent>
@@ -197,19 +290,25 @@ const ClubManagement = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-primary">28</p>
+                  <p className="text-2xl font-bold text-primary">{players.length}</p>
                   <p className="text-xs text-muted-foreground">Jogadores no Elenco</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-green-600">€45M</p>
+                  <p className="text-2xl font-bold text-green-600">€{
+                    (players.reduce((sum, player) => sum + (player.market_value || 0), 0) / 1_000_000).toFixed(1)
+                  }M</p>
                   <p className="text-xs text-muted-foreground">Valor do Elenco</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">23</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {players.length > 0 ? (players.reduce((sum, player) => sum + calculateAge(player.date_of_birth), 0) / players.length).toFixed(0) : 0}
+                  </p>
                   <p className="text-xs text-muted-foreground">Idade Média</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-purple-600">12</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {new Set(players.map(p => p.nationality)).size}
+                  </p>
                   <p className="text-xs text-muted-foreground">Nacionalidades</p>
                 </div>
               </CardContent>
