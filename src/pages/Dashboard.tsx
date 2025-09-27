@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react"; // Added useCallback
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";  
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ const Dashboard = () => {
   const { toast } = useToast();
 
   const fetchProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -68,7 +68,7 @@ const Dashboard = () => {
         console.error('Error fetching profile:', error);
         return null;
       }
-      setProfile(data);
+      setProfile(data); // Update profile state
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -77,7 +77,7 @@ const Dashboard = () => {
   }, [user]);
 
   const fetchClubMemberships = useCallback(async () => {
-    if (!user) return;
+    if (!user) return null;
     try {
       const { data, error } = await supabase
         .from('club_members')
@@ -95,7 +95,7 @@ const Dashboard = () => {
         console.error('Error fetching club memberships:', error);
         return null;
       }
-      setClubMemberships(data || []);
+      setClubMemberships(data || []); // Update clubMemberships state
       return data || [];
     } catch (error) {
       console.error('Error fetching club memberships:', error);
@@ -108,13 +108,19 @@ const Dashboard = () => {
     const currentProfile = await fetchProfile();
     const currentMemberships = await fetchClubMemberships();
 
+    console.log("--- checkOnboardingStatus ---");
+    console.log("Current Profile:", currentProfile);
+    console.log("Current Memberships:", currentMemberships);
+
     if (!currentProfile) {
+      console.log("No profile found, stopping onboarding check.");
       setLoading(false);
       return;
     }
 
     // 1. User Type Setup
     if (!currentProfile.user_type) {
+      console.log("User type not set, showing UserTypeSetup.");
       setShowUserTypeSetup(true);
       setShowCreateClubDialog(false);
       setShowClubInviteSetup(false);
@@ -122,13 +128,16 @@ const Dashboard = () => {
       return;
     }
     setShowUserTypeSetup(false); // Hide if user_type is set
+    console.log("User type is set:", currentProfile.user_type);
 
     const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
     
     // 2. Club Creation (for user_type 'club')
     if (currentProfile.user_type === 'club') {
       const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
+      console.log("User is 'club' type. User owns club:", userOwnsClub);
       if (!userOwnsClub) {
+        console.log("User is 'club' type but does not own a club, showing CreateClubDialog.");
         setShowCreateClubDialog(true);
         setShowClubInviteSetup(false);
         setLoading(false);
@@ -136,30 +145,40 @@ const Dashboard = () => {
       }
     }
     setShowCreateClubDialog(false); // Hide if not 'club' or club already owned
+    console.log("Club creation not needed or already done.");
 
     // 3. Club Invite Setup (for staff-related user_types)
     if (isClubRelatedUser && currentProfile.user_type !== 'club') { // Exclude 'club' type as they create, not join
+      console.log("User is club-related staff type:", currentProfile.user_type);
       if (!currentMemberships || currentMemberships.length === 0) {
+        console.log("User is club-related staff but not a member of any club, showing ClubInviteSetup.");
         setShowClubInviteSetup(true);
         setLoading(false);
         return;
       }
     }
     setShowClubInviteSetup(false); // Hide if not staff-related or already a member
+    console.log("Club invite setup not needed or already done.");
 
     setLoading(false);
+    console.log("Onboarding complete. Profile:", currentProfile);
 
     // After onboarding is complete, handle initial redirection if on root dashboard path
     if (location.pathname === '/dashboard') {
       if (isClubRelatedUser && currentMemberships && currentMemberships.length > 0) {
+        console.log("Redirecting to /dashboard/club");
         navigate('/dashboard/club', { replace: true });
       } else if (currentProfile.user_type === 'player') {
+        console.log("Redirecting to /dashboard/profile");
         navigate('/dashboard/profile', { replace: true });
       } else if (currentProfile.user_type === 'agent') {
+        console.log("Redirecting to /dashboard/market");
         navigate('/dashboard/market', { replace: true });
       } else if (currentProfile.user_type === 'journalist') {
+        console.log("Redirecting to /dashboard/notifications");
         navigate('/dashboard/notifications', { replace: true });
       } else if (currentProfile.user_type === 'fan') {
+        console.log("Redirecting to /dashboard/messages");
         navigate('/dashboard/messages', { replace: true });
       }
     }
@@ -197,6 +216,7 @@ const Dashboard = () => {
         title: "Perfil configurado!",
         description: "Seu perfil foi configurado com sucesso.",
       });
+      await fetchProfile(); // Re-fetch profile to update state
       checkOnboardingStatus(); // Re-check status to proceed to next step if any
     } catch (error) {
       console.error('Error in handleUserTypeSetup:', error);
@@ -208,6 +228,7 @@ const Dashboard = () => {
       title: "Afiliação ao clube!",
       description: "Você agora está vinculado a um clube.",
     });
+    await fetchClubMemberships(); // Re-fetch memberships to update state
     checkOnboardingStatus(); // Re-check status
   };
 
@@ -216,6 +237,7 @@ const Dashboard = () => {
       title: "Clube criado!",
       description: "Seu perfil de clube foi criado com sucesso.",
     });
+    await fetchClubMemberships(); // Re-fetch memberships to update state
     checkOnboardingStatus(); // Re-check status
   };
 

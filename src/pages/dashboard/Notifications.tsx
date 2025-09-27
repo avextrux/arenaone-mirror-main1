@@ -5,15 +5,16 @@ import { Bell, CheckCircle, Archive, Trash2, MessageSquare, UserPlus, TrendingUp
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client"; // Import supabase
-import { useAuth } from "@/hooks/useAuth"; // Import useAuth
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Notification {
   id: string;
+  user_id: string;
   type: 'message' | 'connection_request' | 'opportunity' | 'club_invite' | 'system';
   title: string;
   description: string;
-  timestamp: string;
+  created_at: string; // Changed from timestamp to created_at to match Supabase convention
   read: boolean;
   related_entity_id?: string; // e.g., conversation_id, profile_id, opportunity_id
 }
@@ -27,69 +28,131 @@ const Notifications = () => {
   useEffect(() => {
     if (user) {
       fetchNotifications();
+
+      // Setup real-time subscription for new notifications
+      const subscription = supabase
+        .channel(`notifications_for_user_${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const newNotification = payload.new as Notification;
+            setNotifications((prev) => [newNotification, ...prev]);
+            toast({
+              title: newNotification.title,
+              description: newNotification.description,
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, toast]);
 
   const fetchNotifications = async () => {
     setLoading(true);
-    // This is where you would fetch real notifications from Supabase.
-    // For now, we'll use a placeholder message.
-    // Example:
-    // const { data, error } = await supabase
-    //   .from('notifications')
-    //   .select('*')
-    //   .eq('user_id', user.id)
-    //   .order('created_at', { ascending: false });
-    // if (error) {
-    //   console.error('Error fetching notifications:', error);
-    //   toast({ title: "Erro", description: "Não foi possível carregar notificações.", variant: "destructive" });
-    // } else {
-    //   setNotifications(data || []);
-    // }
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-    // Placeholder for real data fetching
-    const placeholderNotifications: Notification[] = [
-      {
-        id: "1",
-        type: "system",
-        title: "Bem-vindo à ArenaOne!",
-        description: "Explore seu novo dashboard e comece a se conectar.",
-        timestamp: new Date().toISOString(),
-        read: false,
-      },
-      {
-        id: "2",
-        type: "system",
-        title: "Funcionalidade de Notificações",
-        description: "A integração com o Supabase para notificações em tempo real está em desenvolvimento.",
-        timestamp: new Date(Date.now() - 3600 * 1000).toISOString(), // 1 hour ago
-        read: false,
-      },
-    ];
-    setNotifications(placeholderNotifications);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        toast({ title: "Erro", description: "Não foi possível carregar notificações.", variant: "destructive" });
+      } else {
+        setNotifications(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      toast({ title: "Erro", description: "Ocorreu um erro ao carregar notificações.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
-    );
-    toast({
-      title: "Notificação marcada como lida",
-      description: "Esta notificação não aparecerá mais como não lida.",
-    });
-    // In a real app, you'd update Supabase here
+  const markAsRead = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id)
+        .eq('user_id', user?.id); // Ensure user owns the notification
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+      );
+      toast({
+        title: "Notificação marcada como lida",
+        description: "Esta notificação não aparecerá mais como não lida.",
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      toast({ title: "Erro", description: "Não foi possível marcar como lida.", variant: "destructive" });
+    }
   };
 
-  const archiveNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
-    toast({
-      title: "Notificação arquivada",
-      description: "A notificação foi removida da sua lista.",
-    });
-    // In a real app, you'd delete from Supabase here
+  const markAllAsRead = async () => {
+    if (!user) return;
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+
+      if (error) throw error;
+
+      setNotifications(prev => 
+        prev.map(notif => ({ ...notif, read: true }))
+      );
+      toast({
+        title: "Todas as notificações marcadas como lidas",
+        description: "Sua caixa de entrada está limpa!",
+      });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      toast({ title: "Erro", description: "Não foi possível marcar todas como lidas.", variant: "destructive" });
+    }
+  };
+
+  const archiveNotification = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user?.id); // Ensure user owns the notification
+
+      if (error) throw error;
+
+      setNotifications(prev => prev.filter(notif => notif.id !== id));
+      toast({
+        title: "Notificação arquivada",
+        description: "A notificação foi removida da sua lista.",
+      });
+    } catch (error) {
+      console.error('Error archiving notification:', error);
+      toast({ title: "Erro", description: "Não foi possível arquivar a notificação.", variant: "destructive" });
+    }
   };
 
   const getNotificationIcon = (type: Notification['type']) => {
@@ -145,7 +208,7 @@ const Notifications = () => {
             Mantenha-se atualizado com as últimas atividades
           </p>
         </div>
-        <Button variant="outline" onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}>
+        <Button variant="outline" onClick={markAllAsRead} disabled={unreadNotifications.length === 0}>
           <CheckCircle className="w-4 h-4 mr-2" />
           Marcar todas como lidas
         </Button>
@@ -178,7 +241,7 @@ const Notifications = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-sm">{notif.title}</h3>
-                          <span className="text-xs text-muted-foreground">{formatTime(notif.timestamp)}</span>
+                          <span className="text-xs text-muted-foreground">{formatTime(notif.created_at)}</span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">{notif.description}</p>
                         <div className="flex gap-2 mt-3">
@@ -213,7 +276,7 @@ const Notifications = () => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-sm">{notif.title}</h3>
-                          <span className="text-xs">{formatTime(notif.timestamp)}</span>
+                          <span className="text-xs">{formatTime(notif.created_at)}</span>
                         </div>
                         <p className="text-sm mt-1">{notif.description}</p>
                         <div className="flex gap-2 mt-3">
