@@ -166,10 +166,7 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
 
       if (memberError) console.error('Error creating club member for manager:', memberError);
 
-      toast({
-        title: "Clube criado!",
-        description: "Seu perfil de clube foi criado com sucesso.",
-      });
+      // Removed toast here, it will be handled by Dashboard.tsx
       onClubCreated();
       onOpenChange(false); // Close dialog
       setClubForm({

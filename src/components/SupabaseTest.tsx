@@ -44,9 +44,8 @@ const SupabaseTest = () => {
     }
   };
 
-  useEffect(() => {
-    runTest(); // Run test automatically on component mount
-  }, []);
+  // Removed useEffect to run test automatically on mount.
+  // Now it only runs when the button is clicked.
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
