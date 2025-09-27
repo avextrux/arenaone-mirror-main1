@@ -277,6 +277,45 @@ export type Database = {
           },
         ]
       }
+      conversations: { // New table for conversations
+        Row: {
+          id: string
+          created_at: string | null
+          user1_id: string
+          user2_id: string
+          last_message_at: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string | null
+          user1_id: string
+          user2_id: string
+          last_message_at?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string | null
+          user1_id?: string
+          user2_id?: string
+          last_message_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_user1_id_fkey"
+            columns: ["user1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_user2_id_fkey"
+            columns: ["user2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string | null
@@ -409,34 +448,34 @@ export type Database = {
       messages: {
         Row: {
           content: string
+          conversation_id: string // Added conversation_id
           created_at: string | null
           id: string
           read: boolean | null
-          receiver_id: string
           sender_id: string
         }
         Insert: {
           content: string
+          conversation_id: string // Added conversation_id
           created_at?: string | null
           id?: string
           read?: boolean | null
-          receiver_id: string
           sender_id: string
         }
         Update: {
           content?: string
+          conversation_id?: string // Added conversation_id
           created_at?: string | null
           id?: string
           read?: boolean | null
-          receiver_id?: string
           sender_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "messages_receiver_id_fkey"
-            columns: ["receiver_id"]
+            foreignKeyName: "messages_conversation_id_fkey" // New foreign key
+            columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
           {

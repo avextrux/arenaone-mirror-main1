@@ -8,8 +8,8 @@ interface AuthContextType {
   session: Session | null;
   signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithLinkedIn: () => Promise<void>;
+  // signInWithGoogle: () => Promise<void>; // Removed
+  // signInWithLinkedIn: () => Promise<void>; // Removed
   signOut: () => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
   loading: boolean;
@@ -117,37 +117,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
-      },
-    });
-    if (error) {
-      toast({
-        title: "Erro no login com Google",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  // const signInWithGoogle = async () => { // Removed
+  //   const { error } = await supabase.auth.signInWithOAuth({
+  //     provider: 'google',
+  //     options: {
+  //       redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
+  //     },
+  //   });
+  //   if (error) {
+  //     toast({
+  //       title: "Erro no login com Google",
+  //       description: error.message,
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
-  const signInWithLinkedIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'linkedin_oidc', // Use 'linkedin_oidc' for OpenID Connect
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
-      },
-    });
-    if (error) {
-      toast({
-        title: "Erro no login com LinkedIn",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  // const signInWithLinkedIn = async () => { // Removed
+  //   const { error } = await supabase.auth.signInWithOAuth({
+  //     provider: 'linkedin_oidc', // Use 'linkedin_oidc' for OpenID Connect
+  //     options: {
+  //       redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
+  //     },
+  //   });
+  //   if (error) {
+  //     toast({
+  //       title: "Erro no login com LinkedIn",
+  //       description: error.message,
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   const resendConfirmation = async (email: string) => {
     const { error } = await supabase.auth.resend({
@@ -207,8 +207,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     signUp,
     signIn,
-    signInWithGoogle,
-    signInWithLinkedIn,
+    // signInWithGoogle, // Removed
+    // signInWithLinkedIn, // Removed
     signOut,
     resendConfirmation,
     loading,

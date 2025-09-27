@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Building, Briefcase, Target, Trophy, PenTool, Heart, Flag, Activity, Stethoscope, Calculator, Chrome, Linkedin } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Building, Briefcase, Target, Trophy, PenTool, Heart, Flag, Activity, Stethoscope, Calculator } from "lucide-react"; // Removed Chrome, Linkedin
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -33,7 +33,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
 
-  const { signUp, signIn, signInWithGoogle, signInWithLinkedIn, resendConfirmation, user } = useAuth();
+  const { signUp, signIn, resendConfirmation, user } = useAuth(); // Removed signInWithGoogle, signInWithLinkedIn
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -320,7 +320,8 @@ const Auth = () => {
                   )}
                 </form>
 
-                <div className="relative my-6">
+                {/* Removed social login section */}
+                {/* <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />
                   </div>
@@ -350,7 +351,7 @@ const Auth = () => {
                     <Linkedin className="w-4 h-4" />
                     Entrar com LinkedIn
                   </Button>
-                </div>
+                </div> */}
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-6">
@@ -480,7 +481,8 @@ const Auth = () => {
                   </Button>
                 </form>
 
-                <div className="relative my-6">
+                {/* Removed social login section */}
+                {/* <div className="relative my-6">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />
                   </div>
@@ -510,7 +512,7 @@ const Auth = () => {
                     <Linkedin className="w-4 h-4" />
                     Registrar com LinkedIn
                   </Button>
-                </div>
+                </div> */}
               </TabsContent>
             </Tabs>
 
