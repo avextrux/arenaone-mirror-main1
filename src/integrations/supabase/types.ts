@@ -493,6 +493,47 @@ export type Database = {
           },
         ]
       }
+      notifications: { // NEW TABLE ADDED
+        Row: {
+          id: string
+          user_id: string
+          type: "message" | "connection_request" | "opportunity" | "club_invite" | "system"
+          title: string
+          description: string
+          created_at: string
+          read: boolean
+          related_entity_id: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: "message" | "connection_request" | "opportunity" | "club_invite" | "system"
+          title: string
+          description: string
+          created_at?: string
+          read?: boolean
+          related_entity_id?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: "message" | "connection_request" | "opportunity" | "club_invite" | "system"
+          title?: string
+          description?: string
+          created_at?: string
+          read?: boolean
+          related_entity_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           created_at: string | null
