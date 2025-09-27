@@ -12,6 +12,7 @@ import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardRouter from "@/components/dashboard/DashboardRouter";
 import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
+import CreateClubDialog from "@/components/dashboard/CreateClubDialog"; // Import new component
 import { LogOut, Bell, Settings, Search, Users, Building, TrendingUp, MessageSquare } from "lucide-react";
 
 interface Profile {
@@ -19,7 +20,7 @@ interface Profile {
   full_name: string;
   email: string;
   avatar_url?: string;
-  user_type: string;
+  user_type: string | null; // user_type can be null initially
   bio?: string;
   location?: string;
   website?: string;
@@ -46,8 +47,9 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSetup, setShowSetup] = useState(false);
-  const [showClubSetup, setShowClubSetup] = useState(false);
+  const [showUserTypeSetup, setShowUserTypeSetup] = useState(false);
+  const [showClubInviteSetup, setShowClubInviteSetup] = useState(false);
+  const [showCreateClubDialog, setShowCreateClubDialog] = useState(false); // State for new dialog
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -60,20 +62,52 @@ const Dashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    if (profile && !showSetup && !showClubSetup) {
-      // Redirect logic for club members
+    if (!loading && profile) {
+      // Onboarding flow logic
+      if (!profile.user_type) {
+        setShowUserTypeSetup(true);
+        return;
+      }
+
       const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(profile.user_type);
+      
+      if (profile.user_type === 'club') {
+        // If user is a club, check if they own a club
+        const userOwnsClub = clubMemberships.some(m => m.permission_level === 'admin' && m.department === 'management');
+        if (!userOwnsClub) {
+          setShowCreateClubDialog(true);
+          return;
+        }
+      } else if (isClubRelatedUser) {
+        // If user is staff-related, check if they are part of any club
+        if (clubMemberships.length === 0) {
+          setShowClubInviteSetup(true);
+          return;
+        }
+      }
+
+      // If onboarding is complete, handle redirection
       const isAlreadyOnClubPage = location.pathname.startsWith('/dashboard/club') || location.pathname.startsWith('/dashboard/players');
+      const isAlreadyOnProfilePage = location.pathname.startsWith('/dashboard/profile');
+      const isAlreadyOnMarketPage = location.pathname.startsWith('/dashboard/market');
+      const isAlreadyOnMessagesPage = location.pathname.startsWith('/dashboard/messages');
+      const isAlreadyOnNotificationsPage = location.pathname.startsWith('/dashboard/notifications');
+      const isAlreadyOnFeedPage = location.pathname === '/dashboard';
+
 
       if (isClubRelatedUser && clubMemberships.length > 0 && location.pathname === '/dashboard') {
         navigate('/dashboard/club', { replace: true });
-      } else if (location.pathname === '/dashboard' && profile.user_type === 'player') {
+      } else if (profile.user_type === 'player' && location.pathname === '/dashboard') {
         navigate('/dashboard/profile', { replace: true });
-      } else if (location.pathname === '/dashboard' && profile.user_type === 'agent') {
+      } else if (profile.user_type === 'agent' && location.pathname === '/dashboard') {
         navigate('/dashboard/market', { replace: true });
+      } else if (profile.user_type === 'journalist' && location.pathname === '/dashboard') {
+        navigate('/dashboard/notifications', { replace: true }); // Example for journalist
+      } else if (profile.user_type === 'fan' && location.pathname === '/dashboard') {
+        navigate('/dashboard/messages', { replace: true }); // Example for fan
       }
     }
-  }, [profile, clubMemberships, showSetup, showClubSetup, location.pathname, navigate]);
+  }, [loading, profile, clubMemberships, showUserTypeSetup, showClubInviteSetup, showCreateClubDialog, location.pathname, navigate]);
 
 
   const fetchProfile = async () => {
@@ -93,22 +127,6 @@ const Dashboard = () => {
 
       if (data) {
         setProfile(data);
-        // Se o usuário não tem tipo definido, mostrar setup
-        if (!data.user_type) {
-          setShowSetup(true);
-        }
-        // Se é staff de clube mas não tem clube associado, mostrar setup de clube
-        else if (['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach'].includes(data.user_type)) {
-          const { data: memberships } = await supabase
-            .from('club_members')
-            .select('*')
-            .eq('user_id', user.id)
-            .eq('status', 'accepted');
-          
-          if (!memberships || memberships.length === 0) {
-            setShowClubSetup(true);
-          }
-        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -144,7 +162,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleUserTypeSetup = async (userType: string, profileData: any) => {
+  const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
     if (!user) return;
 
     try {
@@ -168,8 +186,9 @@ const Dashboard = () => {
         return;
       }
 
-      setShowSetup(false);
-      await fetchProfile();
+      setShowUserTypeSetup(false);
+      await fetchProfile(); // Re-fetch profile to update user_type in state
+      await fetchClubMemberships(); // Re-fetch memberships as user_type might affect them
       
       toast({
         title: "Perfil configurado!",
@@ -180,8 +199,14 @@ const Dashboard = () => {
     }
   };
 
-  const handleClubSetup = async (clubData: any) => {
-    setShowClubSetup(false);
+  const handleClubInviteSetupComplete = async () => {
+    setShowClubInviteSetup(false);
+    await fetchProfile();
+    await fetchClubMemberships();
+  };
+
+  const handleClubCreated = async () => {
+    setShowCreateClubDialog(false);
     await fetchProfile();
     await fetchClubMemberships();
   };
@@ -191,7 +216,8 @@ const Dashboard = () => {
     navigate('/');
   };
 
-  const getUserTypeColor = (userType: string) => {
+  const getUserTypeColor = (userType: string | null) => {
+    if (!userType) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     const colors = {
       player: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
       club: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
@@ -207,7 +233,8 @@ const Dashboard = () => {
     return colors[userType as keyof typeof colors] || colors.fan;
   };
 
-  const getUserTypeLabel = (userType: string) => {
+  const getUserTypeLabel = (userType: string | null) => {
+    if (!userType) return "Não Definido";
     const labels = {
       player: "Jogador",
       club: "Clube", 
@@ -234,12 +261,16 @@ const Dashboard = () => {
     );
   }
 
-  if (showSetup) {
-    return <UserTypeSetup onComplete={handleUserTypeSetup} />;
+  if (showUserTypeSetup) {
+    return <UserTypeSetup onComplete={handleUserTypeSetupComplete} />;
   }
 
-  if (showClubSetup) {
-    return <ClubInviteSetup onComplete={handleClubSetup} userType={profile?.user_type || ''} />;
+  if (showCreateClubDialog) {
+    return <CreateClubDialog open={showCreateClubDialog} onOpenChange={setShowCreateClubDialog} onClubCreated={handleClubCreated} />;
+  }
+
+  if (showClubInviteSetup) {
+    return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
   }
 
   if (!profile) {
@@ -258,7 +289,7 @@ const Dashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-muted/20">
-        <DashboardSidebar userType={profile.user_type} clubMemberships={clubMemberships} />
+        <DashboardSidebar userType={profile.user_type || 'fan'} clubMemberships={clubMemberships} />
         
         <div className="flex-1 flex flex-col">
           {/* Header */}

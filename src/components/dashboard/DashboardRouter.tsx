@@ -16,8 +16,8 @@ const DashboardRouter = () => {
 
   return (
     <Routes>
-      {/* Rota padrão para /dashboard, mostrando Feed */}
-      <Route index element={<Feed />} /> 
+      {/* Rota padrão para /dashboard, mostrando Feed (agora em desenvolvimento) */}
+      <Route index element={<UnderDevelopment page="Feed" />} /> 
       {/* Rotas explícitas, agora relativas ao caminho pai (/dashboard) */}
       <Route path="network" element={<UnderDevelopment page="Rede" />} /> 
       <Route path="market" element={<Market />} />
