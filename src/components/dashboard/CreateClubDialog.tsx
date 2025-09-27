@@ -15,11 +15,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating unique file names
+import { ClubMembership } from "@/pages/Dashboard"; // Import ClubMembership type
 
 interface CreateClubDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onClubCreated: () => void;
+  onClubCreated: (newClub: any, newMembership: ClubMembership) => void; // Updated prop signature
 }
 
 const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialogProps) => {
@@ -135,7 +136,7 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
         logoUrl = await uploadLogo(logoFile);
       }
 
-      const { data, error } = await supabase
+      const { data: newClub, error: clubError } = await supabase
         .from('clubs')
         .insert([{
           name: clubForm.name,
@@ -149,25 +150,42 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
         .select()
         .single();
 
-      if (error) throw error;
+      if (clubError) throw clubError;
 
       // Also create a club_member entry for the manager
-      const { error: memberError } = await supabase
+      const { data: newMembership, error: memberError } = await supabase
         .from('club_members')
         .insert([{
-          club_id: data.id,
+          club_id: newClub.id,
           user_id: user.id,
           department: 'management', // Manager is part of management
           permission_level: 'admin', // Manager has admin permissions
           status: 'accepted',
           invited_at: new Date().toISOString(),
           accepted_at: new Date().toISOString(),
-        }]);
+        }])
+        .select(`
+          *,
+          clubs (name, logo_url)
+        `)
+        .single();
 
       if (memberError) console.error('Error creating club member for manager:', memberError);
 
-      // Removed toast here, it will be handled by Dashboard.tsx
-      onClubCreated();
+      if (newMembership) {
+        onClubCreated(newClub, newMembership as ClubMembership); // Pass both new club and membership
+      } else {
+        // Fallback if membership creation failed but club succeeded
+        onClubCreated(newClub, { // Create a dummy membership for state update
+          id: uuidv4(), // Generate a temporary ID
+          club_id: newClub.id,
+          department: 'management',
+          permission_level: 'admin',
+          status: 'accepted',
+          clubs: { name: newClub.name, logo_url: newClub.logo_url }
+        });
+      }
+      
       onOpenChange(false); // Close dialog
       setClubForm({
         name: "",

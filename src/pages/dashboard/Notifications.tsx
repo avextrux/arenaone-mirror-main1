@@ -14,7 +14,7 @@ interface Notification {
   type: 'message' | 'connection_request' | 'opportunity' | 'club_invite' | 'system';
   title: string;
   description: string;
-  created_at: string; // Changed from timestamp to created_at to match Supabase convention
+  created_at: string;
   read: boolean;
   related_entity_id?: string; // e.g., conversation_id, profile_id, opportunity_id
 }
@@ -28,7 +28,6 @@ const Notifications = () => {
   useEffect(() => {
     if (user) {
       fetchNotifications();
-
       // Setup real-time subscription for new notifications
       const subscription = supabase
         .channel(`notifications_for_user_${user.id}`)
@@ -65,7 +64,6 @@ const Notifications = () => {
       setLoading(false);
       return;
     }
-
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -88,18 +86,15 @@ const Notifications = () => {
   };
 
   const markAsRead = async (id: string) => {
+    setNotifications(prev => 
+      prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+    );
     try {
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
-        .eq('id', id)
-        .eq('user_id', user?.id); // Ensure user owns the notification
-
+        .eq('id', id);
       if (error) throw error;
-
-      setNotifications(prev => 
-        prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
-      );
       toast({
         title: "Notificação marcada como lida",
         description: "Esta notificação não aparecerá mais como não lida.",
@@ -110,41 +105,14 @@ const Notifications = () => {
     }
   };
 
-  const markAllAsRead = async () => {
-    if (!user) return;
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', user.id)
-        .eq('read', false);
-
-      if (error) throw error;
-
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, read: true }))
-      );
-      toast({
-        title: "Todas as notificações marcadas como lidas",
-        description: "Sua caixa de entrada está limpa!",
-      });
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      toast({ title: "Erro", description: "Não foi possível marcar todas como lidas.", variant: "destructive" });
-    }
-  };
-
   const archiveNotification = async (id: string) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
     try {
       const { error } = await supabase
         .from('notifications')
         .delete()
-        .eq('id', id)
-        .eq('user_id', user?.id); // Ensure user owns the notification
-
+        .eq('id', id);
       if (error) throw error;
-
-      setNotifications(prev => prev.filter(notif => notif.id !== id));
       toast({
         title: "Notificação arquivada",
         description: "A notificação foi removida da sua lista.",
@@ -152,6 +120,26 @@ const Notifications = () => {
     } catch (error) {
       console.error('Error archiving notification:', error);
       toast({ title: "Erro", description: "Não foi possível arquivar a notificação.", variant: "destructive" });
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user) return;
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+      if (error) throw error;
+      toast({
+        title: "Todas as notificações marcadas como lidas",
+        description: "Sua caixa de entrada está limpa!",
+      });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      toast({ title: "Erro", description: "Não foi possível marcar todas como lidas.", variant: "destructive" });
     }
   };
 
