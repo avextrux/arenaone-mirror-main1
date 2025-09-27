@@ -12,6 +12,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { LucideProps } from "lucide-react"; // Import LucideProps
+import { ForwardRefExoticComponent, RefAttributes } from "react"; // Import React types
 
 interface ClubMembership {
   id: string;
@@ -23,6 +25,14 @@ interface ClubMembership {
     name: string;
     logo_url?: string;
   };
+}
+
+// Define a interface para os itens do menu
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
+  disabled?: boolean; // Propriedade disabled é opcional
 }
 
 interface DashboardSidebarProps {
@@ -63,66 +73,66 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
   };
 
   // Menu items baseado no tipo de usuário
-  const getMenuItems = () => {
-    const baseItems = [
+  const getMenuItems = (): MenuItem[] => { // Especifica o tipo de retorno como MenuItem[]
+    const baseItems: MenuItem[] = [
       { title: "Feed", url: "/dashboard", icon: Home, disabled: true }, // Marked as disabled
       { title: "Rede", url: "/dashboard/network", icon: Network, disabled: true }, // Marked as disabled
       { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare },
       { title: "Notificações", url: "/dashboard/notifications", icon: Bell },
     ];
 
-    const userSpecificItems = {
+    const userSpecificItems: Record<string, MenuItem[]> = { // Especifica o tipo para userSpecificItems
       player: [
         { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
-        { title: "Estatísticas", url: "/dashboard/stats", icon: BarChart3 },
-        { title: "Oportunidades", url: "/dashboard/opportunities", icon: Briefcase },
+        { title: "Estatísticas", url: "/dashboard/stats", icon: BarChart3, disabled: true },
+        { title: "Oportunidades", url: "/dashboard/opportunities", icon: Briefcase, disabled: true },
       ],
       club: [
         { title: "Gestão do Clube", url: "/dashboard/club", icon: Building },
         { title: "Jogadores", url: "/dashboard/players", icon: Users },
-        { title: "Staff", url: "/dashboard/staff", icon: UserCheck },
-        { title: "Relatórios", url: "/dashboard/reports", icon: FileText },
+        { title: "Staff", url: "/dashboard/staff", icon: UserCheck, disabled: true },
+        { title: "Relatórios", url: "/dashboard/reports", icon: FileText, disabled: true },
       ],
       agent: [
-        { title: "Meus Clientes", url: "/dashboard/clients", icon: Users },
-        { title: "Contratos", url: "/dashboard/contracts", icon: FileText },
+        { title: "Meus Clientes", url: "/dashboard/clients", icon: Users, disabled: true },
+        { title: "Contratos", url: "/dashboard/contracts", icon: FileText, disabled: true },
         { title: "Mercado", url: "/dashboard/market", icon: Trophy },
       ],
       coach: [
-        { title: "Minha Equipe", url: "/dashboard/team", icon: Users },
-        { title: "Treinamentos", url: "/dashboard/training", icon: Activity },
-        { title: "Táticas", url: "/dashboard/tactics", icon: Target },
+        { title: "Minha Equipe", url: "/dashboard/team", icon: Users, disabled: true },
+        { title: "Treinamentos", url: "/dashboard/training", icon: Activity, disabled: true },
+        { title: "Táticas", url: "/dashboard/tactics", icon: Target, disabled: true },
         { title: "Jogadores", url: "/dashboard/players", icon: Users },
       ],
       scout: [
-        { title: "Relatórios", url: "/dashboard/scout-reports", icon: FileText },
+        { title: "Relatórios", url: "/dashboard/scout-reports", icon: FileText, disabled: true },
         { title: "Jogadores", url: "/dashboard/players", icon: Users },
-        { title: "Análises", url: "/dashboard/analysis", icon: BarChart3 },
+        { title: "Análises", url: "/dashboard/analysis", icon: BarChart3, disabled: true },
       ],
       medical_staff: [
         { title: "Jogadores", url: "/dashboard/players", icon: Users },
-        { title: "Histórico Médico", url: "/dashboard/medical", icon: Stethoscope },
-        { title: "Exames", url: "/dashboard/medical-exams", icon: Activity },
+        { title: "Histórico Médico", url: "/dashboard/medical", icon: Stethoscope, disabled: true },
+        { title: "Exames", url: "/dashboard/medical-exams", icon: Activity, disabled: true },
       ],
       financial_staff: [
         { title: "Jogadores", url: "/dashboard/players", icon: Users },
-        { title: "Contratos", url: "/dashboard/contracts", icon: FileText },
-        { title: "Finanças", url: "/dashboard/finances", icon: Calculator },
+        { title: "Contratos", url: "/dashboard/contracts", icon: FileText, disabled: true },
+        { title: "Finanças", url: "/dashboard/finances", icon: Calculator, disabled: true },
       ],
       technical_staff: [
         { title: "Jogadores", url: "/dashboard/players", icon: Users },
-        { title: "Análises", url: "/dashboard/analysis", icon: BarChart3 },
-        { title: "Relatórios", url: "/dashboard/reports", icon: FileText },
+        { title: "Análises", url: "/dashboard/analysis", icon: BarChart3, disabled: true },
+        { title: "Relatórios", url: "/dashboard/reports", icon: FileText, disabled: true },
       ],
       journalist: [
-        { title: "Artigos", url: "/dashboard/articles", icon: FileText },
-        { title: "Entrevistas", url: "/dashboard/interviews", icon: MessageSquare },
-        { title: "Eventos", url: "/dashboard/events", icon: Calendar },
+        { title: "Artigos", url: "/dashboard/articles", icon: FileText, disabled: true },
+        { title: "Entrevistas", url: "/dashboard/interviews", icon: MessageSquare, disabled: true },
+        { title: "Eventos", url: "/dashboard/events", icon: Calendar, disabled: true },
       ],
       fan: [
-        { title: "Times Favoritos", url: "/dashboard/teams", icon: Trophy },
-        { title: "Eventos", url: "/dashboard/events", icon: Calendar },
-        { title: "Comunidades", url: "/dashboard/communities", icon: Users },
+        { title: "Times Favoritos", url: "/dashboard/teams", icon: Trophy, disabled: true },
+        { title: "Eventos", url: "/dashboard/events", icon: Calendar, disabled: true },
+        { title: "Comunidades", url: "/dashboard/communities", icon: Users, disabled: true },
       ]
     };
 
