@@ -102,11 +102,11 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
           home_clubs:home_team_id (name),
           away_clubs:away_team_id (name)
         `)
-        .returns<Match[]>() // Adicionado .returns<Match[]>() para tipagem explícita
-        .or(`home_team_id.eq.${clubId},away_team_id.eq.${clubId}`)
+        .or(`home_team_id.eq.${clubId},away_team_id.eq.${clubId}`) // .or() deve vir antes de .returns()
         .gte('match_date', format(new Date(), 'yyyy-MM-dd')) // Only future matches
         .order('match_date', { ascending: true })
-        .limit(3); // Show next 3 matches
+        .limit(3)
+        .returns<Match[]>(); // .returns() deve ser o último método antes de .then() ou await
 
       if (error) throw error;
       setUpcomingMatches(data || []);
