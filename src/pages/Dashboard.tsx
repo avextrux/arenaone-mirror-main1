@@ -8,10 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardRouter from "@/components/dashboard/DashboardRouter"; // Importação corrigida
-import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
-import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
-import CreateClubDialog from "@/components/dashboard/CreateClubDialog";
+import DashboardRouter from "@/components/dashboard/DashboardRouter";
+import OnboardingFlow from "@/components/dashboard/OnboardingFlow"; // Importando o novo componente OnboardingFlow
 import { LogOut, Bell, Settings, Search } from "lucide-react";
 import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
@@ -51,54 +49,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
-    if (!user) return;
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          user_type: userType as UserType,
-          bio: profileData.bio,
-          location: profileData.location,
-          website: profileData.website
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        console.error('Error updating profile:', error);
-        toast({
-          title: "Erro ao atualizar perfil",
-          description: "Ocorreu um erro ao salvar suas informações.",
-          variant: "destructive",
-        });
-        return;
-      }
-      toast({
-        title: "Perfil configurado!",
-        description: "Seu perfil foi configurado com sucesso.",
-      });
-      refetchStatus();
-    } catch (error) {
-      console.error('Error in handleUserTypeSetup:', error);
-    }
-  };
-
-  const handleClubInviteSetupComplete = async () => {
-    toast({
-      title: "Afiliação ao clube!",
-      description: "Você agora está vinculado a um clube.",
-    });
-    refetchStatus();
-  };
-
-  const handleClubCreated = async (newClub: any, newMembership: ClubMembership) => {
-    toast({
-      title: "Clube criado!",
-      description: "Seu perfil de clube foi criado com sucesso.",
-    });
-    refetchStatus();
-  };
-
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -115,21 +65,23 @@ const Dashboard = () => {
     );
   }
 
-  if (onboardingStep === "userTypeSetup") {
-    return <UserTypeSetup onComplete={handleUserTypeSetupComplete} />;
-  }
-
-  if (onboardingStep === "createClub") {
-    return <CreateClubDialog open={true} onOpenChange={() => {}} onClubCreated={handleClubCreated} />;
-  }
-
-  if (onboardingStep === "clubInvite") {
-    return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
+  // Se o onboarding não estiver completo, renderiza o OnboardingFlow
+  if (onboardingStep !== "complete") {
+    return (
+      <OnboardingFlow 
+        onboardingStep={onboardingStep} 
+        profile={profile} 
+        clubMemberships={clubMemberships} 
+        refetchStatus={refetchStatus} 
+      />
+    );
   }
 
   // Se chegamos aqui, onboardingStep é "complete".
   // Neste ponto, profile e profile.user_type devem ser válidos.
   if (!profile || !profile.user_type) {
+    // Isso deve ser um caso raro, pois o useOnboardingStatus deveria garantir que o perfil está completo
+    // antes de definir o passo como "complete".
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
