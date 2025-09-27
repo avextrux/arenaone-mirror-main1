@@ -28,7 +28,6 @@ export type UserType =
   | "coach"
   | "scout"
   | "journalist"
-  | "fan"
   | "referee"
   | "medical_staff"
   | "financial_staff"
@@ -1445,7 +1444,6 @@ export const Constants = {
         "coach",
         "scout",
         "journalist",
-        "fan",
         "referee",
         "medical_staff",
         "financial_staff",

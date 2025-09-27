@@ -8,16 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles } from "lucide-react"; // Removed Chrome, Linkedin, and specific user type icons
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Briefcase, Building, Target, Trophy, PenTool, Flag, Activity, Stethoscope, Calculator } from "lucide-react"; // Adicionei ícones para os tipos de usuário
+import { UserType } from "@/integrations/supabase/types"; // Importando UserType
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
-  fullName: z.string().optional().refine((val) => !val || (val.trim().length >= 2 && val.length <= 100), {
-    message: "Nome deve ter entre 2 e 100 caracteres"
+  fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
+  userType: z.nativeEnum(UserType, { // Validar com o enum UserType
+    errorMap: () => ({ message: "Por favor, selecione sua função" })
   }),
-  // userType is now optional and will be set via invite or UserTypeSetup
-  userType: z.string().optional() 
 });
 
 const Auth = () => {
@@ -27,13 +27,13 @@ const Auth = () => {
     email: "",
     password: "",
     fullName: "",
-    // userType: "" // This will not be directly set in signup form anymore
+    userType: "" as UserType | "" // Inicializa como string vazia ou UserType
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
 
-  const { signUp, signIn, resendConfirmation, user } = useAuth(); // Removed signInWithGoogle, signInWithLinkedIn
+  const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -51,15 +51,14 @@ const Auth = () => {
     try {
       // Validate form data
       const validationData = isSignUp 
-        ? { ...formData, fullName: formData.fullName.trim() || undefined } // userType is not selected here
+        ? { ...formData, fullName: formData.fullName.trim(), userType: formData.userType as UserType }
         : { email: formData.email, password: formData.password };
         
       authSchema.parse(validationData);
 
       let result;
       if (isSignUp) {
-        // userType is not passed during initial signup, it will be set in UserTypeSetup or via invite
-        result = await signUp(formData.email.trim(), formData.password, formData.fullName.trim());
+        result = await signUp(formData.email.trim(), formData.password, formData.fullName.trim(), formData.userType);
       } else {
         result = await signIn(formData.email.trim(), formData.password);
         
@@ -103,6 +102,19 @@ const Auth = () => {
     await resendConfirmation(formData.email.trim());
     setLoading(false);
   };
+
+  const userTypeOptions = [
+    { value: "player", label: "Jogador", icon: User },
+    { value: "club", label: "Clube", icon: Building },
+    { value: "agent", label: "Agente", icon: Briefcase },
+    { value: "coach", label: "Técnico", icon: Target },
+    { value: "scout", label: "Olheiro", icon: Trophy },
+    { value: "journalist", label: "Jornalista", icon: PenTool },
+    { value: "referee", label: "Árbitro", icon: Flag },
+    { value: "medical_staff", label: "Staff Médico", icon: Stethoscope },
+    { value: "financial_staff", label: "Staff Financeiro", icon: Calculator },
+    { value: "technical_staff", label: "Staff Técnico", icon: Activity },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -326,6 +338,37 @@ const Auth = () => {
                     {errors.password && (
                       <p className="text-sm text-destructive flex items-center gap-1 mt-1">
                         <span className="text-lg leading-none">›</span> {errors.password}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="userType" className="text-sm font-medium">Sua Função *</Label>
+                    <Select 
+                      value={formData.userType} 
+                      onValueChange={(value: UserType) => handleInputChange("userType", value)}
+                      disabled={loading}
+                    >
+                      <SelectTrigger className={`${errors.userType ? "border-destructive" : ""}`}>
+                        <SelectValue placeholder="Selecione sua função" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userTypeOptions.map((type) => {
+                          const Icon = type.icon;
+                          return (
+                            <SelectItem key={type.value} value={type.value}>
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4 text-muted-foreground" />
+                                {type.label}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    {errors.userType && (
+                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
+                        <span className="text-lg leading-none">›</span> {errors.userType}
                       </p>
                     )}
                   </div>

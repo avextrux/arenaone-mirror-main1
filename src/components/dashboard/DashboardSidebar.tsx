@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Bell, CirclePlus as PlusCircle, Network, Target, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Shield, Heart, Flag, Search } from "lucide-react";
+import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Bell, CirclePlus as PlusCircle, Network, Target, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Shield, Flag, Search } from "lucide-react"; // Removi Heart
 import {
   Sidebar,
   SidebarContent,
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
+import { UserType } from "@/integrations/supabase/types"; // Importando UserType
 
 interface ClubMembership {
   id: string;
@@ -36,7 +37,7 @@ interface MenuItem {
 }
 
 interface DashboardSidebarProps {
-  userType: string;
+  userType: UserType; // Usando UserType
   clubMemberships?: ClubMembership[];
 }
 
@@ -74,52 +75,52 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
 
   const getMenuItems = (): MenuItem[] => {
     const baseItems: MenuItem[] = [
-      { title: "Feed", url: "/dashboard", icon: Home }, // Habilitado
-      { title: "Rede", url: "/dashboard/network", icon: Network, disabled: true }, // Caminho absoluto
-      { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare }, // Caminho absoluto
+      { title: "Feed", url: "/dashboard", icon: Home },
+      { title: "Rede", url: "/dashboard/network", icon: Network, disabled: true },
+      { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare },
       { title: "Notificações", url: "/dashboard/notifications", icon: Bell },
     ];
 
-    const userSpecificItems: Record<string, MenuItem[]> = {
+    const userSpecificItems: Record<UserType, MenuItem[]> = { // Usando UserType
       player: [
-        { title: "Meu Perfil", url: "/dashboard/profile", icon: User }, // Caminho absoluto
+        { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
         { title: "Estatísticas", url: "/dashboard/stats", icon: BarChart3, disabled: true },
         { title: "Oportunidades", url: "/dashboard/opportunities", icon: Briefcase, disabled: true },
       ],
       club: [
-        { title: "Gestão do Clube", url: "/dashboard/club", icon: Building }, // Caminho absoluto
-        { title: "Jogadores", url: "/dashboard/players", icon: Users }, // Caminho absoluto
+        { title: "Gestão do Clube", url: "/dashboard/club", icon: Building },
+        { title: "Jogadores", url: "/dashboard/players", icon: Users },
         { title: "Staff", url: "/dashboard/staff", icon: UserCheck, disabled: true },
         { title: "Relatórios", url: "/dashboard/reports", icon: FileText, disabled: true },
       ],
       agent: [
         { title: "Meus Clientes", url: "/dashboard/clients", icon: Users, disabled: true },
         { title: "Contratos", url: "/dashboard/contracts", icon: FileText, disabled: true },
-        { title: "Mercado", url: "/dashboard/market", icon: Trophy }, // Caminho absoluto
+        { title: "Mercado", url: "/dashboard/market", icon: Trophy },
       ],
       coach: [
         { title: "Minha Equipe", url: "/dashboard/team", icon: Users, disabled: true },
         { title: "Treinamentos", url: "/dashboard/training", icon: Activity, disabled: true },
         { title: "Táticas", url: "/dashboard/tactics", icon: Target, disabled: true },
-        { title: "Jogadores", url: "/dashboard/players", icon: Users }, // Caminho absoluto
+        { title: "Jogadores", url: "/dashboard/players", icon: Users },
       ],
       scout: [
         { title: "Relatórios", url: "/dashboard/scout-reports", icon: FileText, disabled: true },
-        { title: "Jogadores", url: "/dashboard/players", icon: Users }, // Caminho absoluto
+        { title: "Jogadores", url: "/dashboard/players", icon: Users },
         { title: "Análises", url: "/dashboard/analysis", icon: BarChart3, disabled: true },
       ],
       medical_staff: [
-        { title: "Jogadores", url: "/dashboard/players", icon: Users }, // Caminho absoluto
+        { title: "Jogadores", url: "/dashboard/players", icon: Users },
         { title: "Histórico Médico", url: "/dashboard/medical", icon: Stethoscope, disabled: true },
         { title: "Exames", url: "/dashboard/medical-exams", icon: Activity, disabled: true },
       ],
       financial_staff: [
-        { title: "Jogadores", url: "/dashboard/players", icon: Users }, // Caminho absoluto
+        { title: "Jogadores", url: "/dashboard/players", icon: Users },
         { title: "Contratos", url: "/dashboard/contracts", icon: FileText, disabled: true },
         { title: "Finanças", url: "/dashboard/finances", icon: Calculator, disabled: true },
       ],
       technical_staff: [
-        { title: "Jogadores", url: "/dashboard/players", icon: Users }, // Caminho absoluto
+        { title: "Jogadores", url: "/dashboard/players", icon: Users },
         { title: "Análises", url: "/dashboard/analysis", icon: BarChart3, disabled: true },
         { title: "Relatórios", url: "/dashboard/reports", icon: FileText, disabled: true },
       ],
@@ -128,16 +129,16 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
         { title: "Entrevistas", url: "/dashboard/interviews", icon: MessageSquare, disabled: true },
         { title: "Eventos", url: "/dashboard/events", icon: Calendar, disabled: true },
       ],
-      fan: [
-        { title: "Times Favoritos", url: "/dashboard/teams", icon: Trophy, disabled: true },
-        { title: "Eventos", url: "/dashboard/events", icon: Calendar, disabled: true },
-        { title: "Comunidades", url: "/dashboard/communities", icon: Users, disabled: true },
-      ]
+      referee: [ // Adicionado referee
+        { title: "Partidas", url: "/dashboard/matches", icon: Flag, disabled: true },
+        { title: "Relatórios", url: "/dashboard/reports", icon: FileText, disabled: true },
+      ],
     };
 
+    // Fallback para um conjunto básico se o userType não for encontrado (embora não deva acontecer com o enum)
     return [
       ...baseItems,
-      ...(userSpecificItems[userType as keyof typeof userSpecificItems] || userSpecificItems.fan)
+      ...(userSpecificItems[userType] || userSpecificItems.player) // Usando player como fallback genérico
     ];
   };
 

@@ -91,12 +91,13 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
       scout: [
         { value: "match_result", label: "Análise da Partida" }
       ],
-      journalist: [], // Jornalistas podem ter opções específicas no futuro
-      fan: [], // Fãs podem ter opções específicas no futuro
-      referee: [], // Árbitros podem ter opções específicas no futuro
-      medical_staff: [], // Staff médico pode ter opções específicas no futuro
-      financial_staff: [], // Staff financeiro pode ter opções específicas no futuro
-      technical_staff: [], // Staff técnico pode ter opções específicas no futuro
+      journalist: [],
+      referee: [
+        { value: "match_result", label: "Relatório da Partida" }
+      ],
+      medical_staff: [],
+      financial_staff: [],
+      technical_staff: [],
     };
 
     return [

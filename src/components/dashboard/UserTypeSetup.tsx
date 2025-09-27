@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { User, Building, Briefcase, Target, Trophy, PenTool, Heart, Flag, Activity } from "lucide-react";
+import { User, Building, Briefcase, Target, Trophy, PenTool, Heart, Flag, Activity, Stethoscope, Calculator } from "lucide-react"; // Adicionei Stethoscope e Calculator
 
 interface UserTypeSetupProps {
   onComplete: (userType: string, profileData: any) => Promise<void>;
@@ -69,13 +69,6 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
       color: "bg-yellow-100 text-yellow-800"
     },
     {
-      value: "fan",
-      label: "Torcedor",
-      icon: Heart,
-      description: "Fã do futebol",
-      color: "bg-pink-100 text-pink-800"
-    },
-    {
       value: "referee",
       label: "Árbitro",
       icon: Flag,
@@ -85,9 +78,23 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
     {
       value: "medical_staff",
       label: "Staff Médico",
-      icon: Activity,
+      icon: Stethoscope, // Ícone atualizado
       description: "Profissional de saúde esportiva",
       color: "bg-teal-100 text-teal-800"
+    },
+    {
+      value: "financial_staff",
+      label: "Staff Financeiro",
+      icon: Calculator, // Ícone atualizado
+      description: "Profissional de finanças do clube",
+      color: "bg-indigo-100 text-indigo-800"
+    },
+    {
+      value: "technical_staff",
+      label: "Staff Técnico",
+      icon: Activity,
+      description: "Profissional de apoio técnico",
+      color: "bg-cyan-100 text-cyan-800"
     }
   ];
 
@@ -102,6 +109,10 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
     }
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setProfileData(prev => ({ ...prev, [field]: value }));
+  };
+
   const getSpecializationPlaceholder = (type: string) => {
     const placeholders = {
       player: "Ex: Meio-campo, Atacante, Goleiro...",
@@ -110,9 +121,10 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
       coach: "Ex: Futebol de base, Preparação física, Análise técnica...",
       scout: "Ex: Talentos jovens, Mercado europeu, Futebol brasileiro...",
       journalist: "Ex: Cobertura de jogos, Entrevistas, Análise tática...",
-      fan: "Ex: História do clube, Estatísticas, Colecionador...",
       referee: "Ex: Futebol profissional, Arbitragem FIFA...",
-      medical_staff: "Ex: Fisioterapia, Nutrição esportiva, Preparação física..."
+      medical_staff: "Ex: Fisioterapia, Nutrição esportiva, Preparação física...",
+      financial_staff: "Ex: Contabilidade, Orçamento, Análise de investimentos...",
+      technical_staff: "Ex: Análise de dados, Suporte de vídeo, Tecnologia esportiva..."
     };
     return placeholders[type as keyof typeof placeholders] || "Descreva sua especialização...";
   };

@@ -69,10 +69,11 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
     let nextStep: OnboardingStep = "complete";
 
+    // Se o user_type já foi definido no registro, pulamos a etapa userTypeSetup
     if (!currentProfile.user_type) {
       nextStep = "userTypeSetup";
     } else {
-      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
+      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club', 'referee'].includes(currentProfile.user_type); // Adicionado 'referee'
       
       if (currentProfile.user_type === 'club') {
         const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
@@ -91,7 +92,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
     // Handle redirects if onboarding is complete and on base dashboard path
     if (nextStep === "complete" && location.pathname === '/dashboard') {
-      if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
+      if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club', 'referee'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
         navigate('/dashboard/club', { replace: true });
       } else if (currentProfile.user_type === 'player') {
         navigate('/dashboard/profile', { replace: true });
@@ -99,11 +100,11 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
         navigate('/dashboard/market', { replace: true });
       } else if (currentProfile.user_type === 'journalist') {
         navigate('/dashboard/notifications', { replace: true });
-      } else if (currentProfile.user_type === 'fan') {
-        navigate('/dashboard/messages', { replace: true });
+      } else { // Fallback para qualquer outro tipo de usuário que não tenha um redirecionamento específico
+        navigate('/dashboard/profile', { replace: true });
       }
     }
-  }, [user, navigate, location.pathname]); // Removed fetchProfile and fetchClubMemberships from dependencies as they are memoized and called inside.
+  }, [user, navigate, location.pathname]);
 
   useEffect(() => {
     if (user) {
