@@ -1,10 +1,9 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";  
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -13,16 +12,17 @@ import DashboardRouter from "@/components/dashboard/DashboardRouter";
 import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
 import CreateClubDialog from "@/components/dashboard/CreateClubDialog";
-import { LogOut, Bell, Settings, Search, Users, Building, TrendingUp, MessageSquare } from "lucide-react";
-import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
-import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
+import { LogOut, Bell, Settings, Search } from "lucide-react";
+import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
+import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus"; // Importando o novo hook
 
-export interface Profile { // Exportado para ser usado em outros componentes
+export interface Profile {
   id: string;
   full_name: string;
   email: string;
   avatar_url?: string;
-  user_type: UserType | null; // user_type can be null initially
+  user_type: UserType | null;
   bio?: string;
   location?: string;
   website?: string;
@@ -32,10 +32,10 @@ export interface Profile { // Exportado para ser usado em outros componentes
   posts_count: number;
 }
 
-export interface ClubMembership { // Exported for use in CreateClubDialog
+export interface ClubMembership {
   id: string;
   club_id: string;
-  user_id: string; // Adicionado user_id aqui
+  user_id: string;
   department: ClubDepartment;
   permission_level: PermissionLevel;
   status: string;
@@ -47,126 +47,9 @@ export interface ClubMembership { // Exported for use in CreateClubDialog
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showUserTypeSetup, setShowUserTypeSetup] = useState(false);
-  const [showClubInviteSetup, setShowClubInviteSetup] = useState(false); // Corrigido o nome da variável
-  const [showCreateClubDialog, setShowCreateClubDialog] = useState(false);
+  const { loading, onboardingStep, profile, clubMemberships, refetchStatus } = useOnboardingStatus(); // Usando o novo hook
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
-
-  const fetchProfile = useCallback(async () => {
-    if (!user) return null;
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-      setProfile(data);
-      return data;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
-  }, [user]);
-
-  const fetchClubMemberships = useCallback(async () => {
-    if (!user) return null;
-    try {
-      const { data, error } = await supabase
-        .from('club_members')
-        .select(`
-          *,
-          clubs (
-            name,
-            logo_url
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'accepted');
-
-      if (error) {
-        console.error('Error fetching club memberships:', error);
-        return null;
-      }
-      setClubMemberships(data || []);
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching club memberships:', error);
-      return null;
-    }
-  }, [user]);
-
-  const checkOnboardingStatus = useCallback(async (latestProfile?: Profile | null, latestMemberships?: ClubMembership[] | null) => {
-    setLoading(true);
-    const currentProfile = latestProfile !== undefined ? latestProfile : await fetchProfile();
-    const currentMemberships = latestMemberships !== undefined ? latestMemberships : await fetchClubMemberships();
-
-    if (!currentProfile) {
-      setLoading(false);
-      return;
-    }
-
-    let needsUserTypeSetup = false;
-    let needsClubCreation = false;
-    let needsClubInvite = false;
-
-    // 1. User Type Setup
-    if (!currentProfile.user_type) {
-      needsUserTypeSetup = true;
-    } else {
-      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
-      
-      // 2. Club Creation (for user_type 'club')
-      if (currentProfile.user_type === 'club') {
-        const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
-        if (!userOwnsClub) {
-          needsClubCreation = true;
-        }
-      }
-      // 3. Club Invite Setup (for staff-related user_types, excluding 'club' type)
-      else if (isClubRelatedUser) { // currentProfile.user_type !== 'club' is implicit here
-        if (!currentMemberships || currentMemberships.length === 0) {
-          needsClubInvite = true;
-        }
-      }
-    }
-
-    setShowUserTypeSetup(needsUserTypeSetup);
-    setShowCreateClubDialog(needsClubCreation);
-    setShowClubInviteSetup(needsClubInvite); // Corrigido o nome da variável
-    
-    setLoading(false);
-
-    // Only redirect if no onboarding is needed AND we are on the base dashboard path
-    if (!needsUserTypeSetup && !needsClubCreation && !needsClubInvite && location.pathname === '/dashboard') {
-      if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
-        navigate('/dashboard/club', { replace: true });
-      } else if (currentProfile.user_type === 'player') {
-        navigate('/dashboard/profile', { replace: true });
-      } else if (currentProfile.user_type === 'agent') {
-        navigate('/dashboard/market', { replace: true });
-      } else if (currentProfile.user_type === 'journalist') {
-        navigate('/dashboard/notifications', { replace: true });
-      } else if (currentProfile.user_type === 'fan') {
-        navigate('/dashboard/messages', { replace: true });
-      }
-    }
-  }, [user, fetchProfile, fetchClubMemberships, location.pathname, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      checkOnboardingStatus();
-    }
-  }, [user, checkOnboardingStatus]);
 
   const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
     if (!user) return;
@@ -194,10 +77,7 @@ const Dashboard = () => {
         title: "Perfil configurado!",
         description: "Seu perfil foi configurado com sucesso.",
       });
-      // Update local profile state immediately
-      const updatedProfile = profile ? { ...profile, user_type: userType as UserType } : null;
-      setProfile(updatedProfile);
-      checkOnboardingStatus(updatedProfile, clubMemberships); // Pass updated profile
+      refetchStatus(); // Re-fetch status after update
     } catch (error) {
       console.error('Error in handleUserTypeSetup:', error);
     }
@@ -208,7 +88,7 @@ const Dashboard = () => {
       title: "Afiliação ao clube!",
       description: "Você agora está vinculado a um clube.",
     });
-    checkOnboardingStatus(); // Re-check status
+    refetchStatus(); // Re-fetch status
   };
 
   const handleClubCreated = async (newClub: any, newMembership: ClubMembership) => {
@@ -216,16 +96,7 @@ const Dashboard = () => {
       title: "Clube criado!",
       description: "Seu perfil de clube foi criado com sucesso.",
     });
-    
-    // Update local state directly
-    const updatedMemberships = [...clubMemberships, newMembership];
-    setClubMemberships(updatedMemberships);
-    
-    const updatedProfile = profile ? { ...profile, user_type: 'club' as UserType } : null;
-    setProfile(updatedProfile);
-
-    // Pass updated state to checkOnboardingStatus
-    checkOnboardingStatus(updatedProfile, updatedMemberships); 
+    refetchStatus(); // Re-fetch status
   };
 
   const handleSignOut = async () => {
@@ -244,15 +115,15 @@ const Dashboard = () => {
     );
   }
 
-  if (showUserTypeSetup) {
+  if (onboardingStep === "userTypeSetup") {
     return <UserTypeSetup onComplete={handleUserTypeSetupComplete} />;
   }
 
-  if (showCreateClubDialog) {
-    return <CreateClubDialog open={showCreateClubDialog} onOpenChange={setShowCreateClubDialog} onClubCreated={handleClubCreated} />;
+  if (onboardingStep === "createClub") {
+    return <CreateClubDialog open={true} onOpenChange={() => {}} onClubCreated={handleClubCreated} />;
   }
 
-  if (showClubInviteSetup) { // Corrigido o nome da variável
+  if (onboardingStep === "clubInvite") {
     return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
   }
 
