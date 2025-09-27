@@ -22,7 +22,7 @@ const DashboardRouter = () => {
       
       {/* Existing functional routes */}
       <Route path="/market" element={<Market />} />
-      <Route path="/messages" element={<Messages />} />
+      <Route path="/messages" element={<Messages />} /> {/* Rota de Mensagens agora funcional */}
       <Route path="/profile" element={<Profile />} />
       <Route path="/club" element={<ClubManagement />} />
       <Route path="/players" element={<ClubPlayers />} />
