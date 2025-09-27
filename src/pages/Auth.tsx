@@ -37,6 +37,7 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("Auth.tsx: useEffect - user changed:", user);
     if (user) {
       navigate("/dashboard");
     }
@@ -46,6 +47,7 @@ const Auth = () => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
+    console.log("Auth.tsx: handleSubmit - Attempting to submit form...");
 
     try {
       const validationData = isSignUp 
@@ -56,22 +58,25 @@ const Auth = () => {
 
       let result;
       if (isSignUp) {
+        console.log("Auth.tsx: handleSubmit - Calling signUp...");
         result = await signUp(formData.email.trim(), formData.password, formData.fullName.trim(), formData.userType);
       } else {
+        console.log("Auth.tsx: handleSubmit - Calling signIn...");
         result = await signIn(formData.email.trim(), formData.password);
         
-        if (result.error && (
-          result.error.message.includes("Email not confirmed") || 
-          result.error.message.includes("email_not_confirmed")
-        )) {
-          setShowResendButton(true);
+        if (result.error) {
+          console.log("Auth.tsx: handleSubmit - signIn returned an error:", result.error);
+          if (result.error.message.includes("Email not confirmed") || 
+              result.error.message.includes("email_not_confirmed")) {
+            setShowResendButton(true);
+          }
+        } else {
+          console.log("Auth.tsx: handleSubmit - signIn completed without direct error.");
         }
       }
 
-      // Removido: if (!result.error && !isSignUp) { navigate("/dashboard"); }
-      // A navegação agora é gerenciada pelo useEffect que observa o estado 'user'.
-
     } catch (error) {
+      console.error("Auth.tsx: handleSubmit - Validation or submission error:", error);
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -83,6 +88,7 @@ const Auth = () => {
       }
     } finally {
       setLoading(false);
+      console.log("Auth.tsx: handleSubmit - Submission finished, loading set to false.");
     }
   };
 
@@ -95,6 +101,7 @@ const Auth = () => {
 
   const handleResendConfirmation = async () => {
     setLoading(true);
+    console.log("Auth.tsx: handleResendConfirmation - Resending confirmation email for:", formData.email.trim());
     await resendConfirmation(formData.email.trim());
     setLoading(false);
   };

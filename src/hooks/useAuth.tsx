@@ -8,8 +8,6 @@ interface AuthContextType {
   session: Session | null;
   signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  // signInWithGoogle: () => Promise<void>; // Removed
-  // signInWithLinkedIn: () => Promise<void>; // Removed
   signOut: () => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
   loading: boolean;
@@ -24,9 +22,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log("useAuth.tsx: useEffect - Setting up auth state listener.");
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("useAuth.tsx: onAuthStateChange - Event:", event, "Session:", session);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -43,15 +43,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("useAuth.tsx: getSession - Initial session check:", session);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("useAuth.tsx: useEffect cleanup - Unsubscribing from auth state changes.");
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const signUp = async (email: string, password: string, fullName: string, userType?: string) => {
+    console.log("useAuth.tsx: signUp - Attempting to sign up user:", email);
     const redirectUrl = `${window.location.origin}/dashboard`; // Redirect to dashboard after signup
     
     const { error } = await supabase.auth.signUp({
@@ -67,6 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error) {
+      console.error("useAuth.tsx: signUp - Error:", error);
       let message = "Erro ao criar conta.";
       if (error.message.includes("User already registered")) {
         message = "Este email já está cadastrado. Tente fazer login.";
@@ -82,6 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         variant: "destructive",
       });
     } else {
+      console.log("useAuth.tsx: signUp - Sign up successful, check email for confirmation.");
       toast({
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para confirmar a conta.",
@@ -92,12 +99,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log("useAuth.tsx: signIn - Attempting to sign in user:", email);
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
+      console.error("useAuth.tsx: signIn - Error:", error);
       let message = "Email ou senha incorretos.";
       if (error.message.includes("Invalid login credentials")) {
         message = "Email ou senha incorretos. Verifique suas credenciais.";
@@ -112,44 +121,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: message,
         variant: "destructive",
       });
+    } else {
+      console.log("useAuth.tsx: signIn - Supabase signInWithPassword call completed without error.");
     }
 
     return { error };
   };
 
-  // const signInWithGoogle = async () => { // Removed
-  //   const { error } = await supabase.auth.signInWithOAuth({
-  //     provider: 'google',
-  //     options: {
-  //       redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
-  //     },
-  //   });
-  //   if (error) {
-  //     toast({
-  //       title: "Erro no login com Google",
-  //       description: error.message,
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-  // const signInWithLinkedIn = async () => { // Removed
-  //   const { error } = await supabase.auth.signInWithOAuth({
-  //     provider: 'linkedin_oidc', // Use 'linkedin_oidc' for OpenID Connect
-  //     options: {
-  //       redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
-  //     },
-  //   });
-  //   if (error) {
-  //     toast({
-  //       title: "Erro no login com LinkedIn",
-  //       description: error.message,
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
   const resendConfirmation = async (email: string) => {
+    console.log("useAuth.tsx: resendConfirmation - Attempting to resend confirmation for:", email);
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email,
@@ -159,6 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     if (error) {
+      console.error("useAuth.tsx: resendConfirmation - Error:", error);
       let message = "Erro ao reenviar email de confirmação.";
       if (error.message.includes("email_not_confirmed")) {
         message = "Email não confirmado. Tente novamente.";
@@ -174,6 +155,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         variant: "destructive",
       });
     } else {
+      console.log("useAuth.tsx: resendConfirmation - Confirmation email resent successfully.");
       toast({
         title: "Email de confirmação reenviado!",
         description: "Verifique sua caixa de entrada e spam.",
@@ -184,15 +166,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    console.log("useAuth.tsx: signOut - Attempting to sign out user.");
     const { error } = await supabase.auth.signOut();
     
     if (error) {
+      console.error("useAuth.tsx: signOut - Error:", error);
       toast({
         title: "Erro ao sair",
         description: "Não foi possível fazer logout.",
         variant: "destructive",
       });
     } else {
+      console.log("useAuth.tsx: signOut - Logout successful.");
       toast({
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso.",
@@ -207,8 +192,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     signUp,
     signIn,
-    // signInWithGoogle, // Removed
-    // signInWithLinkedIn, // Removed
     signOut,
     resendConfirmation,
     loading,
