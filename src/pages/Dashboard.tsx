@@ -34,6 +34,7 @@ interface Profile {
 export interface ClubMembership { // Exported for use in CreateClubDialog
   id: string;
   club_id: string;
+  user_id: string; // Adicionado user_id aqui
   department: ClubDepartment;
   permission_level: PermissionLevel;
   status: string;
