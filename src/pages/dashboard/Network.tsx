@@ -11,15 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
 import { Tables } from "@/integrations/supabase/types"; // Importando Tables para tipagem
 
-interface Profile extends Tables<'profiles'> { // Usando Tables para o tipo Profile
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-  user_type: string;
-  bio?: string;
-  location?: string;
-  verified: boolean;
-}
+interface Profile extends Tables<'profiles'> {} // Usando Tables para o tipo Profile
 
 interface Connection extends Tables<'connections'> {} // Tipo para conexões
 
