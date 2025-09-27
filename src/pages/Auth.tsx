@@ -68,9 +68,9 @@ const Auth = () => {
         }
       }
 
-      if (!result.error && !isSignUp) {
-        navigate("/dashboard");
-      }
+      // Removido: if (!result.error && !isSignUp) { navigate("/dashboard"); }
+      // A navegação agora é gerenciada pelo useEffect que observa o estado 'user'.
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
