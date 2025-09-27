@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building, Flag, Calendar, Globe } from "lucide-react";
+import { Building, Flag, Calendar, Globe, Upload, FileText, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid'; // For generating unique file names
 
 interface CreateClubDialogProps {
   open: boolean;
@@ -31,8 +32,62 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
     founded_year: "",
     league: "",
     stadium: "",
-    logo_url: ""
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Por favor, selecione uma imagem (JPG, PNG, GIF, SVG, WEBP) ou um arquivo PDF.",
+          variant: "destructive",
+        });
+        setLogoFile(null);
+        setLogoPreview(null);
+        return;
+      }
+
+      setLogoFile(file);
+      if (file.type.startsWith('image/')) {
+        setLogoPreview(URL.createObjectURL(file));
+      } else {
+        setLogoPreview(null); // No preview for PDF, just show file icon
+      }
+    } else {
+      setLogoFile(null);
+      setLogoPreview(null);
+    }
+  };
+
+  const uploadLogo = async (file: File) => {
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExtension}`;
+    const filePath = `club_logos/${user.id}/${fileName}`; // Store under user's ID
+
+    const { data, error } = await supabase.storage
+      .from('club-logos') // Ensure you have a bucket named 'club-logos' in Supabase
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      throw new Error(`Erro ao fazer upload da logo: ${error.message}`);
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase.storage
+      .from('club-logos')
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  };
 
   const handleCreateClub = async () => {
     if (!user || !clubForm.name || !clubForm.country || !clubForm.founded_year) {
@@ -45,7 +100,13 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
     }
 
     setIsSubmitting(true);
+    let logoUrl: string | null = null;
+
     try {
+      if (logoFile) {
+        logoUrl = await uploadLogo(logoFile);
+      }
+
       const { data, error } = await supabase
         .from('clubs')
         .insert([{
@@ -54,7 +115,7 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
           founded_year: parseInt(clubForm.founded_year),
           league: clubForm.league || null,
           stadium: clubForm.stadium || null,
-          logo_url: clubForm.logo_url || null,
+          logo_url: logoUrl, // Use the uploaded logo URL
           manager_id: user.id // The user creating the club becomes its manager
         }])
         .select()
@@ -89,8 +150,9 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
         founded_year: "",
         league: "",
         stadium: "",
-        logo_url: ""
       });
+      setLogoFile(null);
+      setLogoPreview(null);
     } catch (error: any) {
       console.error('Error creating club:', error);
       toast({
@@ -186,14 +248,34 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="logo_url">URL do Logo do Clube</Label>
-            <Input
-              id="logo_url"
-              placeholder="https://seulogo.com/logo.png"
-              value={clubForm.logo_url}
-              onChange={(e) => setClubForm(prev => ({ ...prev, logo_url: e.target.value }))}
-              disabled={isSubmitting}
-            />
+            <Label htmlFor="logo_upload">Logo do Clube (Imagem ou PDF)</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                id="logo_upload"
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleFileChange}
+                className="flex-1"
+                disabled={isSubmitting}
+              />
+              {logoPreview && (
+                <div className="w-16 h-16 flex-shrink-0 border rounded-md flex items-center justify-center overflow-hidden">
+                  {logoFile?.type.startsWith('image/') ? (
+                    <img src={logoPreview} alt="Logo Preview" className="w-full h-full object-contain" />
+                  ) : (
+                    <FileText className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+              )}
+              {!logoFile && (
+                <div className="w-16 h-16 flex-shrink-0 border rounded-md flex items-center justify-center bg-muted">
+                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+            {logoFile && (
+              <p className="text-xs text-muted-foreground mt-1">Arquivo selecionado: {logoFile.name}</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2">
