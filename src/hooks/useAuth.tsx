@@ -8,6 +8,8 @@ interface AuthContextType {
   session: Session | null;
   signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithLinkedIn: () => Promise<void>;
   signOut: () => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
   loading: boolean;
@@ -50,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [toast]);
 
   const signUp = async (email: string, password: string, fullName: string, userType?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/dashboard`; // Redirect to dashboard after signup
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -115,12 +117,44 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
+      },
+    });
+    if (error) {
+      toast({
+        title: "Erro no login com Google",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const signInWithLinkedIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'linkedin_oidc', // Use 'linkedin_oidc' for OpenID Connect
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
+      },
+    });
+    if (error) {
+      toast({
+        title: "Erro no login com LinkedIn",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const resendConfirmation = async (email: string) => {
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${window.location.origin}/`
+        emailRedirectTo: `${window.location.origin}/dashboard` // Redirect to dashboard after confirmation
       }
     });
 
@@ -173,6 +207,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     signUp,
     signIn,
+    signInWithGoogle,
+    signInWithLinkedIn,
     signOut,
     resendConfirmation,
     loading,

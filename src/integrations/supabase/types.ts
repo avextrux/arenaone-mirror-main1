@@ -23,6 +23,7 @@ export type Database = {
           id: string
           invited_at: string | null
           invited_by: string | null
+          invite_code: string | null // Added invite_code column
           permission_level: Database["public"]["Enums"]["permission_level"]
           status: string | null
           updated_at: string | null
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           invited_at?: string | null
           invited_by?: string | null
+          invite_code?: string | null // Added invite_code column
           permission_level?: Database["public"]["Enums"]["permission_level"]
           status?: string | null
           updated_at?: string | null
@@ -49,6 +51,7 @@ export type Database = {
           id?: string
           invited_at?: string | null
           invited_by?: string | null
+          invite_code?: string | null // Added invite_code column
           permission_level?: Database["public"]["Enums"]["permission_level"]
           status?: string | null
           updated_at?: string | null

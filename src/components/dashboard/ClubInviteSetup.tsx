@@ -9,11 +9,29 @@ import { Building, Mail, Users, CircleAlert as AlertCircle, CircleCheck as Check
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
   userType: string;
 }
+
+// Helper to get user type label (moved from Dashboard.tsx for reusability)
+const getUserTypeLabel = (userType: string) => {
+  const labels = {
+    player: "Jogador",
+    club: "Clube", 
+    agent: "Agente",
+    coach: "Técnico",
+    scout: "Olheiro",
+    medical_staff: "Staff Médico",
+    financial_staff: "Staff Financeiro",
+    technical_staff: "Staff Técnico",
+    journalist: "Jornalista",
+    fan: "Torcedor"
+  };
+  return labels[userType as keyof typeof labels] || "Usuário";
+};
 
 const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   const { user } = useAuth();
@@ -29,7 +47,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   useEffect(() => {
     fetchClubs();
     fetchPendingInvites();
-  }, []);
+  }, [user]);
 
   const fetchClubs = async () => {
     const { data } = await supabase
@@ -49,7 +67,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
         *,
         clubs (name, logo_url)
       `)
-      .eq('user_id', user.id)
+      eq('user_id', user.id)
       .eq('status', 'pending');
 
     setPendingInvites(data || []);
@@ -62,18 +80,31 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
         .from('club_members')
         .update({ 
           status: 'accepted',
-          accepted_at: new Date().toISOString()
+          accepted_at: new Date().toISOString(),
+          user_id: user?.id, // Ensure user_id is set if it was null initially
+          // Also update user_type in profiles if it's not set yet
+          // This assumes the invite has a department that maps to a user_type
         })
         .eq('id', inviteId);
 
       if (error) throw error;
+
+      // Update user's profile with the user_type from the accepted invite
+      const acceptedInvite = pendingInvites.find(invite => invite.id === inviteId);
+      if (acceptedInvite && user && !user.user_metadata.user_type) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ user_type: acceptedInvite.department as any }) // Assuming department can map to user_type
+          .eq('id', user.id);
+        if (profileError) console.error('Error updating user_type in profile:', profileError);
+      }
 
       toast({
         title: "Convite aceito!",
         description: "Você agora faz parte da organização.",
       });
 
-      await onComplete({});
+      await onComplete({}); // Trigger re-fetch in Dashboard
     } catch (error) {
       console.error('Error accepting invite:', error);
       toast({
@@ -110,37 +141,80 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   };
 
   const handleJoinWithCode = async () => {
-    if (!inviteCode.trim()) return;
+    if (!inviteCode.trim() || !user) return;
 
     setLoading(true);
     try {
-      // Simular busca por código de convite
-      // Em produção, isso seria uma função do Supabase
+      // Check if an invite with this code exists and is pending
+      const { data, error } = await supabase
+        .from('club_members')
+        .select('*')
+        .eq('invite_code', inviteCode.trim())
+        .eq('status', 'pending')
+        .is('user_id', null) // Ensure it's an unassigned invite
+        .single();
+
+      if (error || !data) {
+        throw new Error("Código de convite inválido ou já utilizado.");
+      }
+
+      // Update the invite to link to the current user and set status to accepted
+      const { error: updateError } = await supabase
+        .from('club_members')
+        .update({ 
+          user_id: user.id,
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', data.id);
+
+      if (updateError) throw updateError;
+
+      // Update user's profile with the user_type from the accepted invite
+      if (user && !user.user_metadata.user_type) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ user_type: data.department as any }) // Assuming department can map to user_type
+          .eq('id', user.id);
+        if (profileError) console.error('Error updating user_type in profile:', profileError);
+      }
+
       toast({
-        title: "Código inválido",
-        description: "Código de convite não encontrado ou expirado.",
+        title: "Convite aceito!",
+        description: "Você agora faz parte da organização.",
+      });
+
+      await onComplete({}); // Trigger re-fetch in Dashboard
+    } catch (error: any) {
+      console.error('Error joining with code:', error);
+      toast({
+        title: "Erro",
+        description: error.message || "Não foi possível ingressar com o código.",
         variant: "destructive",
       });
-    } catch (error) {
-      console.error('Error joining with code:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleRequestAccess = async () => {
-    if (!selectedClub || !department) return;
+    if (!selectedClub || !department || !user) return;
 
     setLoading(true);
     try {
+      // Generate a unique invite code for this request
+      const newInviteCode = uuidv4();
+
       const { error } = await supabase
         .from('club_members')
         .insert([{
           club_id: selectedClub,
-          user_id: user?.id,
+          user_id: user.id, // User is requesting, so user_id is known
           department: department as any,
-          permission_level: 'read',
-          status: 'pending'
+          permission_level: 'read', // Default for requests
+          status: 'pending',
+          invite_code: newInviteCode, // Store the generated code
+          invited_at: new Date().toISOString()
         }]);
 
       if (error) throw error;
@@ -151,6 +225,8 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
       });
 
       setStep(1);
+      setDepartment("");
+      setSelectedClub("");
       await fetchPendingInvites();
     } catch (error) {
       console.error('Error requesting access:', error);
@@ -175,7 +251,11 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
     
     return options[userType as keyof typeof options] || [
       { value: "management", label: "Diretoria" },
-      { value: "admin", label: "Administração" }
+      { value: "admin", label: "Administração" },
+      { value: "medical", label: "Departamento Médico" },
+      { value: "scouting", label: "Departamento de Scouting" },
+      { value: "technical", label: "Comissão Técnica" },
+      { value: "financial", label: "Departamento Financeiro" },
     ];
   };
 

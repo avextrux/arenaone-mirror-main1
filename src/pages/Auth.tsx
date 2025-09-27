@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Building, Briefcase, Target, Trophy, PenTool, Heart, Flag, Activity, Stethoscope, Calculator } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Building, Briefcase, Target, Trophy, PenTool, Heart, Flag, Activity, Stethoscope, Calculator, Chrome, Linkedin } from "lucide-react";
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -16,7 +16,8 @@ const authSchema = z.object({
   fullName: z.string().optional().refine((val) => !val || (val.trim().length >= 2 && val.length <= 100), {
     message: "Nome deve ter entre 2 e 100 caracteres"
   }),
-  userType: z.string().optional()
+  // userType is now optional and will be set via invite or UserTypeSetup
+  userType: z.string().optional() 
 });
 
 const Auth = () => {
@@ -26,13 +27,13 @@ const Auth = () => {
     email: "",
     password: "",
     fullName: "",
-    userType: ""
+    userType: "" // This will not be directly set in signup form anymore
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showResendButton, setShowResendButton] = useState(false);
 
-  const { signUp, signIn, resendConfirmation, user } = useAuth();
+  const { signUp, signIn, signInWithGoogle, signInWithLinkedIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -42,6 +43,7 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  // User types for display purposes, not for direct selection during signup
   const userTypes = [
     {
       value: "player",
@@ -123,19 +125,15 @@ const Auth = () => {
     try {
       // Validate form data
       const validationData = isSignUp 
-        ? { ...formData, fullName: formData.fullName.trim() || undefined, userType: formData.userType || undefined }
+        ? { ...formData, fullName: formData.fullName.trim() || undefined } // userType is not selected here
         : { email: formData.email, password: formData.password };
         
       authSchema.parse(validationData);
 
       let result;
       if (isSignUp) {
-        if (!formData.userType) {
-          setErrors({ userType: "Selecione seu tipo de perfil" });
-          setLoading(false);
-          return;
-        }
-        result = await signUp(formData.email.trim(), formData.password, formData.fullName.trim(), formData.userType);
+        // userType is not passed during initial signup, it will be set in UserTypeSetup or via invite
+        result = await signUp(formData.email.trim(), formData.password, formData.fullName.trim());
       } else {
         result = await signIn(formData.email.trim(), formData.password);
         
@@ -321,6 +319,38 @@ const Auth = () => {
                     </Button>
                   )}
                 </form>
+
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Ou continue com
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithGoogle}
+                    disabled={loading}
+                  >
+                    <Chrome className="w-4 h-4" />
+                    Entrar com Google
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithLinkedIn}
+                    disabled={loading}
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    Entrar com LinkedIn
+                  </Button>
+                </div>
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-6">
@@ -396,7 +426,8 @@ const Auth = () => {
                     )}
                   </div>
 
-                  <div className="space-y-3">
+                  {/* Removed userType selection from signup form as it will be handled by invite or UserTypeSetup */}
+                  {/* <div className="space-y-3">
                     <Label className="text-sm font-medium">Tipo de Perfil *</Label>
                     <div className="grid grid-cols-2 gap-3">
                       {userTypes.map((type) => {
@@ -431,7 +462,7 @@ const Auth = () => {
                     {errors.userType && (
                       <p className="text-sm text-destructive">{errors.userType}</p>
                     )}
-                  </div>
+                  </div> */}
 
                   <Button 
                     type="submit" 
@@ -448,6 +479,38 @@ const Auth = () => {
                     )}
                   </Button>
                 </form>
+
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Ou continue com
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithGoogle}
+                    disabled={loading}
+                  >
+                    <Chrome className="w-4 h-4" />
+                    Registrar com Google
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center gap-2"
+                    onClick={signInWithLinkedIn}
+                    disabled={loading}
+                  >
+                    <Linkedin className="w-4 h-4" />
+                    Registrar com LinkedIn
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
 
