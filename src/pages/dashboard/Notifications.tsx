@@ -1,0 +1,244 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Bell, CheckCircle, Archive, Trash2, MessageSquare, UserPlus, TrendingUp, Building } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+
+interface Notification {
+  id: string;
+  type: 'message' | 'connection_request' | 'opportunity' | 'club_invite' | 'system';
+  title: string;
+  description: string;
+  timestamp: string;
+  read: boolean;
+  related_entity_id?: string; // e.g., conversation_id, profile_id, opportunity_id
+}
+
+const Notifications = () => {
+  const { toast } = useToast();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate fetching notifications
+    const fetchNotifications = async () => {
+      setLoading(true);
+      // Dummy data for notifications
+      const dummyNotifications: Notification[] = [
+        {
+          id: "1",
+          type: "message",
+          title: "Nova Mensagem de João Silva",
+          description: "Você recebeu uma nova mensagem de João Silva: 'Olá, como vai?'",
+          timestamp: "2024-07-20T10:00:00Z",
+          read: false,
+          related_entity_id: "conv_123"
+        },
+        {
+          id: "2",
+          type: "connection_request",
+          title: "Pedido de Conexão de Maria Souza",
+          description: "Maria Souza enviou um pedido de conexão. Aceitar ou rejeitar?",
+          timestamp: "2024-07-19T15:30:00Z",
+          read: false,
+          related_entity_id: "profile_456"
+        },
+        {
+          id: "3",
+          type: "opportunity",
+          title: "Nova Oportunidade de Transferência",
+          description: "Uma nova oportunidade de transferência para um clube na Espanha foi publicada.",
+          timestamp: "2024-07-18T09:00:00Z",
+          read: true,
+          related_entity_id: "opp_789"
+        },
+        {
+          id: "4",
+          type: "club_invite",
+          title: "Convite para o FC Barcelona",
+          description: "Você foi convidado para se juntar ao departamento de scouting do FC Barcelona.",
+          timestamp: "2024-07-17T11:45:00Z",
+          read: false,
+          related_entity_id: "club_101"
+        },
+        {
+          id: "5",
+          type: "system",
+          title: "Atualização da Plataforma",
+          description: "Novos recursos foram adicionados à ArenaOne! Confira as novidades.",
+          timestamp: "2024-07-16T14:00:00Z",
+          read: true,
+        },
+      ];
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+      setNotifications(dummyNotifications);
+      setLoading(false);
+    };
+
+    fetchNotifications();
+  }, []);
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notif => (notif.id === id ? { ...notif, read: true } : notif))
+    );
+    toast({
+      title: "Notificação marcada como lida",
+      description: "Esta notificação não aparecerá mais como não lida.",
+    });
+  };
+
+  const archiveNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+    toast({
+      title: "Notificação arquivada",
+      description: "A notificação foi removida da sua lista.",
+    });
+  };
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'message': return <MessageSquare className="w-5 h-5 text-blue-500" />;
+      case 'connection_request': return <UserPlus className="w-5 h-5 text-green-500" />;
+      case 'opportunity': return <TrendingUp className="w-5 h-5 text-purple-500" />;
+      case 'club_invite': return <Building className="w-5 h-5 text-red-500" />;
+      case 'system': return <Bell className="w-5 h-5 text-yellow-500" />;
+      default: return <Bell className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (seconds < 60) return 'Agora';
+    if (minutes < 60) return `${minutes}m atrás`;
+    if (hours < 24) return `${hours}h atrás`;
+    if (days < 7) return `${days}d atrás`;
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const unreadNotifications = notifications.filter(notif => !notif.read);
+  const readNotifications = notifications.filter(notif => notif.read);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando notificações...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            <Bell className="w-6 h-6" />
+            Notificações
+          </h1>
+          <p className="text-muted-foreground">
+            Mantenha-se atualizado com as últimas atividades
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}>
+          <CheckCircle className="w-4 h-4 mr-2" />
+          Marcar todas como lidas
+        </Button>
+      </div>
+
+      {notifications.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Bell className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="font-semibold text-lg mb-2">Nenhuma notificação</h3>
+            <p className="text-muted-foreground">
+              Você está em dia! Novas notificações aparecerão aqui.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {unreadNotifications.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Não Lidas ({unreadNotifications.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {unreadNotifications.map((notif, index) => (
+                  <div key={notif.id}>
+                    <div className="flex items-start gap-4 p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notif.type)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-sm">{notif.title}</h3>
+                          <span className="text-xs text-muted-foreground">{formatTime(notif.timestamp)}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">{notif.description}</p>
+                        <div className="flex gap-2 mt-3">
+                          <Button variant="outline" size="sm" onClick={() => markAsRead(notif.id)}>
+                            <CheckCircle className="w-3 h-3 mr-1" /> Lida
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => archiveNotification(notif.id)}>
+                            <Archive className="w-3 h-3 mr-1" /> Arquivar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    {index < unreadNotifications.length - 1 && <Separator />}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          {readNotifications.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Lidas ({readNotifications.length})</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {readNotifications.map((notif, index) => (
+                  <div key={notif.id}>
+                    <div className="flex items-start gap-4 p-4 text-muted-foreground hover:bg-muted/50 transition-colors">
+                      <div className="flex-shrink-0 mt-1 opacity-70">
+                        {getNotificationIcon(notif.type)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-sm">{notif.title}</h3>
+                          <span className="text-xs">{formatTime(notif.timestamp)}</span>
+                        </div>
+                        <p className="text-sm mt-1">{notif.description}</p>
+                        <div className="flex gap-2 mt-3">
+                          <Button variant="ghost" size="sm" onClick={() => archiveNotification(notif.id)}>
+                            <Archive className="w-3 h-3 mr-1" /> Arquivar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    {index < readNotifications.length - 1 && <Separator />}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Notifications;

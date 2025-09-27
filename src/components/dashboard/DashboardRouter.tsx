@@ -6,6 +6,7 @@ import Messages from "@/pages/dashboard/Messages";
 import Profile from "@/pages/dashboard/Profile";
 import ClubManagement from "@/pages/dashboard/ClubManagement";
 import ClubPlayers from "@/pages/dashboard/ClubPlayers";
+import Notifications from "@/pages/dashboard/Notifications"; // Import the new Notifications component
 import { Card, CardContent } from "@/components/ui/card";
 import { Construction } from "lucide-react";
 
@@ -26,9 +27,9 @@ const DashboardRouter = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/club" element={<ClubManagement />} />
       <Route path="/players" element={<ClubPlayers />} />
+      <Route path="/notifications" element={<Notifications />} /> {/* New route for Notifications */}
       
       {/* Páginas em desenvolvimento */}
-      <Route path="/notifications" element={<UnderDevelopment page="Notificações" />} />
       <Route path="/stats" element={<UnderDevelopment page="Estatísticas" />} />
       <Route path="/transfers" element={<UnderDevelopment page="Transferências" />} />
       <Route path="/training" element={<UnderDevelopment page="Treinamentos" />} />

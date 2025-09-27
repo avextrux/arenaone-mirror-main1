@@ -68,6 +68,7 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
       { title: "Feed", url: "/dashboard", icon: Home },
       { title: "Rede", url: "/dashboard/network", icon: Network },
       { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare },
+      { title: "Notificações", url: "/dashboard/notifications", icon: Bell }, // Added Notifications
     ];
 
     const userSpecificItems = {
