@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import SupabaseTest from "@/components/SupabaseTest"; // Import the test component
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </BrowserRouter>
+        <SupabaseTest /> {/* Add the test component here */}
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
