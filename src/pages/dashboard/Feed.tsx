@@ -15,7 +15,7 @@ interface Post {
   shares_count: number;
   created_at: string;
   user_id: string;
-  profiles: {
+  profiles?: { // Made profiles optional
     full_name: string;
     avatar_url?: string;
     user_type: string;  
@@ -166,11 +166,11 @@ const Feed = () => {
               key={post.id}
               id={post.id}
               author={{
-                name: post.profiles.full_name,
-                username: post.profiles.full_name.toLowerCase().replace(/\s+/g, ''),
-                avatar: post.profiles.avatar_url,
-                userType: post.profiles.user_type,
-                verified: post.profiles.verified
+                name: post.profiles?.full_name || "Usuário Desconhecido", // Null check
+                username: post.profiles?.full_name?.toLowerCase().replace(/\s+/g, '') || "desconhecido", // Null check
+                avatar: post.profiles?.avatar_url, // Null check
+                userType: post.profiles?.user_type || "fan", // Null check
+                verified: post.profiles?.verified || false // Null check
               }}
               content={post.content}
               postType={post.post_type}
