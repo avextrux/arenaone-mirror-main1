@@ -10,6 +10,7 @@ import Notifications from "@/pages/dashboard/Notifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Construction } from "lucide-react";
 import { Profile as UserProfile, ClubMembership } from "@/pages/Dashboard"; // Import types from Dashboard
+import { UserType } from "@/integrations/supabase/types"; // Import UserType
 
 interface DashboardRouterProps {
   profile: UserProfile | null;
@@ -20,53 +21,104 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
   const location = useLocation();
   console.log("DashboardRouter current path:", location.pathname); // Para depuração
 
-  return (
-    <Routes>
-      {/* Rota padrão para /dashboard, mostrando Feed (agora funcional) */}
-      <Route index element={<Feed profile={profile} />} /> 
-      {/* Rotas explícitas, agora relativas ao caminho pai (/dashboard) */}
-      <Route path="network" element={<UnderDevelopment page="Rede" />} /> 
-      <Route path="market" element={<Market />} />
-      <Route path="messages" element={<Messages />} /> {/* Rota de Mensagens agora funcional */}
+  if (!profile || !profile.user_type) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <p className="text-muted-foreground ml-4">Carregando rotas do dashboard...</p>
+      </div>
+    );
+  }
+
+  const userType: UserType = profile.user_type;
+
+  const renderCommonRoutes = () => (
+    <>
+      <Route index element={<Feed profile={profile} />} />
+      <Route path="network" element={<UnderDevelopment page="Rede" />} />
+      <Route path="messages" element={<Messages />} />
+      <Route path="notifications" element={<Notifications />} />
       <Route path="profile" element={<Profile />} />
+      <Route path="market" element={<Market />} /> {/* Mercado é comum para alguns, mas pode ser mais relevante para outros */}
+      <Route path="post" element={<UnderDevelopment page="Criar Post" />} />
+      <Route path="search" element={<UnderDevelopment page="Pesquisar" />} />
+      <Route path="settings" element={<UnderDevelopment page="Configurações" />} />
+    </>
+  );
+
+  const renderClubRelatedRoutes = () => (
+    <>
       <Route path="club" element={<ClubManagement clubMemberships={clubMemberships} />} />
       <Route path="players" element={<ClubPlayers clubMemberships={clubMemberships} />} />
-      <Route path="notifications" element={<Notifications />} />
-      
-      {/* Páginas em desenvolvimento */}
-      <Route path="stats" element={<UnderDevelopment page="Estatísticas" />} />
-      <Route path="transfers" element={<UnderDevelopment page="Transferências" />} />
-      <Route path="training" element={<UnderDevelopment page="Treinamentos" />} />
-      <Route path="opportunities" element={<UnderDevelopment page="Oportunidades" />} />
-      <Route path="scouts" element={<UnderDevelopment page="Scout Reports" />} />
-      <Route path="scout-reports" element={<UnderDevelopment page="Scout Reports" />} />
+      <Route path="staff" element={<UnderDevelopment page="Staff do Clube" />} />
+      <Route path="reports" element={<UnderDevelopment page="Relatórios" />} />
       <Route path="medical" element={<UnderDevelopment page="Histórico Médico" />} />
       <Route path="medical-exams" element={<UnderDevelopment page="Exames Médicos" />} />
       <Route path="finances" element={<UnderDevelopment page="Finanças" />} />
-      <Route path="staff" element={<UnderDevelopment page="Staff do Clube" />} />
-      <Route path="calendar" element={<UnderDevelopment page="Calendário" />} />
-      <Route path="jobs" element={<UnderDevelopment page="Vagas" />} />
-      <Route path="clients" element={<UnderDevelopment page="Meus Clientes" />} />
-      <Route path="contracts" element={<UnderDevelopment page="Contratos" />} />
-      <Route path="reports" element={<UnderDevelopment page="Relatórios" />} />
-      <Route path="team" element={<UnderDevelopment page="Minha Equipe" />} />
+      <Route path="training" element={<UnderDevelopment page="Treinamentos" />} />
       <Route path="tactics" element={<UnderDevelopment page="Táticas" />} />
-      <Route path="matches" element={<UnderDevelopment page="Partidas" />} />
       <Route path="analysis" element={<UnderDevelopment page="Análises" />} />
-      <Route path="articles" element={<UnderDevelopment page="Artigos" />} />
-      <Route path="interviews" element={<UnderDevelopment page="Entrevistas" />} />
-      <Route path="events" element={<UnderDevelopment page="Eventos" />} />
-      <Route path="contacts" element={<UnderDevelopment page="Contatos" />} />
-      <Route path="teams" element={<UnderDevelopment page="Times Favoritos" />} />
-      <Route path="communities" element={<UnderDevelopment page="Comunidades" />} />
-      <Route path="post" element={<UnderDevelopment page="Novo Post" />} />
-      <Route path="search" element={<UnderDevelopment page="Pesquisar" />} />
-      <Route path="settings" element={<UnderDevelopment page="Configurações" />} />
-      
-      {/* Rota padrão para qualquer outra rota não encontrada no dashboard */}
-      <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
-    </Routes>
+    </>
   );
+
+  switch (userType) {
+    case 'player':
+      return (
+        <Routes>
+          {renderCommonRoutes()}
+          <Route path="stats" element={<UnderDevelopment page="Estatísticas" />} />
+          <Route path="opportunities" element={<UnderDevelopment page="Minhas Oportunidades" />} />
+          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
+        </Routes>
+      );
+    case 'club':
+      return (
+        <Routes>
+          {renderCommonRoutes()}
+          {renderClubRelatedRoutes()}
+          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
+        </Routes>
+      );
+    case 'agent':
+      return (
+        <Routes>
+          {renderCommonRoutes()}
+          <Route path="clients" element={<UnderDevelopment page="Meus Clientes" />} />
+          <Route path="contracts" element={<UnderDevelopment page="Contratos" />} />
+          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
+        </Routes>
+      );
+    case 'coach':
+    case 'scout':
+    case 'medical_staff':
+    case 'financial_staff':
+    case 'technical_staff':
+      return (
+        <Routes>
+          {renderCommonRoutes()}
+          {renderClubRelatedRoutes()}
+          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
+        </Routes>
+      );
+    case 'journalist':
+      return (
+        <Routes>
+          {renderCommonRoutes()}
+          <Route path="articles" element={<UnderDevelopment page="Artigos" />} />
+          <Route path="interviews" element={<UnderDevelopment page="Entrevistas" />} />
+          <Route path="events" element={<UnderDevelopment page="Eventos" />} />
+          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
+        </Routes>
+      );
+    default:
+      // Fallback para tipos de usuário não configurados ou novos
+      return (
+        <Routes>
+          {renderCommonRoutes()}
+          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
+        </Routes>
+      );
+  }
 };
 
 const UnderDevelopment = ({ page }: { page: string }) => (
@@ -80,7 +132,7 @@ const UnderDevelopment = ({ page }: { page: string }) => (
         </p>
       </CardContent>
     </Card>
-  </div>
-);
+  );
+};
 
 export default DashboardRouter;

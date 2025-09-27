@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { User, Building, Briefcase, Target, Trophy, PenTool, Heart, Flag, Activity, Stethoscope, Calculator } from "lucide-react"; // Adicionei Stethoscope e Calculator
+import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator } from "lucide-react"; // Adicionei Stethoscope e Calculator
 
 interface UserTypeSetupProps {
   onComplete: (userType: string, profileData: any) => Promise<void>;
@@ -69,13 +69,6 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
       color: "bg-yellow-100 text-yellow-800"
     },
     {
-      value: "referee",
-      label: "Árbitro",
-      icon: Flag,
-      description: "Oficial de partida",
-      color: "bg-gray-100 text-gray-800"
-    },
-    {
       value: "medical_staff",
       label: "Staff Médico",
       icon: Stethoscope, // Ícone atualizado
@@ -121,7 +114,6 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
       coach: "Ex: Futebol de base, Preparação física, Análise técnica...",
       scout: "Ex: Talentos jovens, Mercado europeu, Futebol brasileiro...",
       journalist: "Ex: Cobertura de jogos, Entrevistas, Análise tática...",
-      referee: "Ex: Futebol profissional, Arbitragem FIFA...",
       medical_staff: "Ex: Fisioterapia, Nutrição esportiva, Preparação física...",
       financial_staff: "Ex: Contabilidade, Orçamento, Análise de investimentos...",
       technical_staff: "Ex: Análise de dados, Suporte de vídeo, Tecnologia esportiva..."

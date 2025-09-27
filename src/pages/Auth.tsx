@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Briefcase, Building, Target, Trophy, PenTool, Flag, Activity, Stethoscope, Calculator } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Briefcase, Building, Target, Trophy, PenTool, Activity, Stethoscope, Calculator } from "lucide-react";
 import { UserType, Constants } from "@/integrations/supabase/types"; // Importando Constants
 
 const authSchema = z.object({
@@ -106,7 +106,6 @@ const Auth = () => {
     { value: "coach", label: "Técnico", icon: Target },
     { value: "scout", label: "Olheiro", icon: Trophy },
     { value: "journalist", label: "Jornalista", icon: PenTool },
-    { value: "referee", label: "Árbitro", icon: Flag },
     { value: "medical_staff", label: "Staff Médico", icon: Stethoscope },
     { value: "financial_staff", label: "Staff Financeiro", icon: Calculator },
     { value: "technical_staff", label: "Staff Técnico", icon: Activity },

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Bell, CirclePlus as PlusCircle, Network, Target, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Shield, Flag, Search } from "lucide-react"; // Removi Heart
+import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Bell, CirclePlus as PlusCircle, Network, Target, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Shield, Search } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -116,10 +116,6 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
         { title: "Artigos", url: "/dashboard/articles", icon: FileText, disabled: true },
         { title: "Entrevistas", url: "/dashboard/interviews", icon: MessageSquare, disabled: true },
         { title: "Eventos", url: "/dashboard/events", icon: Calendar, disabled: true },
-      ],
-      referee: [ // Adicionado referee
-        { title: "Partidas", url: "/dashboard/matches", icon: Flag, disabled: true },
-        { title: "Relatórios", url: "/dashboard/reports", icon: FileText, disabled: true },
       ],
     };
 

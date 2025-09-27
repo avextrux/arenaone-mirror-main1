@@ -28,7 +28,6 @@ export type UserType =
   | "coach"
   | "scout"
   | "journalist"
-  | "referee"
   | "medical_staff"
   | "financial_staff"
   | "technical_staff"
@@ -722,9 +721,9 @@ export type Database = {
           club_id: string
           created_at?: string | null
           created_by: string
+          id?: string
           emergency_contact?: Json | null
           fitness_level?: number | null
-          id?: string
           injuries_history?: Json | null
           last_medical_exam?: string | null
           medical_history?: string | null
@@ -1444,7 +1443,6 @@ export const Constants = {
         "coach",
         "scout",
         "journalist",
-        "referee",
         "medical_staff",
         "financial_staff",
         "technical_staff",

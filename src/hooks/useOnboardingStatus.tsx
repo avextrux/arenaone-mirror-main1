@@ -73,7 +73,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     if (!currentProfile.user_type) {
       nextStep = "userTypeSetup";
     } else {
-      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club', 'referee'].includes(currentProfile.user_type); // Adicionado 'referee'
+      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
       
       if (currentProfile.user_type === 'club') {
         const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
@@ -92,7 +92,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
     // Handle redirects if onboarding is complete and on base dashboard path
     if (nextStep === "complete" && location.pathname === '/dashboard') {
-      if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club', 'referee'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
+      if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
         navigate('/dashboard/club', { replace: true });
       } else if (currentProfile.user_type === 'player') {
         navigate('/dashboard/profile', { replace: true });
