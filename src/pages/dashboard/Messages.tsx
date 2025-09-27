@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile hook
 import NewConversationDialog from "@/components/dashboard/NewConversationDialog"; // Import new component
+import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
 
 // Define types based on Supabase schema
 interface Profile {
@@ -369,32 +370,6 @@ const Messages = () => {
   const handleConversationStarted = (conversationId: string) => {
     setSelectedConversationId(conversationId);
     fetchConversations(); // Re-fetch conversations to update the list
-  };
-
-  const getUserTypeColor = (userType: string) => {
-    const colors = {
-      player: "bg-blue-100 text-blue-800",
-      club: "bg-red-100 text-red-800",
-      agent: "bg-green-100 text-green-800",
-      coach: "bg-purple-100 text-purple-800",
-      scout: "bg-orange-100 text-orange-800",
-      journalist: "bg-yellow-100 text-yellow-800",
-      fan: "bg-gray-100 text-gray-800"
-    };
-    return colors[userType as keyof typeof colors] || colors.fan;
-  };
-
-  const getUserTypeLabel = (userType: string) => {
-    const labels = {
-      player: "Jogador",
-      club: "Clube", 
-      agent: "Agente",
-      coach: "Técnico",
-      scout: "Olheiro",
-      journalist: "Jornalista",
-      fan: "Torcedor"
-    };
-    return labels[userType as keyof typeof labels] || "Usuário";
   };
 
   const formatTime = (timestamp: string) => {

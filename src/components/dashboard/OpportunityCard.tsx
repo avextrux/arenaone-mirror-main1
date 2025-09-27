@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Eye, DollarSign, Globe, Calendar, MapPin } from "lucide-react";
+import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
 
 interface Opportunity {
   id: string;
@@ -24,32 +25,6 @@ interface Opportunity {
 interface OpportunityCardProps {
   opportunity: Opportunity;
 }
-
-const getUserTypeColor = (userType: string) => {
-  const colors = {
-    player: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-    club: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-    agent: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    coach: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-    scout: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-    journalist: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-    fan: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-  };
-  return colors[userType as keyof typeof colors] || colors.fan;
-};
-
-const getUserTypeLabel = (userType: string) => {
-  const labels = {
-    player: "Jogador",
-    club: "Clube", 
-    agent: "Agente",
-    coach: "Técnico",
-    scout: "Olheiro",
-    journalist: "Jornalista",
-    fan: "Torcedor"
-  };
-  return labels[userType as keyof typeof labels] || "Usuário";
-};
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('pt-BR');

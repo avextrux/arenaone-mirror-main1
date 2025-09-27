@@ -15,6 +15,7 @@ import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
 import CreateClubDialog from "@/components/dashboard/CreateClubDialog";
 import { LogOut, Bell, Settings, Search, Users, Building, TrendingUp, MessageSquare } from "lucide-react";
 import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
+import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
 
 interface Profile {
   id: string;
@@ -230,40 +231,6 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
-  };
-
-  const getUserTypeColor = (userType: UserType | null) => {
-    if (!userType) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
-    const colors = {
-      player: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      club: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-      agent: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      coach: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-      scout: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-      medical_staff: "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200",
-      financial_staff: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
-      technical_staff: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
-      journalist: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      fan: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-    };
-    return colors[userType as keyof typeof colors] || colors.fan;
-  };
-
-  const getUserTypeLabel = (userType: UserType | null) => {
-    if (!userType) return "Não Definido";
-    const labels = {
-      player: "Jogador",
-      club: "Clube", 
-      agent: "Agente",
-      coach: "Técnico",
-      scout: "Olheiro",
-      medical_staff: "Staff Médico",
-      financial_staff: "Staff Financeiro",
-      technical_staff: "Staff Técnico",
-      journalist: "Jornalista",
-      fan: "Torcedor"
-    };
-    return labels[userType as keyof typeof labels] || "Usuário";
   };
 
   if (loading) {

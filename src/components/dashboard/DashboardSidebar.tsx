@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
+import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
 
 interface ClubMembership {
   id: string;

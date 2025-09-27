@@ -12,13 +12,15 @@ import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit } from "lucide-
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
+import { UserType } from "@/integrations/supabase/types"; // Importando UserType
 
 interface Profile {
   id: string;
   full_name: string;
   email: string;
   avatar_url?: string;
-  user_type: string;
+  user_type: UserType | null; // user_type pode ser nulo inicialmente
   bio?: string;
   location?: string;
   website?: string;
@@ -93,7 +95,7 @@ const Profile = () => {
           bio: formData.bio,
           location: formData.location,
           website: formData.website,
-          user_type: formData.user_type as any
+          user_type: formData.user_type as UserType // Usando o tipo UserType
         })
         .eq('id', user.id);
 
@@ -119,32 +121,6 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const getUserTypeColor = (userType: string) => {
-    const colors = {
-      player: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      club: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-      agent: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      coach: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-      scout: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
-      journalist: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      fan: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-    };
-    return colors[userType as keyof typeof colors] || colors.fan;
-  };
-
-  const getUserTypeLabel = (userType: string) => {
-    const labels = {
-      player: "Jogador",
-      club: "Clube", 
-      agent: "Agente",
-      coach: "Técnico",
-      scout: "Olheiro",
-      journalist: "Jornalista",
-      fan: "Torcedor"
-    };
-    return labels[userType as keyof typeof labels] || "Usuário";
   };
 
   if (loading) {
@@ -212,7 +188,7 @@ const Profile = () => {
                   <Avatar className="w-32 h-32 border-4 border-primary/20">
                     <AvatarImage src={profile.avatar_url} />
                     <AvatarFallback className="text-2xl">
-                      {profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {profile.full_name?.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {editMode && (
@@ -302,6 +278,10 @@ const Profile = () => {
                         <SelectItem value="scout">Olheiro</SelectItem>
                         <SelectItem value="journalist">Jornalista</SelectItem>
                         <SelectItem value="fan">Torcedor</SelectItem>
+                        <SelectItem value="referee">Árbitro</SelectItem>
+                        <SelectItem value="medical_staff">Staff Médico</SelectItem>
+                        <SelectItem value="financial_staff">Staff Financeiro</SelectItem>
+                        <SelectItem value="technical_staff">Staff Técnico</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (

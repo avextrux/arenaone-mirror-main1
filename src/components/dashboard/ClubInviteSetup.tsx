@@ -10,28 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
+import { getUserTypeLabel } from "@/lib/userUtils"; // Importando a função de utilitário
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
   userType: string;
 }
-
-// Helper to get user type label (moved from Dashboard.tsx for reusability)
-const getUserTypeLabel = (userType: string) => {
-  const labels = {
-    player: "Jogador",
-    club: "Clube", 
-    agent: "Agente",
-    coach: "Técnico",
-    scout: "Olheiro",
-    medical_staff: "Staff Médico",
-    financial_staff: "Staff Financeiro",
-    technical_staff: "Staff Técnico",
-    journalist: "Jornalista",
-    fan: "Torcedor"
-  };
-  return labels[userType as keyof typeof labels] || "Usuário";
-};
 
 const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   const { user } = useAuth();
