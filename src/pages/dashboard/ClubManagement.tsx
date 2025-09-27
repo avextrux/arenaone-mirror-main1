@@ -114,7 +114,7 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
         .limit(3); // Show next 3 matches
 
       if (error) throw error;
-      setUpcomingMatches(data || []);
+      setUpcomingMatches(data as Match[] || []); // <-- Correção aplicada aqui
     } catch (error) {
       console.error('Error fetching upcoming matches:', error);
       toast({
