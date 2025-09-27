@@ -15,7 +15,7 @@ import CreateClubDialog from "@/components/dashboard/CreateClubDialog";
 import { LogOut, Bell, Settings, Search } from "lucide-react";
 import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
-import { useOnboardingStatus } from "@/hooks/useOnboardingStatus"; // Importando o novo hook
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 
 export interface Profile {
   id: string;
@@ -47,7 +47,7 @@ export interface ClubMembership {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
-  const { loading, onboardingStep, profile, clubMemberships, refetchStatus } = useOnboardingStatus(); // Usando o novo hook
+  const { loading, onboardingStep, profile, clubMemberships, refetchStatus } = useOnboardingStatus();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -77,7 +77,7 @@ const Dashboard = () => {
         title: "Perfil configurado!",
         description: "Seu perfil foi configurado com sucesso.",
       });
-      refetchStatus(); // Re-fetch status after update
+      refetchStatus();
     } catch (error) {
       console.error('Error in handleUserTypeSetup:', error);
     }
@@ -88,7 +88,7 @@ const Dashboard = () => {
       title: "Afiliação ao clube!",
       description: "Você agora está vinculado a um clube.",
     });
-    refetchStatus(); // Re-fetch status
+    refetchStatus();
   };
 
   const handleClubCreated = async (newClub: any, newMembership: ClubMembership) => {
@@ -96,7 +96,7 @@ const Dashboard = () => {
       title: "Clube criado!",
       description: "Seu perfil de clube foi criado com sucesso.",
     });
-    refetchStatus(); // Re-fetch status
+    refetchStatus();
   };
 
   const handleSignOut = async () => {
@@ -127,11 +127,13 @@ const Dashboard = () => {
     return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
   }
 
-  if (!profile) {
+  // Se chegamos aqui, onboardingStep é "complete".
+  // Neste ponto, profile e profile.user_type devem ser válidos.
+  if (!profile || !profile.user_type) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">Erro ao carregar perfil</p>
+          <p className="text-muted-foreground">Erro ao carregar perfil ou tipo de usuário não definido.</p>
           <Button onClick={() => navigate('/')} className="mt-4">
             Voltar ao início
           </Button>
@@ -143,10 +145,9 @@ const Dashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-muted/20">
-        <DashboardSidebar userType={profile.user_type || 'fan'} clubMemberships={clubMemberships} />
+        <DashboardSidebar userType={profile.user_type} clubMemberships={clubMemberships} />
         
         <div className="flex-1 flex flex-col">
-          {/* Header */}
           <header className="border-b border-border/50 bg-card/90 backdrop-blur-md sticky top-0 z-40 shadow-sm">
             <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4">
               <div className="flex items-center gap-2 md:gap-4">
@@ -204,7 +205,6 @@ const Dashboard = () => {
             </div>
           </header>
 
-          {/* Main Content */}
           <main className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
               <DashboardRouter profile={profile} clubMemberships={clubMemberships} />

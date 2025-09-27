@@ -8,14 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Briefcase, Building, Target, Trophy, PenTool, Flag, Activity, Stethoscope, Calculator } from "lucide-react"; // Adicionei ícones para os tipos de usuário
-import { UserType } from "@/integrations/supabase/types"; // Importando UserType
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Briefcase, Building, Target, Trophy, PenTool, Flag, Activity, Stethoscope, Calculator } from "lucide-react";
+import { UserType, Constants } from "@/integrations/supabase/types"; // Importando Constants
 
 const authSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
   fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
-  userType: z.nativeEnum(UserType, { // Validar com o enum UserType
+  userType: z.enum(Constants.public.Enums.user_type, { // Usando z.enum com o array de valores do Supabase
     errorMap: () => ({ message: "Por favor, selecione sua função" })
   }),
 });
@@ -27,7 +27,7 @@ const Auth = () => {
     email: "",
     password: "",
     fullName: "",
-    userType: "" as UserType | "" // Inicializa como string vazia ou UserType
+    userType: "" as UserType | ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,6 @@ const Auth = () => {
   const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
@@ -49,7 +48,6 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      // Validate form data
       const validationData = isSignUp 
         ? { ...formData, fullName: formData.fullName.trim(), userType: formData.userType as UserType }
         : { email: formData.email, password: formData.password };
@@ -62,7 +60,6 @@ const Auth = () => {
       } else {
         result = await signIn(formData.email.trim(), formData.password);
         
-        // Show resend button if email not confirmed error
         if (result.error && (
           result.error.message.includes("Email not confirmed") || 
           result.error.message.includes("email_not_confirmed")
@@ -91,7 +88,6 @@ const Auth = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
@@ -118,14 +114,12 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-primary/5 rounded-full blur-2xl"></div>
       </div>
 
-      {/* Back to home button */}
       <Button
         variant="ghost" 
         className="absolute top-8 left-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
