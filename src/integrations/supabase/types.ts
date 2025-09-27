@@ -1125,6 +1125,9 @@ export type Database = {
           user_type: UserType // Using top-level enum type
           verified: boolean | null
           website: string | null
+          specialization: string | null // NEW FIELD
+          experience: string | null // NEW FIELD
+          achievements: string | null // NEW FIELD
         }
         Insert: {
           avatar_url?: string | null
@@ -1142,6 +1145,9 @@ export type Database = {
           user_type?: UserType // Using top-level enum type
           verified?: boolean | null
           website?: string | null
+          specialization?: string | null // NEW FIELD
+          experience?: string | null // NEW FIELD
+          achievements?: string | null // NEW FIELD
         }
         Update: {
           avatar_url?: string | null
@@ -1159,6 +1165,9 @@ export type Database = {
           user_type?: UserType // Using top-level enum type
           verified?: boolean | null
           website?: string | null
+          specialization?: string | null // NEW FIELD
+          experience?: string | null // NEW FIELD
+          achievements?: string | null // NEW FIELD
         }
         Relationships: []
       }

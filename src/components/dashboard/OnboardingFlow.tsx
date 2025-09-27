@@ -29,7 +29,10 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
           user_type: userType as UserType,
           bio: profileData.bio,
           location: profileData.location,
-          website: profileData.website
+          website: profileData.website,
+          specialization: profileData.specialization, // NEW FIELD
+          experience: profileData.experience,         // NEW FIELD
+          achievements: profileData.achievements      // NEW FIELD
         })
         .eq('id', user.id);
 

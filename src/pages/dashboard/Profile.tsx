@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit } from "lucide-react";
+import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit, Briefcase, Award, Target } from "lucide-react"; // Adicionei Briefcase, Award, Target
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,9 @@ interface Profile {
   followers_count: number;
   following_count: number;
   posts_count: number;
+  specialization?: string; // NEW FIELD
+  experience?: string;     // NEW FIELD
+  achievements?: string;   // NEW FIELD
 }
 
 const Profile = () => {
@@ -42,7 +45,10 @@ const Profile = () => {
     bio: "",
     location: "",
     website: "",
-    user_type: ""
+    user_type: "" as UserType | "",
+    specialization: "", // NEW FIELD
+    experience: "",     // NEW FIELD
+    achievements: ""    // NEW FIELD
   });
 
   useEffect(() => {
@@ -73,7 +79,10 @@ const Profile = () => {
           bio: data.bio || "",
           location: data.location || "",
           website: data.website || "",
-          user_type: data.user_type || ""
+          user_type: data.user_type || "",
+          specialization: data.specialization || "", // NEW FIELD
+          experience: data.experience || "",         // NEW FIELD
+          achievements: data.achievements || ""      // NEW FIELD
         });
       }
     } catch (error) {
@@ -95,7 +104,10 @@ const Profile = () => {
           bio: formData.bio,
           location: formData.location,
           website: formData.website,
-          user_type: formData.user_type as UserType // Usando o tipo UserType
+          user_type: formData.userType as UserType, // Usando o tipo UserType
+          specialization: formData.specialization, // NEW FIELD
+          experience: formData.experience,         // NEW FIELD
+          achievements: formData.achievements      // NEW FIELD
         })
         .eq('id', user.id);
 
@@ -266,7 +278,7 @@ const Profile = () => {
                 <div>
                   <Label htmlFor="user_type">Função</Label>
                   {editMode ? (
-                    <Select value={formData.user_type} onValueChange={(value) => setFormData(prev => ({ ...prev, user_type: value }))}>
+                    <Select value={formData.userType} onValueChange={(value) => setFormData(prev => ({ ...prev, user_type: value }))}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -277,8 +289,6 @@ const Profile = () => {
                         <SelectItem value="coach">Técnico</SelectItem>
                         <SelectItem value="scout">Olheiro</SelectItem>
                         <SelectItem value="journalist">Jornalista</SelectItem>
-                        <SelectItem value="fan">Torcedor</SelectItem>
-                        <SelectItem value="referee">Árbitro</SelectItem>
                         <SelectItem value="medical_staff">Staff Médico</SelectItem>
                         <SelectItem value="financial_staff">Staff Financeiro</SelectItem>
                         <SelectItem value="technical_staff">Staff Técnico</SelectItem>
@@ -330,14 +340,32 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
+
+                {/* NEW FIELD: Specialization */}
+                <div>
+                  <Label htmlFor="specialization">Especialização</Label>
+                  {editMode ? (
+                    <Input
+                      id="specialization"
+                      value={formData.specialization}
+                      onChange={(e) => setFormData(prev => ({ ...prev, specialization: e.target.value }))}
+                      placeholder="Ex: Meio-campo, Análise Tática"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Target className="w-4 h-4 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">{profile.specialization || "Não informado"}</p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Biografia</CardTitle>
+                <CardTitle>Biografia e Experiência</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div>
                   <Label htmlFor="bio">Sobre você</Label>
                   {editMode ? (
@@ -352,6 +380,48 @@ const Profile = () => {
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {profile.bio || "Nenhuma biografia adicionada ainda."}
                     </p>
+                  )}
+                </div>
+
+                {/* NEW FIELD: Experience */}
+                <div>
+                  <Label htmlFor="experience">Experiência</Label>
+                  {editMode ? (
+                    <Textarea
+                      id="experience"
+                      value={formData.experience}
+                      onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
+                      placeholder="Descreva sua experiência profissional..."
+                      className="mt-1 min-h-32"
+                    />
+                  ) : (
+                    <div className="flex items-start gap-2 mt-1">
+                      <Briefcase className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {profile.experience || "Nenhuma experiência adicionada ainda."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* NEW FIELD: Achievements */}
+                <div>
+                  <Label htmlFor="achievements">Conquistas</Label>
+                  {editMode ? (
+                    <Textarea
+                      id="achievements"
+                      value={formData.achievements}
+                      onChange={(e) => setFormData(prev => ({ ...prev, achievements: e.target.value }))}
+                      placeholder="Liste suas principais conquistas..."
+                      className="mt-1 min-h-32"
+                    />
+                  ) : (
+                    <div className="flex items-start gap-2 mt-1">
+                      <Award className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {profile.achievements || "Nenhuma conquista adicionada ainda."}
+                      </p>
+                    </div>
                   )}
                 </div>
               </CardContent>
