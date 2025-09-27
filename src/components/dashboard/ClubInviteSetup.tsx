@@ -67,7 +67,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
         *,
         clubs (name, logo_url)
       `)
-      eq('user_id', user.id)
+      .eq('user_id', user.id)
       .eq('status', 'pending');
 
     setPendingInvites(data || []);
