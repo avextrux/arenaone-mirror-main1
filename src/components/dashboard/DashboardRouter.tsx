@@ -6,7 +6,10 @@ import Messages from "@/pages/dashboard/Messages";
 import Profile from "@/pages/dashboard/Profile";
 import ClubManagement from "@/pages/dashboard/ClubManagement";
 import ClubPlayers from "@/pages/dashboard/ClubPlayers";
-import Notifications from "@/pages/dashboard/Notifications"; // Import the new Notifications component
+import Notifications from "@/pages/dashboard/Notifications";
+import Stats from "@/pages/dashboard/Stats"; // Import new Stats page
+import Opportunities from "@/pages/dashboard/Opportunities"; // Import new Opportunities page
+import Settings from "@/pages/dashboard/Settings"; // Import new Settings page
 import { Card, CardContent } from "@/components/ui/card";
 import { Construction } from "lucide-react";
 
@@ -27,13 +30,14 @@ const DashboardRouter = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/club" element={<ClubManagement />} />
       <Route path="/players" element={<ClubPlayers />} />
-      <Route path="/notifications" element={<Notifications />} /> {/* New route for Notifications */}
+      <Route path="/notifications" element={<Notifications />} />
+      <Route path="/stats" element={<Stats />} /> {/* New route for Stats */}
+      <Route path="/opportunities" element={<Opportunities />} /> {/* New route for Opportunities */}
+      <Route path="/settings" element={<Settings />} /> {/* New route for Settings */}
       
       {/* Páginas em desenvolvimento */}
-      <Route path="/stats" element={<UnderDevelopment page="Estatísticas" />} />
       <Route path="/transfers" element={<UnderDevelopment page="Transferências" />} />
       <Route path="/training" element={<UnderDevelopment page="Treinamentos" />} />
-      <Route path="/opportunities" element={<UnderDevelopment page="Oportunidades" />} />
       <Route path="/scouts" element={<UnderDevelopment page="Scout Reports" />} />
       <Route path="/scout-reports" element={<UnderDevelopment page="Scout Reports" />} />
       <Route path="/medical" element={<UnderDevelopment page="Histórico Médico" />} />
@@ -57,7 +61,6 @@ const DashboardRouter = () => {
       <Route path="/communities" element={<UnderDevelopment page="Comunidades" />} />
       <Route path="/post" element={<UnderDevelopment page="Novo Post" />} />
       <Route path="/search" element={<UnderDevelopment page="Pesquisar" />} />
-      <Route path="/settings" element={<UnderDevelopment page="Configurações" />} />
       
       {/* Rota padrão - Feed */}
       <Route path="*" element={<Feed />} />

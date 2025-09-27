@@ -8,8 +8,6 @@ interface AuthContextType {
   session: Session | null;
   signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  // signInWithGoogle: () => Promise<void>; // Removed
-  // signInWithLinkedIn: () => Promise<void>; // Removed
   signOut: () => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
   loading: boolean;
@@ -24,14 +22,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Show success toast for login/signup
         if (event === 'SIGNED_IN') {
           toast({
             title: "Login realizado com sucesso!",
@@ -41,7 +37,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -52,7 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [toast]);
 
   const signUp = async (email: string, password: string, fullName: string, userType?: string) => {
-    const redirectUrl = `${window.location.origin}/dashboard`; // Redirect to dashboard after signup
+    const redirectUrl = `${window.location.origin}/dashboard`; 
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -69,11 +64,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       let message = "Erro ao criar conta.";
       if (error.message.includes("User already registered")) {
-        message = "Este email já está cadastrado. Tente fazer login.";
-      } else if (error.message.includes("Password")) {
+        message = "Este e-mail já está registrado. Tente fazer login ou redefinir a senha.";
+      } else if (error.message.includes("Password should be at least 6 characters")) {
         message = "A senha deve ter pelo menos 6 caracteres.";
-      } else if (error.message.includes("Email")) {
-        message = "Por favor, insira um email válido.";
+      } else if (error.message.includes("AuthApiError: Email not confirmed")) {
+        message = "Sua conta foi criada, mas o e-mail não foi confirmado. Verifique sua caixa de entrada e spam.";
+      } else if (error.message.includes("Email link is invalid or has expired")) {
+        message = "O link de confirmação de e-mail é inválido ou expirou. Por favor, solicite um novo.";
       }
       
       toast({
@@ -84,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta.",
+        description: "Verifique seu e-mail para confirmar a conta e fazer login.",
       });
     }
 
@@ -101,10 +98,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       let message = "Email ou senha incorretos.";
       if (error.message.includes("Invalid login credentials")) {
         message = "Email ou senha incorretos. Verifique suas credenciais.";
-      } else if (error.message.includes("Email not confirmed")) {
-        message = "Sua conta ainda não foi confirmada. Verifique seu email e clique no link de confirmação. Você pode reenviar o email de confirmação abaixo.";
-      } else if (error.message.includes("email_not_confirmed")) {
-        message = "Sua conta ainda não foi confirmada. Verifique seu email e clique no link de confirmação. Você pode reenviar o email de confirmação abaixo.";
+      } else if (error.message.includes("Email not confirmed") || error.message.includes("email_not_confirmed")) {
+        message = "Sua conta ainda não foi confirmada. Verifique seu e-mail e clique no link de confirmação. Você pode reenviar o e-mail de confirmação abaixo.";
+      } else if (error.message.includes("User not found")) {
+        message = "Usuário não encontrado. Verifique o e-mail ou registre-se.";
       }
       
       toast({
@@ -117,55 +114,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return { error };
   };
 
-  // const signInWithGoogle = async () => { // Removed
-  //   const { error } = await supabase.auth.signInWithOAuth({
-  //     provider: 'google',
-  //     options: {
-  //       redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
-  //     },
-  //   });
-  //   if (error) {
-  //     toast({
-  //       title: "Erro no login com Google",
-  //       description: error.message,
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-  // const signInWithLinkedIn = async () => { // Removed
-  //   const { error } = await supabase.auth.signInWithOAuth({
-  //     provider: 'linkedin_oidc', // Use 'linkedin_oidc' for OpenID Connect
-  //     options: {
-  //       redirectTo: `${window.location.origin}/dashboard`, // Redirect to dashboard after OAuth
-  //     },
-  //   });
-  //   if (error) {
-  //     toast({
-  //       title: "Erro no login com LinkedIn",
-  //       description: error.message,
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
   const resendConfirmation = async (email: string) => {
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard` // Redirect to dashboard after confirmation
+        emailRedirectTo: `${window.location.origin}/dashboard` 
       }
     });
 
     if (error) {
-      let message = "Erro ao reenviar email de confirmação.";
+      let message = "Erro ao reenviar e-mail de confirmação.";
       if (error.message.includes("email_not_confirmed")) {
-        message = "Email não confirmado. Tente novamente.";
-      } else if (error.message.includes("rate_limit")) {
+        message = "E-mail não confirmado. Tente novamente.";
+      } else if (error.message.includes("rate_limit") || error.message.includes("over_email_send_rate_limit")) {
         message = "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.";
-      } else if (error.message.includes("over_email_send_rate_limit")) {
-        message = "Limite de emails atingido. Aguarde alguns minutos antes de tentar novamente.";
+      } else if (error.message.includes("User not found")) {
+        message = "Nenhuma conta encontrada com este e-mail.";
       }
       
       toast({
@@ -175,7 +140,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     } else {
       toast({
-        title: "Email de confirmação reenviado!",
+        title: "E-mail de confirmação reenviado!",
         description: "Verifique sua caixa de entrada e spam.",
       });
     }
@@ -207,8 +172,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     session,
     signUp,
     signIn,
-    // signInWithGoogle, // Removed
-    // signInWithLinkedIn, // Removed
     signOut,
     resendConfirmation,
     loading,

@@ -68,7 +68,7 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
       { title: "Feed", url: "/dashboard", icon: Home },
       { title: "Rede", url: "/dashboard/network", icon: Network },
       { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare },
-      { title: "Notificações", url: "/dashboard/notifications", icon: Bell }, // Added Notifications
+      { title: "Notificações", url: "/dashboard/notifications", icon: Bell },
     ];
 
     const userSpecificItems = {
@@ -87,6 +87,7 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
         { title: "Meus Clientes", url: "/dashboard/clients", icon: Users },
         { title: "Contratos", url: "/dashboard/contracts", icon: FileText },
         { title: "Mercado", url: "/dashboard/market", icon: Trophy },
+        { title: "Oportunidades", url: "/dashboard/opportunities", icon: Briefcase },
       ],
       coach: [
         { title: "Minha Equipe", url: "/dashboard/team", icon: Users },
