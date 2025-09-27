@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
-import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
+import { getUserTypeColor, getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
 import { UserType } from "@/integrations/supabase/types"; // Importando UserType
 
 interface ClubMembership {
@@ -51,18 +51,6 @@ const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarPr
     isActive 
       ? "bg-primary text-primary-foreground font-medium" 
       : "text-foreground hover:bg-primary/10 hover:text-primary";
-
-  const getDepartmentLabel = (dept: string) => {
-    const labels = {
-      medical: "Médico",
-      financial: "Financeiro", 
-      technical: "Técnico",
-      scouting: "Scouting",
-      management: "Diretoria",
-      admin: "Admin"
-    };
-    return labels[dept as keyof typeof labels] || dept;
-  };
 
   const getPermissionColor = (level: string) => {
     const colors = {

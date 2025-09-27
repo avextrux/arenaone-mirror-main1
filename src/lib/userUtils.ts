@@ -1,4 +1,4 @@
-import { UserType } from "@/integrations/supabase/types";
+import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
 
 export const getUserTypeColor = (userType: UserType | string | null) => {
   if (!userType) return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
@@ -32,4 +32,16 @@ export const getUserTypeLabel = (userType: UserType | string | null) => {
     referee: "Árbitro"
   };
   return labels[userType] || "Usuário"; // Fallback para 'Usuário' genérico
+};
+
+export const getDepartmentLabel = (dept: ClubDepartment | string) => {
+  const labels: Record<string, string> = {
+    medical: "Médico",
+    financial: "Financeiro", 
+    technical: "Técnico",
+    scouting: "Scouting",
+    management: "Diretoria",
+    admin: "Admin"
+  };
+  return labels[dept] || dept;
 };

@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
-import { getUserTypeLabel } from "@/lib/userUtils"; // Importando a função de utilitário
+import { getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando a função de utilitário
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
@@ -243,18 +243,6 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
     ];
   };
 
-  const getDepartmentLabel = (dept: string) => {
-    const labels = {
-      medical: "Médico",
-      financial: "Financeiro", 
-      technical: "Técnico",
-      scouting: "Scouting",
-      management: "Diretoria",
-      admin: "Admin"
-    };
-    return labels[dept as keyof typeof labels] || dept;
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
@@ -359,6 +347,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
                   placeholder="Digite o código fornecido pelo clube"
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value)}
+                  disabled={loading}
                 />
               </div>
               
