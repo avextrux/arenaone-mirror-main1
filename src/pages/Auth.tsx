@@ -11,13 +11,20 @@ import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Briefcase, Building, Target, Trophy, PenTool, Activity, Stethoscope, Calculator } from "lucide-react";
 import { UserType, Constants } from "@/integrations/supabase/types"; // Importando Constants
 
-const authSchema = z.object({
+// Esquema de validação para o formulário de REGISTRO
+const signUpSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
   fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
   userType: z.enum(Constants.public.Enums.user_type, { // Usando z.enum com o array de valores do Supabase
     errorMap: () => ({ message: "Por favor, selecione sua função" })
   }),
+});
+
+// Esquema de validação para o formulário de LOGIN
+const signInSchema = z.object({
+  email: z.string().email("Email inválido").max(255, "Email muito longo"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
 });
 
 const Auth = () => {
@@ -50,19 +57,24 @@ const Auth = () => {
     console.log("Auth.tsx: handleSubmit - Attempting to submit form...");
 
     try {
-      const validationData = isSignUp 
-        ? { ...formData, fullName: formData.fullName.trim(), userType: formData.userType as UserType }
-        : { email: formData.email, password: formData.password };
-        
-      authSchema.parse(validationData);
-
-      let result;
       if (isSignUp) {
+        // Validação para o formulário de REGISTRO
+        signUpSchema.parse({ 
+          email: formData.email.trim(), 
+          password: formData.password, 
+          fullName: formData.fullName.trim(), 
+          userType: formData.userType as UserType 
+        });
         console.log("Auth.tsx: handleSubmit - Calling signUp...");
-        result = await signUp(formData.email.trim(), formData.password, formData.fullName.trim(), formData.userType);
+        await signUp(formData.email.trim(), formData.password, formData.fullName.trim(), formData.userType);
       } else {
+        // Validação para o formulário de LOGIN
+        signInSchema.parse({ 
+          email: formData.email.trim(), 
+          password: formData.password 
+        });
         console.log("Auth.tsx: handleSubmit - Calling signIn...");
-        result = await signIn(formData.email.trim(), formData.password);
+        const result = await signIn(formData.email.trim(), formData.password);
         
         if (result.error) {
           console.log("Auth.tsx: handleSubmit - signIn returned an error:", result.error);
