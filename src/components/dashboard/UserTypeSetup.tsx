@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator, Calendar, Flag, Foot } from "lucide-react"; // Adicionei Calendar, Flag, Foot
+import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator, Calendar, Flag, Footprints } from "lucide-react"; // Adicionei Calendar, Flag, Footprints
 
 interface UserTypeSetupProps {
   onComplete: (userType: string, profileData: any) => Promise<void>;

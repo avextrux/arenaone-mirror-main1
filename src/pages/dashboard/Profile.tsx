@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit, Briefcase, Award, Target, Calendar, Flag, Foot, Ruler, Weight } from "lucide-react";
+import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit, Briefcase, Award, Target, Calendar, Flag, Ruler, Weight, Footprints } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -477,7 +477,7 @@ const Profile = () => {
                         </Select>
                       ) : (
                         <div className="flex items-center gap-2 mt-1">
-                          <Foot className="w-4 h-4 text-muted-foreground" />
+                          <Footprints className="w-4 h-4 text-muted-foreground" />
                           <p className="text-sm text-muted-foreground">{playerProfile.preferred_foot || "Não informado"}</p>
                         </div>
                       )}
