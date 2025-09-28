@@ -154,11 +154,22 @@ const ClubAuth = () => {
       }
       managerUserId = authResult.user.id;
 
-      // Explicitly get session to ensure client is updated and has the latest token
-      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !currentSession || currentSession.user.id !== managerUserId) {
-        console.error("Session check failed:", sessionError);
-        throw new Error("Erro de sessão: Não foi possível confirmar a autenticação do usuário. Por favor, tente novamente.");
+      // Force Supabase client to update its session with the new one
+      if (authResult.session) {
+        await supabase.auth.setSession(authResult.session);
+      } else {
+        // If no session is returned (e.g., new signup requiring email confirmation),
+        // we should not proceed with club creation immediately.
+        // The user will be redirected to email-confirmation-success.
+        // If this path is reached, it means a new user signed up and needs to confirm email.
+        // The club creation should happen AFTER email confirmation and subsequent login.
+        // For now, we'll just return and let the redirect handle it.
+        toast({
+          title: "Registro pendente de confirmação",
+          description: "Por favor, confirme seu email para prosseguir com o registro do clube.",
+          variant: "default",
+        });
+        return; // Stop execution here
       }
 
       // 3. Upload Club Logo
