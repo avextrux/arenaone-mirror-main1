@@ -14,6 +14,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import EmailConfirmationSuccess from "./pages/EmailConfirmationSuccess";
 import LoginSuccess from "./pages/LoginSuccess"; // Importar a nova página de sucesso de login
+import RegistrationSuccess from "./pages/RegistrationSuccess"; // Importar a nova página de sucesso de registro
 import ClubAuth from "./pages/ClubAuth";
 import AdminAuth from "./pages/AdminAuth"; // Importar AdminAuth
 import AdminDashboard from "./pages/AdminDashboard"; // Importar AdminDashboard
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/email-confirmation-success" element={<EmailConfirmationSuccess />} />
             <Route path="/login-success" element={<LoginSuccess />} /> {/* Nova rota para sucesso de login */}
+            <Route path="/registration-success" element={<RegistrationSuccess />} /> {/* Nova rota para sucesso de registro */}
             
             <Route 
               path="/dashboard/*" 

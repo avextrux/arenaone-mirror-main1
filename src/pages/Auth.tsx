@@ -60,10 +60,10 @@ const Auth = () => {
           email: formData.email.trim(), 
           password: formData.password, 
         });
-        // Chamada signUp sem fullName e userType
-        await signUp(formData.email.trim(), formData.password);
-        // Para o cadastro, o usuário é redirecionado para email-confirmation-success,
-        // então não há redirecionamento direto para login-success aqui.
+        const result = await signUp(formData.email.trim(), formData.password);
+        if (!result.error) {
+          navigate("/registration-success"); // Redireciona para a página de sucesso de registro
+        }
       } else {
         // Validação para o formulário de LOGIN
         signInSchema.parse({ 

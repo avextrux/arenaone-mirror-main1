@@ -53,13 +53,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [toast]);
 
   const signUp = async (email: string, password: string, fullName?: string, userType?: string) => {
-    const redirectUrl = `${window.location.origin}/email-confirmation-success`; // Redirecionar para a nova página
+    // O emailRedirectTo é para quando o usuário clica no link do email, não para o redirecionamento inicial após o signup.
+    const emailConfirmationRedirectUrl = `${window.location.origin}/email-confirmation-success`; 
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: emailConfirmationRedirectUrl,
         data: {
           full_name: fullName, // fullName agora é opcional
           user_type: userType // userType agora é opcional
@@ -86,10 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } else {
       // A criação do perfil inicial (id, email, full_name) é tratada pelo trigger handle_new_user no Supabase.
       // O user_type será atualizado no onboarding flow (UserTypeSetup) ou no registro de clube.
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta.",
-      });
+      // Não mostramos um toast de sucesso aqui, pois o redirecionamento para RegistrationSuccess.tsx cuidará disso.
     }
 
     return { user: authData.user, session: authData.session, error: null }; // Retorna o user e session aqui
