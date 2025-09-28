@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
-import { getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando a função de utilitário
+import { getUserTypeLabel, getDepartmentLabel, mapDepartmentToUserType } from "@/lib/userUtils"; // Importando a função de utilitário e mapDepartmentToUserType
 import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
 import { ClubDepartment, PermissionLevel, Constants, TablesInsert, UserType } from "@/integrations/supabase/types"; // Importar Constants e TablesInsert
 
@@ -26,7 +26,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   const [inviteCode, setInviteCode] = useState("");
   const [clubs, setClubs] = useState<any[]>([]);
   const [selectedClub, setSelectedClub] = useState("");
-  const [department, setDepartment] = useState<ClubDepartment>(ClubDepartment.Management); // Usar enum
+  const [department, setDepartment] = useState<ClubDepartment>(ClubDepartment.Technical); // Usar enum
   const [loading, setLoading] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<AppClubMembership[]>([]); // Usar AppClubMembership
 
@@ -78,10 +78,10 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
 
       // Update user's profile with the user_type from the accepted invite
       const acceptedInvite = pendingInvites.find(invite => invite.id === inviteId);
-      if (acceptedInvite && user && !user.user_metadata.user_type) {
+      if (acceptedInvite && user) { // Removed !user.user_metadata.user_type check as it's handled by onboarding flow
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ user_type: acceptedInvite.department as UserType }) // Assuming department can map to user_type
+          .update({ user_type: mapDepartmentToUserType(acceptedInvite.department) }) // Usando mapDepartmentToUserType
           .eq('id', user.id);
         if (profileError) console.error('Error updating user_type in profile:', profileError);
       }
@@ -161,10 +161,10 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
       if (updateError) throw updateError;
 
       // Update user's profile with the user_type from the accepted invite
-      if (user && !user.user_metadata.user_type) {
+      if (user) { // Removed !user.user_metadata.user_type check as it's handled by onboarding flow
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ user_type: data.department as UserType }) // Assuming department can map to user_type
+          .update({ user_type: mapDepartmentToUserType(data.department) }) // Usando mapDepartmentToUserType
           .eq('id', user.id);
         if (profileError) console.error('Error updating user_type in profile:', profileError);
       }

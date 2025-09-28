@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { format, addDays } from 'date-fns';
 import { ClubDepartment, PermissionLevel, Constants, TablesInsert, UserType } from "@/integrations/supabase/types";
-import { getDepartmentLabel, getUserTypeLabel } from "@/lib/userUtils";
+import { getDepartmentLabel, getPermissionLabel } from "@/lib/userUtils"; // Importando getPermissionLabel
 
 interface CreateMemberInviteDialogProps {
   clubId: string;

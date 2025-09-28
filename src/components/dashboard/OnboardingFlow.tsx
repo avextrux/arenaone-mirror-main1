@@ -9,7 +9,7 @@ import { UserType } from "@/integrations/supabase/types";
 import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
 
 interface OnboardingFlowProps {
-  onboardingStep: "userTypeSetup" | "createClub" | "clubInvite" | "complete";
+  onboardingStep: "userTypeSetup" | "clubInvite" | "complete";
   profile: AppProfile | null; // Usar AppProfile
   clubMemberships: AppClubMembership[]; // Usar AppClubMembership
   refetchStatus: () => Promise<void>;
@@ -149,7 +149,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
       navigate('/dashboard', { replace: true });
       return null;
     case "clubInvite":
-      return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
+      return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || UserType.Fan} />; // Corrigido: fallback para UserType.Fan
     case "complete":
       navigate('/dashboard', { replace: true });
       return null;
