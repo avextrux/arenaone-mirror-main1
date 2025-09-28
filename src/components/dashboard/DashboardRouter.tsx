@@ -20,7 +20,7 @@ import CoachDashboardHome from "@/pages/dashboard/CoachDashboardHome";
 import ScoutDashboardHome from "@/pages/dashboard/ScoutDashboardHome";
 import MedicalStaffDashboardHome from "@/pages/dashboard/MedicalStaffDashboardHome";
 import FinancialStaffDashboardHome from "@/pages/dashboard/FinancialStaffDashboardHome";
-import TechnicalStaffDashboardHome from "@/pages/dashboard/TechnicalStaffDashboardHome"; // Importar TechnicalStaffDashboardHome
+import TechnicalStaffDashboardHome from "@/pages/dashboard/TechnicalStaffDashboardHome";
 import JournalistDashboardHome from "@/pages/dashboard/JournalistDashboardHome";
 
 // Importar as novas páginas especializadas
@@ -135,20 +135,20 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
         <>
           <Route path="team" element={<UnderDevelopment page="Minha Equipe" />} />
           <Route path="match-analysis" element={<UnderDevelopment page="Análises de Jogo" />} />
-          <Route path="coach/training-plans" element={<TrainingPlans clubMemberships={clubMemberships} />} /> {/* Nova rota */}
+          <Route path="coach/training-plans" element={<TrainingPlans clubMemberships={clubMemberships} />} />
         </>
       )}
       {userType === 'scout' && (
         <>
           <Route path="scout-reports" element={<UnderDevelopment page="Relatórios de Scouting" />} />
           <Route path="market-analysis" element={<UnderDevelopment page="Análises de Mercado" />} />
-          <Route path="scout/reports" element={<ScoutReports clubMemberships={clubMemberships} />} /> {/* Nova rota */}
+          <Route path="scout/reports" element={<ScoutReports clubMemberships={clubMemberships} />} />
         </>
       )}
       {userType === 'medical_staff' && (
         <>
           <Route path="recovery-plans" element={<UnderDevelopment page="Planos de Recuperação" />} />
-          <Route path="medical/injuries" element={<InjuriesOverview clubMemberships={clubMemberships} />} /> {/* Nova rota */}
+          <Route path="medical/injuries" element={<InjuriesOverview clubMemberships={clubMemberships} />} />
         </>
       )}
       {userType === 'financial_staff' && (

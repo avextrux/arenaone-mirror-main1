@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LayoutDashboard, Building, Users, DollarSign, FileText, Trophy, Calendar, TrendingUp, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Building, Users, DollarSign, FileText, Trophy, Calendar, TrendingUp, BarChart3, Plus } from "lucide-react";
 import { Profile, ClubMembership } from "@/pages/Dashboard";
+import { Link } from "react-router-dom"; // Importar Link para navegação interna
 
 interface ClubDashboardHomeProps {
   profile: Profile | null;
@@ -9,6 +10,23 @@ interface ClubDashboardHomeProps {
 
 const ClubDashboardHome = ({ profile, clubMemberships }: ClubDashboardHomeProps) => {
   const primaryClub = clubMemberships.length > 0 ? clubMemberships[0].clubs : null;
+
+  // Dados simulados para demonstração
+  const simulatedSquadSize = 25;
+  const simulatedNextMatch = "vs Rival FC";
+  const simulatedNextMatchDate = "25/12/2024";
+  const simulatedBudget = "€ 15M";
+  const simulatedPendingReports = 3; // Scouting, Médico, Técnico
+  const simulatedTitles = 12;
+  const simulatedSquadMarketValue = "€ 120M";
+  const simulatedRecentResults = [
+    "Vitória vs Time A (3-1)",
+    "Empate vs Time B (1-1)",
+    "Derrota vs Time C (0-2)",
+    "Vitória vs Time D (2-0)",
+    "Vitória vs Time E (4-1)",
+  ];
+  const simulatedActiveStaff = 15;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -25,71 +43,89 @@ const ClubDashboardHome = ({ profile, clubMemberships }: ClubDashboardHomeProps)
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Jogadores Ativos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">25</div>
-            <p className="text-xs text-muted-foreground">Ver elenco completo</p>
-          </CardContent>
-        </Card>
+        {/* Jogadores Ativos */}
+        <Link to="/dashboard/players">
+          <Card className="hover:shadow-lg transition-shadow h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Jogadores Ativos</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{simulatedSquadSize}</div>
+              <p className="text-xs text-muted-foreground">Ver elenco completo</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Próximo Jogo</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">vs Rival FC</div>
-            <p className="text-xs text-muted-foreground">25/12/2024</p>
-          </CardContent>
-        </Card>
+        {/* Próximo Jogo */}
+        <Link to="/dashboard/club"> {/* Ou uma rota específica para jogos */}
+          <Card className="hover:shadow-lg transition-shadow h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Próximo Jogo</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{simulatedNextMatch}</div>
+              <p className="text-xs text-muted-foreground">{simulatedNextMatchDate}</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orçamento Disponível</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">€ 15M</div>
-            <p className="text-xs text-muted-foreground">Ver detalhes financeiros</p>
-          </CardContent>
-        </Card>
+        {/* Orçamento Disponível */}
+        <Link to="/dashboard/finances">
+          <Card className="hover:shadow-lg transition-shadow h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Orçamento Disponível</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{simulatedBudget}</div>
+              <p className="text-xs text-muted-foreground">Ver detalhes financeiros</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Relatórios Pendentes</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Scouting, Médico, Técnico</p>
-          </CardContent>
-        </Card>
+        {/* Relatórios Pendentes */}
+        <Link to="/dashboard/reports">
+          <Card className="hover:shadow-lg transition-shadow h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Relatórios Pendentes</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{simulatedPendingReports}</div>
+              <p className="text-xs text-muted-foreground">Scouting, Médico, Técnico</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Títulos Conquistados</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">Histórico do clube</p>
-          </CardContent>
-        </Card>
+        {/* Títulos Conquistados */}
+        <Link to="/dashboard/club"> {/* Ou uma rota específica para histórico do clube */}
+          <Card className="hover:shadow-lg transition-shadow h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Títulos Conquistados</CardTitle>
+              <Trophy className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{simulatedTitles}</div>
+              <p className="text-xs text-muted-foreground">Histórico do clube</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor de Mercado do Elenco</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">€ 120M</div>
-            <p className="text-xs text-muted-foreground">Análise de mercado</p>
-          </CardContent>
-        </Card>
+        {/* Valor de Mercado do Elenco */}
+        <Link to="/dashboard/market">
+          <Card className="hover:shadow-lg transition-shadow h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Valor de Mercado do Elenco</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{simulatedSquadMarketValue}</div>
+              <p className="text-xs text-muted-foreground">Análise de mercado</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Seções mais detalhadas */}
@@ -103,11 +139,9 @@ const ClubDashboardHome = ({ profile, clubMemberships }: ClubDashboardHomeProps)
           </CardHeader>
           <CardContent>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>Vitória vs Time A (3-1)</li>
-              <li>Empate vs Time B (1-1)</li>
-              <li>Derrota vs Time C (0-2)</li>
-              <li>Vitória vs Time D (2-0)</li>
-              <li>Vitória vs Time E (4-1)</li>
+              {simulatedRecentResults.map((result, index) => (
+                <li key={index}>{result}</li>
+              ))}
             </ul>
           </CardContent>
         </Card>
@@ -121,10 +155,10 @@ const ClubDashboardHome = ({ profile, clubMemberships }: ClubDashboardHomeProps)
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Você tem 15 membros de staff ativos, incluindo técnicos, médicos e olheiros.
+              Você tem {simulatedActiveStaff} membros de staff ativos, incluindo técnicos, médicos e olheiros.
             </p>
             <div className="mt-4 text-right">
-              <a href="#" className="text-primary text-sm hover:underline">Gerenciar Staff</a>
+              <Link to="/dashboard/staff" className="text-primary text-sm hover:underline">Gerenciar Staff</Link>
             </div>
           </CardContent>
         </Card>
