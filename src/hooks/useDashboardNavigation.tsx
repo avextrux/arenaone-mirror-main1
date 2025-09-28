@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Search, LayoutDashboard, DollarSign, HeartPulse, BookOpen, ClipboardList, GraduationCap, Handshake, Lightbulb, LineChart, ShieldCheck, TrendingUp, Megaphone, Newspaper, Camera, Video, MapPin, Smile, PlusCircle, Bell, Target } from "lucide-react";
+import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Search, LayoutDashboard, DollarSign, HeartPulse, BookOpen, ClipboardList, GraduationCap, Handshake, Lightbulb, LineChart, ShieldCheck, TrendingUp, Megaphone, Newspaper, Camera, Video, MapPin, Smile, PlusCircle } from "lucide-react";
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { UserType } from "@/integrations/supabase/types";
