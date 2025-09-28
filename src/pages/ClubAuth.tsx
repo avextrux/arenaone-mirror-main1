@@ -148,13 +148,11 @@ const ClubAuth = () => {
         }
       }
 
-      // IMPORTANT: Ensure the session is fully loaded and user is available before proceeding
-      // This is a crucial step to ensure RLS policies correctly identify auth.uid()
-      const { data: { user: currentUser }, error: getUserError } = await supabase.auth.getUser();
-      if (getUserError || !currentUser) {
-        throw new Error("Erro ao obter informações do usuário autenticado. Por favor, tente novamente.");
+      // If after signUp/signIn, authResult.user is still null, something went wrong.
+      if (!authResult.user) {
+        throw new Error("Falha ao autenticar o usuário. Por favor, tente novamente.");
       }
-      managerUserId = currentUser.id; // Use the ID from the freshly fetched user
+      managerUserId = authResult.user.id; // Use the ID directly from the authResult
 
       // 3. Upload Club Logo
       let logoUrl: string | null = null;
@@ -170,7 +168,7 @@ const ClubAuth = () => {
         league: formData.league.trim() || null,
         stadium: formData.stadium.trim() || null,
         logo_url: logoUrl,
-        manager_id: managerUserId, // This should now definitely match auth.uid()
+        manager_id: managerUserId,
       };
 
       const { data: newClub, error: clubError } = await supabase
