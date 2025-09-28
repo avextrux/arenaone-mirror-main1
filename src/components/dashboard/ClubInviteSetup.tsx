@@ -12,11 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
 import { getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando a função de utilitário
 import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
-import { ClubDepartment, PermissionLevel, Constants, TablesInsert } from "@/integrations/supabase/types"; // Importar Constants e TablesInsert
+import { ClubDepartment, PermissionLevel, Constants, TablesInsert, UserType } from "@/integrations/supabase/types"; // Importar Constants e TablesInsert
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
-  userType: string;
+  userType: UserType; // Alterado para UserType
 }
 
 const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
@@ -79,7 +79,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
       if (acceptedInvite && user && !user.user_metadata.user_type) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ user_type: acceptedInvite.department as any }) // Assuming department can map to user_type
+          .update({ user_type: acceptedInvite.department as UserType }) // Assuming department can map to user_type
           .eq('id', user.id);
         if (profileError) console.error('Error updating user_type in profile:', profileError);
       }
@@ -162,7 +162,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
       if (user && !user.user_metadata.user_type) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ user_type: data.department as any }) // Assuming department can map to user_type
+          .update({ user_type: data.department as UserType }) // Assuming department can map to user_type
           .eq('id', user.id);
         if (profileError) console.error('Error updating user_type in profile:', profileError);
       }
@@ -233,16 +233,22 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
     }
   };
 
-  const getDepartmentOptions = (userType: string) => {
-    const options = {
+  const getDepartmentOptions = (userType: UserType) => { // Alterado para UserType
+    const options: Record<UserType, { value: ClubDepartment; label: string }[]> = {
       [UserType.MedicalStaff]: [{ value: ClubDepartment.Medical, label: "Departamento Médico" }],
       [UserType.FinancialStaff]: [{ value: ClubDepartment.Financial, label: "Departamento Financeiro" }],
       [UserType.TechnicalStaff]: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }],
       [UserType.Scout]: [{ value: ClubDepartment.Scouting, label: "Departamento de Scouting" }],
-      [UserType.Coach]: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }]
+      [UserType.Coach]: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }],
+      [UserType.Player]: [],
+      [UserType.Agent]: [],
+      [UserType.Journalist]: [],
+      [UserType.Fan]: [],
+      [UserType.Admin]: [],
+      [UserType.Club]: [],
     };
     
-    return options[userType as keyof typeof options] || [
+    return options[userType] || [
       { value: ClubDepartment.Management, label: "Diretoria" },
       { value: ClubDepartment.Admin, label: "Administração" },
       { value: ClubDepartment.Medical, label: "Departamento Médico" },
