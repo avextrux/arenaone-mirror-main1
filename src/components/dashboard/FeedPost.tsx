@@ -30,6 +30,7 @@ interface PostProps {
 }
 
 const FeedPost = ({
+  id,
   author,
   content,
   images = [],
@@ -44,6 +45,7 @@ const FeedPost = ({
   onShare
 }: PostProps) => {
   const [showFullContent, setShowFullContent] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
   
   const getPostTypeIcon = (type: string) => {
     switch (type) {
@@ -70,6 +72,15 @@ const FeedPost = ({
     return date.toLocaleDateString('pt-BR');
   };
 
+  const handleLike = async () => {
+    if (isLiking) return;
+    setIsLiking(true);
+    try {
+      await onLike();
+    } finally {
+      setIsLiking(false);
+    }
+  };
   const shouldTruncate = content.length > 300;
   const displayContent = shouldTruncate && !showFullContent 
     ? content.substring(0, 300) + "..." 
@@ -81,7 +92,7 @@ const FeedPost = ({
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={author.avatar_url || undefined} /> {/* Usar avatar_url */}
+              <AvatarImage src={author.avatar_url || undefined} />
               <AvatarFallback>
                 {author.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </AvatarFallback>
@@ -98,7 +109,7 @@ const FeedPost = ({
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                @{author.full_name.toLowerCase().replace(/\s+/g, '')} · {formatTimestamp(timestamp)} {/* Usar full_name para username */}
+                @{author.full_name.toLowerCase().replace(/\s+/g, '')} · {formatTimestamp(timestamp)}
               </p>
             </div>
           </div>
@@ -175,7 +186,8 @@ const FeedPost = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onLike}
+                onClick={handleLike}
+                disabled={isLiking}
                 className={`flex items-center space-x-2 hover:bg-red-50 hover:text-red-600 transition-colors ${
                   isLiked ? 'text-red-600' : 'text-muted-foreground'
                 }`}

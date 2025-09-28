@@ -29,7 +29,8 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         website: profileData.website || null,
         specialization: profileData.specialization || null,
         experience: profileData.experience || null,
-        achievements: profileData.achievements || null
+        achievements: profileData.achievements || null,
+        updated_at: new Date().toISOString(),
       };
 
       const { error: profileUpdateError } = await supabase
@@ -41,7 +42,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         console.error('Error updating profile:', profileUpdateError);
         toast({
           title: "Erro ao atualizar perfil",
-          description: `Ocorreu um erro ao salvar suas informações: ${profileUpdateError.message || JSON.stringify(profileUpdateError)}.`,
+          description: `Ocorreu um erro ao salvar suas informações: ${profileUpdateError.message}`,
           variant: "destructive",
         });
         return;
@@ -61,8 +62,8 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
 
         const playerPayload = {
           profile_id: user.id,
-          first_name: user.user_metadata.full_name?.split(' ')[0] || '',
-          last_name: user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
+          first_name: (user.user_metadata.full_name || profileData.full_name || user.email.split('@')[0]).split(' ')[0] || '',
+          last_name: (user.user_metadata.full_name || profileData.full_name || user.email.split('@')[0]).split(' ').slice(1).join(' ') || '',
           date_of_birth: profileData.date_of_birth || null,
           nationality: profileData.nationality || null,
           position: profileData.position || null,
@@ -78,7 +79,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
             console.error('Error creating player entry:', playerInsertError);
             toast({
               title: "Erro ao criar perfil de jogador",
-              description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerInsertError.message || JSON.stringify(playerInsertError)}.`,
+              description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerInsertError.message}`,
               variant: "destructive",
             });
             return;
@@ -93,7 +94,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
             console.error('Error updating player entry:', playerUpdateError);
             toast({
               title: "Erro ao atualizar perfil de jogador",
-              description: `Ocorreu um erro ao atualizar suas informações de jogador: ${playerUpdateError.message || JSON.stringify(playerUpdateError)}.`,
+              description: `Ocorreu um erro ao atualizar suas informações de jogador: ${playerUpdateError.message}`,
               variant: "destructive",
             });
             return;
@@ -110,7 +111,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
       console.error('Error in handleUserTypeSetup:', error);
       toast({
         title: "Erro inesperado",
-        description: `Ocorreu um erro inesperado durante a configuração do perfil: ${error instanceof Error ? error.message : JSON.stringify(error)}.`,
+        description: `Ocorreu um erro inesperado durante a configuração do perfil: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }

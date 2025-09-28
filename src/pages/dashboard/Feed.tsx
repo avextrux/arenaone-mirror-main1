@@ -67,17 +67,28 @@ const Feed = ({ profile }: FeedProps) => {
   const handleCreatePost = async (content: string, postType: string, visibility: string) => {
     if (!user) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('posts')
       .insert([{
         user_id: user.id,
         content: content,
         post_type: postType,
         visibility: visibility
-      }]);
+      }])
+      .select();
 
-    if (!error) {
+    if (error) {
+      toast({
+        title: "Erro ao publicar post",
+        description: "Não foi possível publicar seu post.",
+        variant: "destructive",
+      });
+    } else {
       await fetchFeed();
+      toast({
+        title: "Post publicado!",
+        description: "Seu post foi publicado com sucesso.",
+      });
     }
   };
 

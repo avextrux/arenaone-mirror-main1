@@ -209,7 +209,7 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
     }
   };
 
-  const hasPermission = (department: ClubDepartment, minLevel: PermissionLevel = PermissionLevel.Read) => {
+  const hasPermission = useCallback((department: ClubDepartment, minLevel: PermissionLevel = PermissionLevel.Read) => {
     const membership = clubMemberships.find(m => m.department === department);
     if (!membership) return false;
 
@@ -218,14 +218,14 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
     const requiredLevel = levels[minLevel] || 1;
 
     return userLevel >= requiredLevel;
-  };
+  }, [clubMemberships]);
 
-  const canViewMedical = () => hasPermission(ClubDepartment.Medical);
-  const canEditMedical = () => hasPermission(ClubDepartment.Medical, PermissionLevel.Write);
-  const canViewFinancial = () => hasPermission(ClubDepartment.Financial);
-  const canEditFinancial = () => hasPermission(ClubDepartment.Financial, PermissionLevel.Write);
-  const canViewTechnical = () => hasPermission(ClubDepartment.Technical) || hasPermission(ClubDepartment.Scouting);
-  const canEditTechnical = () => hasPermission(ClubDepartment.Technical, PermissionLevel.Write) || hasPermission(ClubDepartment.Scouting, PermissionLevel.Write);
+  const canViewMedical = useCallback(() => hasPermission(ClubDepartment.Medical), [hasPermission]);
+  const canEditMedical = useCallback(() => hasPermission(ClubDepartment.Medical, PermissionLevel.Write), [hasPermission]);
+  const canViewFinancial = useCallback(() => hasPermission(ClubDepartment.Financial), [hasPermission]);
+  const canEditFinancial = useCallback(() => hasPermission(ClubDepartment.Financial, PermissionLevel.Write), [hasPermission]);
+  const canViewTechnical = useCallback(() => hasPermission(ClubDepartment.Technical) || hasPermission(ClubDepartment.Scouting), [hasPermission]);
+  const canEditTechnical = useCallback(() => hasPermission(ClubDepartment.Technical, PermissionLevel.Write) || hasPermission(ClubDepartment.Scouting, PermissionLevel.Write), [hasPermission]);
 
   const handleSaveMedicalInfo = async () => {
     if (!selectedPlayer || !canEditMedical() || !primaryClubId) return;

@@ -38,17 +38,18 @@ const ClubInviteManager = () => {
     try {
       const { data, error } = await supabase
         .from('club_members')
-        .select(`*`) // Alterado para selecionar todas as colunas sem o join
+        .select('*')
         .eq('status', 'pending')
-        .is('user_id', null) // Apenas convites não atribuídos
-        .eq('department', ClubDepartment.Management) // Apenas convites para registro de clube
-        .eq('permission_level', PermissionLevel.Admin) // Apenas convites para registro de clube
+        .is('user_id', null)
+        .eq('department', ClubDepartment.Management)
+        .eq('permission_level', PermissionLevel.Admin)
         .order('created_at', { ascending: false });
+        
       if (error) {
         console.error('Error fetching invites:', error);
         toast({ title: "Erro", description: "Não foi possível carregar os convites.", variant: "destructive" });
       } else {
-        setInvites(data as ClubInvite[] || []);
+        setInvites(data || []);
       }
     } catch (error) {
       console.error('Unexpected error in fetchInvites:', error);
@@ -72,10 +73,10 @@ const ClubInviteManager = () => {
       const { error } = await supabase
         .from('club_members')
         .insert([{
-          club_id: null, // Isso agora é permitido
-          user_id: null, // Não atribuído
-          department: ClubDepartment.Management, // Fixo para registro de clube
-          permission_level: PermissionLevel.Admin, // Fixo para registro de clube
+          club_id: null,
+          user_id: null,
+          department: ClubDepartment.Management,
+          permission_level: PermissionLevel.Admin,
           status: 'pending',
           invite_code: newInviteCode,
           invited_by: user.id,
@@ -86,8 +87,8 @@ const ClubInviteManager = () => {
       if (error) throw error;
 
       toast({ title: "Convite Gerado!", description: "Um novo link de convite para registro de clube foi criado.", });
-      setGeneratedCode(newInviteCode); // Exibir o código gerado temporariamente
-      await fetchInvites(); // Atualizar a lista
+      setGeneratedCode(newInviteCode);
+      await fetchInvites();
     } catch (error: any) {
       console.error('Error generating invite:', error);
       toast({ title: "Erro", description: error.message || "Não foi possível gerar o convite.", variant: "destructive" });

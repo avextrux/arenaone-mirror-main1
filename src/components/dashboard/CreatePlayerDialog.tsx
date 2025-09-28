@@ -51,7 +51,6 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
       return;
     }
 
-    // Basic validation
     if (!playerForm.first_name || !playerForm.last_name || !playerForm.nationality || !playerForm.position || !playerForm.date_of_birth) {
       toast({
         title: "Campos obrigatórios",
@@ -61,6 +60,18 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
       return;
     }
 
+    // Validate date of birth (player must be at least 16 years old)
+    const birthDate = new Date(playerForm.date_of_birth);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    if (age < 16) {
+      toast({
+        title: "Idade inválida",
+        description: "O jogador deve ter pelo menos 16 anos.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { error } = await supabase
@@ -77,7 +88,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
           market_value: playerForm.market_value,
           contract_start: playerForm.contract_start || null,
           contract_end: playerForm.contract_end || null,
-          current_club_id: clubId, // Associate player with the current club
+          current_club_id: clubId,
         }]);
 
       if (error) throw error;
@@ -86,9 +97,8 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
         title: "Jogador adicionado!",
         description: `${playerForm.first_name} ${playerForm.last_name} foi adicionado ao clube.`,
       });
-      onPlayerCreated(); // Notify parent to refresh player list
-      onOpenChange(false); // Close dialog
-      // Reset form
+      onPlayerCreated();
+      onOpenChange(false);
       setPlayerForm({
         first_name: "", last_name: "", nationality: "", position: "", date_of_birth: "",
         height: null, weight: null, preferred_foot: "", market_value: null, contract_start: "", contract_end: "",

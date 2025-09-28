@@ -4,10 +4,15 @@ import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { AppProfile } from "@/types/app"; // Importar AppProfile
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const CreatePostPage = () => {
   const { user } = useAuth();
   const { profile, loading } = useOnboardingStatus(); // Usar o profile do hook de onboarding
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   if (loading) {
     return (
@@ -32,21 +37,43 @@ const CreatePostPage = () => {
     );
   }
 
-  // A função onPost será tratada pelo componente Feed, então aqui apenas passamos um placeholder
-  // ou podemos refatorar CreatePost para ter sua própria lógica de envio.
-  // Por enquanto, vamos simular o onPost para que o componente CreatePost funcione.
   const handlePostSubmit = async (content: string, postType: string, visibility: string) => {
-    console.log("Post submitted from CreatePostPage:", { content, postType, visibility });
-    // Em uma implementação real, você chamaria a API para criar o post aqui.
-    // Por simplicidade, vamos apenas logar e mostrar um toast.
-    // A lógica real de criação de post já existe no Feed.tsx, então idealmente
-    // este componente seria usado dentro do Feed ou teria sua própria lógica de API.
-    // Para evitar duplicação, vamos apenas simular aqui.
-    // Se o objetivo é ter uma página dedicada, a lógica de API deve vir para cá.
-    // Por enquanto, o Feed.tsx ainda é o responsável por criar posts.
-    // Para esta página funcionar de forma independente, precisaríamos de uma função de API aqui.
-    // Por simplicidade, vamos apenas retornar uma Promise resolvida.
-    return Promise.resolve();
+    if (!user) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar posts.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .insert([{
+          user_id: user.id,
+          content: content,
+          post_type: postType,
+          visibility: visibility
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Post criado!",
+        description: "Seu post foi publicado com sucesso.",
+      });
+
+      // Redirect to feed after successful post creation
+      navigate('/dashboard/feed');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      toast({
+        title: "Erro ao criar post",
+        description: "Não foi possível publicar seu post.",
+        variant: "destructive",
+      });
+    }
   };
 
 

@@ -151,12 +151,26 @@ const Profile = () => {
       throw new Error("Usuário não autenticado.");
     }
 
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "O arquivo deve ter no máximo 5MB.",
+        variant: "destructive",
+      });
+      throw new Error("Arquivo muito grande");
+    }
     const fileExtension = file.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExtension}`;
-    const filePath = `avatars/${user.id}/${fileName}`; // Store under user's ID
+    const filePath = `avatars/${user.id}/${fileName}`;
 
+    // Delete old avatar if exists
+    if (profile?.avatar_url) {
+      const oldPath = profile.avatar_url.split('/').slice(-2).join('/');
+      await supabase.storage.from('avatars').remove([oldPath]);
+    }
     const { data, error } = await supabase.storage
-      .from('avatars') // Ensure you have a bucket named 'avatars' in Supabase
+      .from('avatars')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
@@ -166,7 +180,7 @@ const Profile = () => {
       console.error("Supabase Storage Upload Error:", error);
       toast({
         title: "Erro no Upload do Avatar",
-        description: `Não foi possível fazer upload do avatar: ${error.message}. Verifique as políticas de RLS do seu bucket 'avatars'.`,
+        description: `Não foi possível fazer upload do avatar: ${error.message}`,
         variant: "destructive",
       });
       throw new Error(`Erro ao fazer upload do avatar: ${error.message}`);
@@ -196,7 +210,6 @@ const Profile = () => {
     let newAvatarUrl = profile?.avatar_url;
 
     try {
-      // Client-side validation for player-specific required fields
       if (profile?.user_type === 'player') {
         if (!playerFormData.date_of_birth || !playerFormData.nationality || !playerFormData.position) {
           toast({
@@ -210,7 +223,12 @@ const Profile = () => {
       }
 
       if (avatarFile) {
-        newAvatarUrl = await uploadAvatar(avatarFile);
+        try {
+          newAvatarUrl = await uploadAvatar(avatarFile);
+        } catch (uploadError) {
+          // Continue with profile update even if avatar upload fails
+          console.error('Avatar upload failed, continuing with profile update:', uploadError);
+        }
       }
 
       const { error: profileError } = await supabase
@@ -224,6 +242,7 @@ const Profile = () => {
           experience: formData.experience,
           achievements: formData.achievements,
           avatar_url: newAvatarUrl,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
@@ -231,7 +250,7 @@ const Profile = () => {
         console.error('Profile.tsx: Error updating profile:', profileError);
         toast({
           title: "Erro ao atualizar perfil",
-          description: `Ocorreu um erro ao salvar suas informações: ${profileError.message}.`, // Exibir mensagem de erro do Supabase
+          description: `Ocorreu um erro ao salvar suas informações: ${profileError.message}.`,
           variant: "destructive",
         });
         return;
@@ -240,21 +259,24 @@ const Profile = () => {
       if (profile?.user_type === 'player') {
         const { error: playerError } = await supabase
           .from('players')
-          .update({
+          .upsert({
+            profile_id: user.id,
             date_of_birth: playerFormData.date_of_birth,
             nationality: playerFormData.nationality,
             position: playerFormData.position,
             preferred_foot: playerFormData.preferred_foot || null,
             height: playerFormData.height ? parseInt(playerFormData.height) : null,
             weight: playerFormData.weight ? parseInt(playerFormData.weight) : null,
-          })
-          .eq('profile_id', user.id);
+            first_name: formData.full_name.split(' ')[0] || '',
+            last_name: formData.full_name.split(' ').slice(1).join(' ') || '',
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'profile_id' });
 
         if (playerError) {
           console.error('Profile.tsx: Error updating player profile:', playerError);
           toast({
             title: "Erro ao atualizar perfil de jogador",
-            description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerError.message}.`, // Exibir mensagem de erro do Supabase
+            description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerError.message}.`,
             variant: "destructive",
           });
           return;
@@ -263,7 +285,7 @@ const Profile = () => {
 
       await fetchProfile();
       setEditMode(false);
-      setAvatarFile(null); // Clear file input after successful save
+      setAvatarFile(null);
       
       toast({
         title: "Perfil atualizado!",

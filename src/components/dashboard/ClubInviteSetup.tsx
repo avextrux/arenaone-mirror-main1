@@ -132,39 +132,36 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
 
     setLoading(true);
     try {
-      // Check if an invite with this code exists and is pending
       const { data, error } = await supabase
         .from('club_members')
         .select('*')
         .eq('invite_code', inviteCode.trim())
         .eq('status', 'pending')
-        .is('user_id', null) // Ensure it's an unassigned invite
-        .gte('expires_at', new Date().toISOString()) // Check if not expired
-        .eq('used', false) // Ensure it's not used
+        .is('user_id', null)
+        .or('expires_at.is.null,expires_at.gte.' + new Date().toISOString())
+        .eq('used', false)
         .single();
 
       if (error || !data) {
         throw new Error("Código de convite inválido, expirado ou já utilizado.");
       }
 
-      // Update the invite to link to the current user and set status to accepted
       const { error: updateError } = await supabase
         .from('club_members')
         .update({ 
           user_id: user.id,
           status: 'accepted',
           accepted_at: new Date().toISOString(),
-          used: true, // Mark as used
+          used: true,
         })
         .eq('id', data.id);
 
       if (updateError) throw updateError;
 
-      // Update user's profile with the user_type from the accepted invite
-      if (user) { // Removed !user.user_metadata.user_type check as it's handled by onboarding flow
+      if (user) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ user_type: mapDepartmentToUserType(data.department) }) // Usando mapDepartmentToUserType
+          .update({ user_type: mapDepartmentToUserType(data.department) })
           .eq('id', user.id);
         if (profileError) console.error('Error updating user_type in profile:', profileError);
       }
@@ -174,7 +171,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
         description: "Você agora faz parte da organização.",
       });
 
-      await onComplete({}); // Trigger re-fetch in Dashboard
+      await onComplete({});
     } catch (error: any) {
       console.error('Error joining with code:', error);
       toast({

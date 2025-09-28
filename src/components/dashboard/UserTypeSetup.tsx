@@ -7,14 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Calendar, Flag, Footprints } from "lucide-react"; // Mantendo apenas os ícones específicos do player
+import { User, Calendar, Flag, Footprints } from "lucide-react";
 import { userTypeOptions, getSpecializationPlaceholder } from "@/lib/userTypeUtils"; // Importando do novo utilitário
+import { useToast } from "@/hooks/use-toast";
 
 interface UserTypeSetupProps {
   onComplete: (userType: string, profileData: any) => Promise<void>;
 }
 
 const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [selectedType, setSelectedType] = useState("");
   const [profileData, setProfileData] = useState({
@@ -24,7 +26,6 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
     specialization: "",
     experience: "",
     achievements: "",
-    // Player specific fields
     date_of_birth: "",
     nationality: "",
     position: "",
@@ -32,17 +33,33 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filtrar userTypeOptions para remover 'club', 'fan' e 'admin' se não precisarem de setup adicional aqui
   const filteredUserTypeOptions = userTypeOptions.filter(
     (type) => type.value !== "club" && type.value !== "fan" && type.value !== "admin"
   );
 
   const handleSubmit = async () => {
+    // Validate required fields for player
+    if (selectedType === "player") {
+      if (!profileData.date_of_birth || !profileData.nationality || !profileData.position) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "Data de Nascimento, Nacionalidade e Posição são obrigatórios para jogadores.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       await onComplete(selectedType, profileData);
     } catch (error) {
       console.error("Erro ao configurar perfil:", error);
+      toast({
+        title: "Erro ao configurar perfil",
+        description: "Ocorreu um erro ao salvar suas informações.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

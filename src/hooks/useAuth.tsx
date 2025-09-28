@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [toast]);
 
   const signUp = async (email: string, password: string, fullName?: string, userType?: string) => {
-    const redirectUrl = `${window.location.origin}/email-confirmation-success`; // Redirecionar para a nova página
+    const redirectUrl = `${window.location.origin}/email-confirmation-success`;
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -61,8 +61,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          full_name: fullName, // fullName agora é opcional
-          user_type: userType // userType agora é opcional
+          full_name: fullName || email.split('@')[0],
+          user_type: userType || 'fan'
         }
       }
     });
@@ -84,15 +84,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       return { user: null, session: null, error: authError };
     } else {
-      // A criação do perfil inicial (id, email, full_name) é tratada pelo trigger handle_new_user no Supabase.
-      // O user_type será atualizado no onboarding flow (UserTypeSetup) ou no registro de clube.
       toast({
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para confirmar a conta.",
       });
     }
 
-    return { user: authData.user, session: authData.session, error: null }; // Retorna o user e session aqui
+    return { user: authData.user, session: authData.session, error: null };
   };
 
   const signIn = async (email: string, password: string) => {

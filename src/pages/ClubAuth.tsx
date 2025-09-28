@@ -133,12 +133,10 @@ const ClubAuth = () => {
       let managerUserId: string;
       let authResult;
 
-      // 2. Attempt to sign up the manager. If email exists, attempt to sign in.
       authResult = await signUp(formData.managerEmail.trim(), formData.managerPassword, formData.clubName.trim(), UserType.Club);
       
       if (authResult.error) {
         if (authResult.error.message.includes("User already registered")) {
-          // User already exists, try to sign them in
           authResult = await signIn(formData.managerEmail.trim(), formData.managerPassword);
           if (authResult.error) {
             throw new Error("Email já registrado. Por favor, faça login com sua senha existente ou use um email diferente.");
@@ -148,37 +146,36 @@ const ClubAuth = () => {
         }
       }
 
-      // If after signUp/signIn, authResult.user is still null, something went wrong.
       if (!authResult.user) {
         throw new Error("Falha ao autenticar o usuário. Por favor, tente novamente.");
       }
       managerUserId = authResult.user.id;
 
-      // Force Supabase client to update its session with the new one
       if (authResult.session) {
         await supabase.auth.setSession(authResult.session);
       } else {
-        // If no session is returned (e.g., new signup requiring email confirmation),
-        // we should not proceed with club creation immediately.
-        // The user will be redirected to email-confirmation-success.
-        // If this path is reached, it means a new user signed up and needs to confirm email.
-        // The club creation should happen AFTER email confirmation and subsequent login.
-        // For now, we'll just return and let the redirect handle it.
         toast({
           title: "Registro pendente de confirmação",
           description: "Por favor, confirme seu email para prosseguir com o registro do clube.",
           variant: "default",
         });
-        return; // Stop execution here
+        return;
       }
 
-      // 3. Upload Club Logo
       let logoUrl: string | null = null;
       if (logoFile) {
-        logoUrl = await uploadLogo(logoFile, managerUserId);
+        try {
+          logoUrl = await uploadLogo(logoFile, managerUserId);
+        } catch (uploadError) {
+          console.error('Error uploading logo:', uploadError);
+          toast({
+            title: "Aviso",
+            description: "O clube foi criado, mas houve um problema com o upload da logo.",
+            variant: "default",
+          });
+        }
       }
 
-      // 4. Create Club
       const clubPayload: TablesInsert<'clubs'> = {
         name: formData.clubName.trim(),
         country: formData.country.trim(),
@@ -197,7 +194,6 @@ const ClubAuth = () => {
 
       if (clubError) throw clubError;
 
-      // 5. Update Club Membership (the invite)
       const { error: updateInviteError } = await supabase
         .from('club_members')
         .update({
@@ -207,11 +203,10 @@ const ClubAuth = () => {
           accepted_at: new Date().toISOString(),
           used: true,
         })
-        .eq('id', inviteData.id); // Use the ID of the validated invite
+        .eq('id', inviteData.id);
 
       if (updateInviteError) throw updateInviteError;
 
-      // 6. Update Manager's Profile to user_type 'club'
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({ user_type: UserType.Club })
@@ -223,7 +218,7 @@ const ClubAuth = () => {
         title: "Clube registrado com sucesso!",
         description: "Você foi registrado como gerente do clube.",
       });
-      navigate("/dashboard"); // Redirect to dashboard
+      navigate("/dashboard");
     } catch (error: any) {
       console.error('Error during club registration:', error);
       if (error instanceof z.ZodError) {

@@ -36,30 +36,27 @@ const AdminAuth = () => {
 
   const checkAdminStatus = async (userId: string) => {
     setLoading(true);
-    console.log("AdminAuth: Checking admin status for user ID:", userId); // Log user ID
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('*') // Changed to select all columns
+        .select('user_type')
         .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle to handle no row found gracefully
+        .single();
 
-      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+      if (profileError) {
         console.error("AdminAuth: Error fetching profile:", profileError);
         throw profileError;
       }
 
       if (profileData?.user_type === 'admin') {
-        console.log("AdminAuth: User is admin, navigating to dashboard.");
         navigate("/admin-dashboard");
       } else {
-        console.log("AdminAuth: User is NOT admin or profile not found. User type:", profileData?.user_type);
         toast({
           title: "Acesso Negado",
           description: "Você não tem permissão de administrador.",
           variant: "destructive",
         });
-        await supabase.auth.signOut(); // Sign out non-admin users
+        await supabase.auth.signOut();
       }
     } catch (error: any) {
       console.error("AdminAuth: Error checking admin status (catch block):", error);
@@ -68,7 +65,7 @@ const AdminAuth = () => {
         description: error.message || "Não foi possível verificar seu status de administrador.",
         variant: "destructive",
       });
-      await supabase.auth.signOut(); // Ensure user is signed out on error
+      await supabase.auth.signOut();
     } finally {
       setLoading(false);
     }

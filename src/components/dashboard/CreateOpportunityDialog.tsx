@@ -41,7 +41,6 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
   const handleCreateOpportunity = async () => {
     if (!user) return;
 
-    // Basic validation for required fields in the database
     if (!opportunityForm.title || !opportunityForm.description || !opportunityForm.opportunity_type) {
       toast({
         title: "Campos obrigatórios",
@@ -53,7 +52,6 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
 
     setIsSubmitting(true);
     try {
-      // Create a payload that strictly matches the insert type, omitting 'profiles'
       const payload: TablesInsert<'opportunities'> = {
         title: opportunityForm.title,
         description: opportunityForm.description,
@@ -88,7 +86,7 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
         deadline: ""
       });
       
-      onOpportunityCreated(); // Notify parent component to refresh data
+      onOpportunityCreated();
       
       toast({
         title: "Oportunidade criada!",
@@ -96,6 +94,11 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
       });
     } catch (error) {
       console.error('Error creating opportunity:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro inesperado ao criar a oportunidade.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

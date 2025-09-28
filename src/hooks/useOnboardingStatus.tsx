@@ -77,7 +77,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     setLoading(true);
     const currentProfile = await fetchProfile();
     const currentMemberships = await fetchClubMemberships();
-    await fetchUnreadNotificationCount(); // Buscar contagem de notificações
+    await fetchUnreadNotificationCount();
 
     if (!currentProfile) {
       setLoading(false);
@@ -86,11 +86,9 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
     let nextStep: OnboardingStep = "complete";
 
-    // Se user_type for null OU 'fan', direcionar para userTypeSetup
     if (!currentProfile.user_type || currentProfile.user_type === UserType.Fan) {
       nextStep = "userTypeSetup";
     } else {
-      // Tipos de usuário que precisam de vínculo com clube
       const needsClubAffiliation = [
         UserType.Player,
         UserType.Agent,

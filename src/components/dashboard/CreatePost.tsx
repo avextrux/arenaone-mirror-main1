@@ -37,10 +37,6 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
       await onPost(content.trim(), postType, visibility);
       setContent("");
       setPostType("post");
-      toast({
-        title: "Post publicado!",
-        description: "Seu post foi publicado com sucesso.",
-      });
     } catch (error) {
       toast({
         title: "Erro ao publicar",

@@ -376,28 +376,39 @@ const Messages = () => {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversationId || !user) return;
 
+    const messageContent = newMessage.trim();
+    setNewMessage(""); // Clear input immediately for better UX
+
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert([{
           conversation_id: selectedConversationId,
           sender_id: user.id,
-          content: newMessage.trim(),
-          read: false, // Sender's message is initially unread by receiver
-        }]);
+          receiver_id: selectedConversation?.user1_id === user.id ? selectedConversation.user2_id : selectedConversation?.user1_id || '',
+          content: messageContent,
+          read: false,
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
-      setNewMessage("");
 
-      // Update last message in conversations list
+      // Update conversation's last_message_at
+      await supabase
+        .from('conversations')
+        .update({ last_message_at: new Date().toISOString() })
+        .eq('id', selectedConversationId);
+
       setConversations(prev => prev.map(conv => 
         conv.id === selectedConversationId 
-          ? { ...conv, last_message_content: newMessage.trim(), last_message_at: new Date().toISOString() }
+          ? { ...conv, last_message_content: messageContent, last_message_at: new Date().toISOString() }
           : conv
       ));
 
     } catch (error) {
       console.error('Error sending message:', error);
+      setNewMessage(messageContent); // Restore message content on error
       toast({
         title: "Erro ao enviar mensagem",
         description: "Não foi possível enviar sua mensagem.",

@@ -132,7 +132,6 @@ const Network = () => {
 
     if (existingConnection) {
       if (existingConnection.status === 'pending' && existingConnection.addressee_id === user.id) {
-        // This user received the request, so accept it
         await handleAcceptConnection(existingConnection.id);
       } else {
         toast({
@@ -145,7 +144,6 @@ const Network = () => {
     }
 
     try {
-      // Send connection request
       const { data, error } = await supabase
         .from('connections')
         .insert([{ requester_id: user.id, addressee_id: profileId, status: 'pending' }])
@@ -154,24 +152,31 @@ const Network = () => {
 
       if (error) throw error;
 
-      // Send notification to the addressee
+      // Get current user's profile for notification
+      const { data: currentUserProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      const senderName = currentUserProfile?.full_name || user.email;
+
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert([{
           user_id: profileId,
           type: 'connection_request',
           title: 'Nova solicitação de conexão',
-          description: `${user.user_metadata.full_name || user.email} quer se conectar com você.`,
-          related_entity_id: data.id, // Link to the connection ID
+          description: `${senderName} quer se conectar com você.`,
+          related_entity_id: data.id,
         }]);
 
       if (notificationError) console.error('Error sending notification:', notificationError);
-
       toast({
         title: "Solicitação enviada!",
         description: "Sua solicitação de conexão foi enviada.",
       });
-      fetchUserConnections(); // Refresh connections to update UI
+      fetchUserConnections();
     } catch (error) {
       console.error('Error sending connection request:', error);
       toast({
@@ -191,16 +196,24 @@ const Network = () => {
 
       if (error) throw error;
 
-      // Send notification to the requester
       const connection = userConnections.find(c => c.id === connectionId);
       if (connection && user) {
+        // Get current user's profile for notification
+        const { data: currentUserProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        const accepterName = currentUserProfile?.full_name || user.email;
+
         const { error: notificationError } = await supabase
           .from('notifications')
           .insert([{
             user_id: connection.requester_id,
             type: 'connection_request',
             title: 'Solicitação de conexão aceita!',
-            description: `${user.user_metadata.full_name || user.email} aceitou sua solicitação de conexão.`,
+            description: `${accepterName} aceitou sua solicitação de conexão.`,
             related_entity_id: connection.id,
           }]);
         if (notificationError) console.error('Error sending acceptance notification:', notificationError);
@@ -210,7 +223,7 @@ const Network = () => {
         title: "Conexão aceita!",
         description: "Você agora está conectado com este perfil.",
       });
-      fetchUserConnections(); // Refresh connections to update UI
+      fetchUserConnections();
     } catch (error) {
       console.error('Error accepting connection:', error);
       toast({
