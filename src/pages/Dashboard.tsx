@@ -46,6 +46,7 @@ const Dashboard = () => {
     );
   }
 
+  console.log("Dashboard: onboardingStep =", onboardingStep); // NOVO LOG AQUI
   if (onboardingStep !== "complete") {
     return (
       <OnboardingFlow 
