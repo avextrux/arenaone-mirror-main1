@@ -237,6 +237,9 @@ const ClubAuth = () => {
       }
       console.log("ClubAuth: Manager profile user_type updated to 'club'.");
 
+      // Add a small delay to allow database changes to propagate
+      await new Promise(resolve => setTimeout(resolve, 500)); 
+      
       // 7. Refetch onboarding status to ensure the dashboard recognizes the complete state
       await refetchStatus();
       console.log("ClubAuth: Onboarding status refetched.");
