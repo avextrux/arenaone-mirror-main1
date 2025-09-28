@@ -231,12 +231,28 @@ const ClubAuth = () => {
         .update({ user_type: UserType.Club })
         .eq('id', managerUserId);
 
-      if (profileUpdateError) console.error('ClubAuth: Error updating manager profile user_type:', profileUpdateError);
+      if (profileUpdateError) {
+        console.error('ClubAuth: Error updating manager profile user_type:', profileUpdateError.message);
+        throw profileUpdateError; // Re-throw to be caught by outer catch block
+      }
       console.log("ClubAuth: Manager profile user_type updated to 'club'.");
 
       // 7. Refetch onboarding status to ensure the dashboard recognizes the complete state
       await refetchStatus();
       console.log("ClubAuth: Onboarding status refetched.");
+
+      // Verify profile user_type after refetch
+      const { data: updatedProfile, error: fetchUpdatedProfileError } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', managerUserId)
+        .single();
+
+      if (fetchUpdatedProfileError) {
+        console.error('ClubAuth: Error fetching updated profile for verification:', fetchUpdatedProfileError);
+      } else {
+        console.log('ClubAuth: Verified user_type after refetch:', updatedProfile?.user_type);
+      }
 
       toast({
         title: "Clube registrado com sucesso!",

@@ -38,6 +38,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       console.error('useOnboardingStatus: Error fetching profile:', error);
       return null;
     }
+    console.log('useOnboardingStatus: Fetched profile data:', data); // Log do perfil buscado
     setProfile(data as AppProfile);
     return data as AppProfile;
   }, [user]);
@@ -53,6 +54,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       console.error('useOnboardingStatus: Error fetching club memberships:', error);
       return [];
     }
+    console.log('useOnboardingStatus: Fetched club memberships:', data); // Log das afiliações
     setClubMemberships(data as AppClubMembership[] || []);
     return data as AppClubMembership[] || [];
   }, [user]);
@@ -67,6 +69,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       console.error('useOnboardingStatus: Error fetching managed clubs:', error);
       return [];
     }
+    console.log('useOnboardingStatus: Fetched managed clubs:', data); // Log dos clubes gerenciados
     return data || [];
   }, [user]);
 
@@ -137,9 +140,6 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
             console.log(`useOnboardingStatus: ${currentProfile.user_type} type user has club memberships, setting next step to complete.`);
             nextStep = "complete";
           }
-        } else {
-          console.log(`useOnboardingStatus: User type ${currentProfile.user_type} does not require club affiliation, setting next step to complete.`);
-          nextStep = "complete";
         }
       }
     }
