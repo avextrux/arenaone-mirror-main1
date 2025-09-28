@@ -7,7 +7,7 @@ import { UserType } from '@/integrations/supabase/types'; // Importar UserType
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string, userType?: string) => Promise<{ error: any }>; // fullName e userType opcionais
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [toast]);
 
-  const signUp = async (email: string, password: string, fullName: string, userType?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, userType?: string) => {
     const redirectUrl = `${window.location.origin}/email-confirmation-success`; // Redirecionar para a nova página
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -61,8 +61,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          full_name: fullName,
-          user_type: userType // Pass userType to user_metadata
+          full_name: fullName, // fullName agora é opcional
+          user_type: userType // userType agora é opcional
         }
       }
     });
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { error: authError };
     } else {
       // A criação do perfil inicial (id, email, full_name) é tratada pelo trigger handle_new_user no Supabase.
-      // O user_type será atualizado no onboarding flow (UserTypeSetup).
+      // O user_type será atualizado no onboarding flow (UserTypeSetup) ou no registro de clube.
       toast({
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para confirmar a conta.",

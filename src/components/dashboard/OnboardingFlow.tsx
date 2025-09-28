@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
-import CreateClubDialog from "@/components/dashboard/CreateClubDialog";
+// import CreateClubDialog from "@/components/dashboard/CreateClubDialog"; // Removido
 import { UserType } from "@/integrations/supabase/types";
 import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
 
@@ -130,26 +130,27 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
     refetchStatus();
   };
 
-  const handleClubCreated = async (newClub: any, newMembership: AppClubMembership) => { // Usar AppClubMembership
-    toast({
-      title: "Clube criado!",
-      description: "Seu perfil de clube foi criado com sucesso.",
-    });
-    refetchStatus();
-  };
+  // Removido handleClubCreated, pois a criação de clube agora é feita em ClubAuth.tsx
+  // const handleClubCreated = async (newClub: any, newMembership: AppClubMembership) => {
+  //   toast({
+  //     title: "Clube criado!",
+  //     description: "Seu perfil de clube foi criado com sucesso.",
+  //   });
+  //   refetchStatus();
+  // };
 
   switch (onboardingStep) {
     case "userTypeSetup":
       return <UserTypeSetup onComplete={handleUserTypeSetupComplete} />;
     case "createClub":
-      // For onboarding, the dialog acts as a full-page step, so it's always open.
-      // onOpenChange is provided but won't typically be triggered by user interaction to close it.
-      return <CreateClubDialog open={true} onOpenChange={() => {}} onClubCreated={handleClubCreated} />;
+      // Usuários do tipo 'club' agora se registram via /club-auth, então este passo não é mais necessário aqui.
+      // Se um usuário chegar aqui com user_type 'club' e sem clube, algo deu errado no ClubAuth.
+      // Redirecionar para o dashboard, onde o DashboardRouter pode lidar com a falta de clube.
+      navigate('/dashboard', { replace: true });
+      return null;
     case "clubInvite":
       return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || ''} />;
     case "complete":
-      // This case should ideally not be reached if OnboardingFlow is rendered only when onboarding is not complete.
-      // However, as a safeguard, we can redirect or show a message.
       navigate('/dashboard', { replace: true });
       return null;
     default:

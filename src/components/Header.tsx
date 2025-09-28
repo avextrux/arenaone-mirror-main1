@@ -77,6 +77,13 @@ const Header = () => {
                 >
                   Cadastre-se
                 </Button>
+                <Button 
+                  variant="outline"
+                  className="border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300"
+                  onClick={() => navigate("/club-auth")}
+                >
+                  Registrar Clube
+                </Button>
               </>
             )}
           </div>

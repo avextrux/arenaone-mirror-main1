@@ -57,7 +57,7 @@ export type Database = {
           permission_level: PermissionLevel // Using top-level enum type
           status: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null // MODIFICADO: user_id agora pode ser nulo
         }
         Insert: {
           accepted_at?: string | null
@@ -73,7 +73,7 @@ export type Database = {
           permission_level?: PermissionLevel // Using top-level enum type
           status?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null // MODIFICADO: user_id agora pode ser nulo
         }
         Update: {
           accepted_at?: string | null
@@ -89,7 +89,7 @@ export type Database = {
           permission_level?: PermissionLevel // Using top-level enum type
           status?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null // MODIFICADO: user_id agora pode ser nulo
         }
         Relationships: [
           {
@@ -97,6 +97,13 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -636,7 +643,6 @@ export type Database = {
           agent_commission: number | null
           bonuses: Json | null
           club_id: string
-          contract_value: number | null
           created_at: string | null
           created_by: string
           id: string
@@ -647,12 +653,12 @@ export type Database = {
           tax_information: Json | null
           transfer_history: Json | null
           updated_at: string | null
+          contract_value: number | null
         }
         Insert: {
           agent_commission?: number | null
           bonuses?: Json | null
           club_id: string
-          contract_value?: number | null
           created_at?: string | null
           created_by: string
           id?: string
@@ -663,12 +669,12 @@ export type Database = {
           tax_information?: Json | null
           transfer_history?: Json | null
           updated_at?: string | null
+          contract_value?: number | null
         }
         Update: {
           agent_commission?: number | null
           bonuses?: Json | null
           club_id?: string
-          contract_value?: number | null
           created_at?: string | null
           created_by?: string
           id?: string
@@ -679,6 +685,7 @@ export type Database = {
           tax_information?: Json | null
           transfer_history?: Json | null
           updated_at?: string | null
+          contract_value?: number | null
         }
         Relationships: [
           {

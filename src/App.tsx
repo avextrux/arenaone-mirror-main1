@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import EmailConfirmationSuccess from "./pages/EmailConfirmationSuccess"; // Importar a nova página
+import ClubAuth from "./pages/ClubAuth"; // Importar a nova página ClubAuth
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/club-auth" element={<ClubAuth />} /> {/* Nova rota para registro de clube */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/email-confirmation-success" element={<EmailConfirmationSuccess />} /> {/* Nova rota */}

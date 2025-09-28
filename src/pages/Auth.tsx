@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles } from "lucide-react"; // Removendo ícones não utilizados
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles, Building } from "lucide-react"; // Adicionado Building
 import { UserType, Constants } from "@/integrations/supabase/types";
 import { userTypeOptions } from "@/lib/userTypeUtils"; // Importando do novo utilitário
 
@@ -16,10 +16,7 @@ import { userTypeOptions } from "@/lib/userTypeUtils"; // Importando do novo uti
 const signUpSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
-  fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
-  userType: z.enum(Constants.public.Enums.user_type, {
-    errorMap: () => ({ message: "Por favor, selecione sua função" })
-  }),
+  // fullName e userType removidos do esquema de validação de registro
 });
 
 // Esquema de validação para o formulário de LOGIN
@@ -34,8 +31,7 @@ const Auth = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    fullName: "",
-    userType: "" as UserType | ""
+    // fullName e userType removidos do estado inicial
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -61,10 +57,9 @@ const Auth = () => {
         signUpSchema.parse({ 
           email: formData.email.trim(), 
           password: formData.password, 
-          fullName: formData.fullName.trim(), 
-          userType: formData.userType as UserType 
         });
-        await signUp(formData.email.trim(), formData.password, formData.fullName.trim(), formData.userType);
+        // Chamada signUp sem fullName e userType
+        await signUp(formData.email.trim(), formData.password);
       } else {
         // Validação para o formulário de LOGIN
         signInSchema.parse({ 
@@ -256,27 +251,7 @@ const Auth = () => {
 
               <TabsContent value="signup" className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-sm font-medium">Nome Completo</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" /> {/* Reutilizando Mail para o ícone de usuário */}
-                      <Input
-                        id="fullName"
-                        type="text"
-                        placeholder="Digite seu nome completo"
-                        value={formData.fullName}
-                        onChange={(e) => handleInputChange("fullName", e.target.value)}
-                        className={`pl-10 ${errors.fullName ? "border-destructive" : ""}`}
-                        disabled={loading}
-                      />
-                    </div>
-                    {errors.fullName && (
-                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                        <span className="text-lg leading-none">›</span> {errors.fullName}
-                      </p>
-                    )}
-                  </div>
-
+                  {/* Nome Completo e Tipo de Usuário removidos do formulário de registro */}
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                     <div className="relative">
@@ -333,37 +308,6 @@ const Auth = () => {
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="userType" className="text-sm font-medium">Sua Função *</Label>
-                    <Select 
-                      value={formData.userType} 
-                      onValueChange={(value: UserType) => handleInputChange("userType", value)}
-                      disabled={loading}
-                    >
-                      <SelectTrigger className={`${errors.userType ? "border-destructive" : ""}`}>
-                        <SelectValue placeholder="Selecione sua função" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {userTypeOptions.map((type) => {
-                          const Icon = type.icon;
-                          return (
-                            <SelectItem key={type.value} value={type.value}>
-                              <div className="flex items-center gap-2">
-                                <Icon className="h-4 w-4 text-muted-foreground" />
-                                {type.label}
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    {errors.userType && (
-                      <p className="text-sm text-destructive flex items-center gap-1 mt-1">
-                        <span className="text-lg leading-none">›</span> {errors.userType}
-                      </p>
-                    )}
-                  </div>
-
                   <Button 
                     type="submit" 
                     className="w-full bg-gradient-to-r from-primary to-primary-hover hover:opacity-90 font-semibold py-2.5"
@@ -379,6 +323,15 @@ const Auth = () => {
                     )}
                   </Button>
                 </form>
+
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    É um clube?{" "}
+                    <Button variant="link" className="p-0 h-auto text-primary hover:underline" onClick={() => navigate("/club-auth")}>
+                      Registre seu clube aqui
+                    </Button>
+                  </p>
+                </div>
               </TabsContent>
             </Tabs>
 

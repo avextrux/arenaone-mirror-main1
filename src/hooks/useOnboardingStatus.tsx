@@ -85,18 +85,17 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
     let nextStep: OnboardingStep = "complete";
 
-    // Modificado: Se user_type for null OU 'fan', direcionar para userTypeSetup
+    // Se user_type for null OU 'fan', direcionar para userTypeSetup
     if (!currentProfile.user_type || currentProfile.user_type === 'fan') {
       nextStep = "userTypeSetup";
     } else {
-      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
+      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach'].includes(currentProfile.user_type);
       
-      if (currentProfile.user_type === 'club') {
-        const userOwnsClub = currentMemberships?.some(m => m.permission_level === 'admin' && m.department === 'management' && m.user_id === user?.id);
-        if (!userOwnsClub) {
-          nextStep = "createClub";
-        }
-      } else if (isClubRelatedUser) {
+      // O tipo 'club' agora é definido no registro de clube, então não precisa de 'createClub' aqui.
+      // Se um usuário com user_type 'club' chegar aqui, ele já deve ter um clube.
+      // Se não tiver, algo deu errado no registro de clube, e ele será tratado como 'complete'
+      // e o DashboardRouter o levará para a home do clube, onde a falta de clube será notada.
+      if (isClubRelatedUser) { // Apenas para staff de clube (não o gerente do clube)
         if (!currentMemberships || currentMemberships.length === 0) {
           nextStep = "clubInvite";
         }
@@ -106,8 +105,6 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     setOnboardingStep(nextStep);
     setLoading(false);
 
-    // REMOVIDO: A lógica de redirecionamento para o estado "complete" será tratada pelo DashboardRouter.
-    // Isso evita conflitos e loops de redirecionamento.
   }, [user, location.pathname, fetchProfile, fetchClubMemberships, fetchUnreadNotificationCount]);
 
   useEffect(() => {
