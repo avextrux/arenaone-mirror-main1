@@ -98,7 +98,8 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
         UserType.FinancialStaff,
         UserType.TechnicalStaff,
         UserType.Scout,
-        UserType.Coach
+        UserType.Coach,
+        UserType.Club // Adicionado UserType.Club aqui
       ];
       
       if (needsClubAffiliation.includes(currentProfile.user_type)) {
