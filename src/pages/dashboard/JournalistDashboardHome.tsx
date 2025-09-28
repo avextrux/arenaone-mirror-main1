@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LayoutDashboard, Newspaper, Megaphone, Calendar, FileText, Camera, Video, TrendingUp, Users } from "lucide-react";
 import { Profile } from "@/pages/Dashboard";
+import UnderDevelopmentBanner from "@/components/UnderDevelopmentBanner"; // Importar o novo componente
 
 interface JournalistDashboardHomeProps {
   profile: Profile | null;
@@ -9,6 +10,7 @@ interface JournalistDashboardHomeProps {
 const JournalistDashboardHome = ({ profile }: JournalistDashboardHomeProps) => {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
+      <UnderDevelopmentBanner featureName="Dashboard do Jornalista" /> {/* Adicionar o banner aqui */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold flex items-center gap-2">

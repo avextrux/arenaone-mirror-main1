@@ -13,7 +13,7 @@ import { Search, Plus, User, MapPin, Calendar, Stethoscope, Calculator, FileText
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
+import { ClubDepartment, PermissionLevel, TablesInsert, Json } from "@/integrations/supabase/types"; // Import types, including Json and TablesInsert
 import { AppClubMembership, AppPlayer, AppPlayerMedicalInfo, AppPlayerFinancialInfo, AppPlayerTechnicalReport } from "@/types/app"; // Importar tipos centralizados
 import CreatePlayerDialog from "@/components/dashboard/CreatePlayerDialog"; // Import the new dialog
 
@@ -209,23 +209,23 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
     }
   };
 
-  const hasPermission = (department: ClubDepartment, minLevel: PermissionLevel = 'read') => {
+  const hasPermission = (department: ClubDepartment, minLevel: PermissionLevel = PermissionLevel.Read) => {
     const membership = clubMemberships.find(m => m.department === department);
     if (!membership) return false;
 
-    const levels: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
+    const levels: Record<PermissionLevel, number> = { [PermissionLevel.Read]: 1, [PermissionLevel.Write]: 2, [PermissionLevel.Admin]: 3 };
     const userLevel = levels[membership.permission_level] || 0;
     const requiredLevel = levels[minLevel] || 1;
 
     return userLevel >= requiredLevel;
   };
 
-  const canViewMedical = () => hasPermission('medical');
-  const canEditMedical = () => hasPermission('medical', 'write');
-  const canViewFinancial = () => hasPermission('financial');
-  const canEditFinancial = () => hasPermission('financial', 'write');
-  const canViewTechnical = () => hasPermission('technical') || hasPermission('scouting');
-  const canEditTechnical = () => hasPermission('technical', 'write') || hasPermission('scouting', 'write');
+  const canViewMedical = () => hasPermission(ClubDepartment.Medical);
+  const canEditMedical = () => hasPermission(ClubDepartment.Medical, PermissionLevel.Write);
+  const canViewFinancial = () => hasPermission(ClubDepartment.Financial);
+  const canEditFinancial = () => hasPermission(ClubDepartment.Financial, PermissionLevel.Write);
+  const canViewTechnical = () => hasPermission(ClubDepartment.Technical) || hasPermission(ClubDepartment.Scouting);
+  const canEditTechnical = () => hasPermission(ClubDepartment.Technical, PermissionLevel.Write) || hasPermission(ClubDepartment.Scouting, PermissionLevel.Write);
 
   const handleSaveMedicalInfo = async () => {
     if (!selectedPlayer || !canEditMedical() || !primaryClubId) return;
@@ -311,25 +311,24 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
 
     setIsSaving(true);
     try {
-      const payload = {
+      const payload: TablesInsert<'player_technical_reports'> = { // Explicitly type payload
         player_id: selectedPlayer.id,
         club_id: primaryClubId,
-        scout_id: user?.id, // Assuming the current user is the scout/evaluator
+        scout_id: user?.id || '', // Assuming user.id is always available here, or provide a fallback
         overall_rating: technicalForm.overall_rating,
-        technical_skills: technicalForm.technical_skills,
+        technical_skills: technicalForm.technical_skills as Json | null, // Explicitly cast to Json | null
         strengths: technicalForm.strengths,
         weaknesses: technicalForm.weaknesses,
         detailed_notes: technicalForm.detailed_notes,
         recommendation: 'monitor', // Default recommendation
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        // created_at and updated_at are handled by database defaults/triggers
       };
 
       // For technical reports, we usually insert a new one rather than upserting an existing one,
       // as each report is a new evaluation.
       const { error } = await supabase
         .from('player_technical_reports')
-        .insert([payload]);
+        .insert([payload]); // Pass as an array
 
       if (error) throw error;
 

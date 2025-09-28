@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Building, Mail, Users, CircleAlert as AlertCircle, CircleCheck as CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth"; // Corrigido: removido '=>'
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
 import { getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando a função de utilitário
 import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
-import { ClubDepartment, PermissionLevel, Constants } from "@/integrations/supabase/types"; // Importar Constants
+import { ClubDepartment, PermissionLevel, Constants, TablesInsert } from "@/integrations/supabase/types"; // Importar Constants e TablesInsert
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
@@ -193,20 +193,22 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
       // Generate a unique invite code for this request
       const newInviteCode = uuidv4();
 
+      const payload: TablesInsert<'club_members'> = {
+        club_id: selectedClub,
+        user_id: user.id, // User is requesting, so user_id is known
+        department: department,
+        permission_level: PermissionLevel.Read, // Default for requests
+        status: 'pending',
+        invite_code: newInviteCode, // Store the generated code
+        invited_by: user.id,
+        invited_at: new Date().toISOString(),
+        expires_at: null, // No expiration for requests, admin will handle
+        used: false,
+      };
+
       const { error } = await supabase
         .from('club_members')
-        .insert({ // Pass a single object, not an array
-          club_id: selectedClub,
-          user_id: user.id, // User is requesting, so user_id is known
-          department: department,
-          permission_level: PermissionLevel.Read, // Default for requests
-          status: 'pending',
-          invite_code: newInviteCode, // Store the generated code
-          invited_by: user.id,
-          invited_at: new Date().toISOString(),
-          expires_at: null, // No expiration for requests, admin will handle
-          used: false,
-        });
+        .insert([payload]); // Pass as an array of one object
 
       if (error) throw error;
 

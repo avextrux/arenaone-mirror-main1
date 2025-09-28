@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LayoutDashboard, User, BarChart3, Briefcase, Activity, HeartPulse, Calendar, DollarSign, ShieldCheck, Users, Building } from "lucide-react";
 import { Profile } from "@/pages/Dashboard";
 import { Link } from "react-router-dom"; // Importar Link para navegação interna
+import UnderDevelopmentBanner from "@/components/UnderDevelopmentBanner"; // Importar o novo componente
 
 interface PlayerProfileDetails {
   current_club_name?: string;
@@ -35,6 +36,7 @@ const PlayerDashboardHome = ({ profile, playerDetails }: PlayerDashboardHomeProp
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
+      <UnderDevelopmentBanner featureName="Dashboard do Jogador" /> {/* Adicionar o banner aqui */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
