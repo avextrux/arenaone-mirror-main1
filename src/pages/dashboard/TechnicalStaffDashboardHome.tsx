@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LayoutDashboard, Users, LineChart, FileText, Lightbulb, Activity, Target } from "lucide-react";
+import { LayoutDashboard, Users, LineChart, FileText, Lightbulb, Activity, Target, Calendar, TrendingUp } from "lucide-react";
 import { Profile } from "@/pages/Dashboard";
 
 interface TechnicalStaffDashboardHomeProps {
@@ -76,9 +76,58 @@ const TechnicalStaffDashboardHome = ({ profile }: TechnicalStaffDashboardHomePro
             <p className="text-xs text-muted-foreground">28/12/2024</p>
           </CardContent>
         </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Média de Treino (horas/semana)</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">15h</div>
+            <p className="text-xs text-muted-foreground">Carga de trabalho da equipe</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Placeholder for more detailed sections */}
+      {/* Seções mais detalhadas */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LineChart className="w-5 h-5" />
+              Performance Individual (Top 3)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>Jogador A: +15% em passes precisos</li>
+              <li>Jogador B: +10% em duelos ganhos</li>
+              <li>Jogador C: -5% em erros de posse</li>
+            </ul>
+            <div className="mt-4 text-right">
+              <a href="#" className="text-primary text-sm hover:underline">Ver todos os relatórios</a>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Próximas Análises
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Análise de vídeo do próximo adversário agendada para amanhã.
+            </p>
+            <div className="mt-4 text-right">
+              <a href="#" className="text-primary text-sm hover:underline">Ver agenda completa</a>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardContent className="p-12 text-center">
           <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4" />

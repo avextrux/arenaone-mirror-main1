@@ -22,6 +22,12 @@ import MedicalStaffDashboardHome from "@/pages/dashboard/MedicalStaffDashboardHo
 import FinancialStaffDashboardHome from "@/pages/dashboard/FinancialStaffDashboardHome";
 import JournalistDashboardHome from "@/pages/dashboard/JournalistDashboardHome";
 
+// Importar as novas páginas especializadas
+import InjuriesOverview from "@/pages/dashboard/medical/InjuriesOverview";
+import ScoutReports from "@/pages/dashboard/scout/ScoutReports";
+import TrainingPlans from "@/pages/dashboard/coach/TrainingPlans";
+
+
 interface DashboardRouterProps {
   profile: UserProfile | null;
   clubMemberships: ClubMembership[];
@@ -128,17 +134,20 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
         <>
           <Route path="team" element={<UnderDevelopment page="Minha Equipe" />} />
           <Route path="match-analysis" element={<UnderDevelopment page="Análises de Jogo" />} />
+          <Route path="coach/training-plans" element={<TrainingPlans clubMemberships={clubMemberships} />} /> {/* Nova rota */}
         </>
       )}
       {userType === 'scout' && (
         <>
           <Route path="scout-reports" element={<UnderDevelopment page="Relatórios de Scouting" />} />
           <Route path="market-analysis" element={<UnderDevelopment page="Análises de Mercado" />} />
+          <Route path="scout/reports" element={<ScoutReports clubMemberships={clubMemberships} />} /> {/* Nova rota */}
         </>
       )}
       {userType === 'medical_staff' && (
         <>
           <Route path="recovery-plans" element={<UnderDevelopment page="Planos de Recuperação" />} />
+          <Route path="medical/injuries" element={<InjuriesOverview clubMemberships={clubMemberships} />} /> {/* Nova rota */}
         </>
       )}
       {userType === 'financial_staff' && (

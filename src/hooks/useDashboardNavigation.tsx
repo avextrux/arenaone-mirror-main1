@@ -50,7 +50,7 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: Club
       { title: "Meu Dashboard", url: "/dashboard/coach-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
-      { title: "Treinamentos", url: "/dashboard/training", icon: Activity, disabled: true },
+      { title: "Planos de Treino", url: "/dashboard/coach/training-plans", icon: Activity }, // Nova página
       { title: "Táticas", url: "/dashboard/tactics", icon: Target, disabled: true },
       { title: "Análises de Jogo", url: "/dashboard/match-analysis", icon: LineChart, disabled: true },
     ],
@@ -58,14 +58,14 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: Club
       { title: "Meu Dashboard", url: "/dashboard/scout-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
-      { title: "Relatórios de Scouting", url: "/dashboard/scout-reports", icon: ClipboardList, disabled: true },
+      { title: "Relatórios de Scouting", url: "/dashboard/scout/reports", icon: ClipboardList }, // Nova página
       { title: "Análises de Mercado", url: "/dashboard/market-analysis", icon: LineChart, disabled: true },
     ],
     medical_staff: [
       { title: "Meu Dashboard", url: "/dashboard/medical-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
-      { title: "Histórico Médico", url: "/dashboard/medical", icon: Stethoscope, disabled: true },
+      { title: "Lesões e Saúde", url: "/dashboard/medical/injuries", icon: Stethoscope }, // Nova página
       { title: "Exames Médicos", url: "/dashboard/medical-exams", icon: HeartPulse, disabled: true },
       { title: "Planos de Recuperação", url: "/dashboard/recovery-plans", icon: ShieldCheck, disabled: true },
     ],

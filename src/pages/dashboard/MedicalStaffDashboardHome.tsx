@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LayoutDashboard, HeartPulse, Users, Stethoscope, ShieldCheck, Calendar, FileText } from "lucide-react";
+import { LayoutDashboard, HeartPulse, Users, Stethoscope, ShieldCheck, Calendar, FileText, AlertCircle, TrendingUp } from "lucide-react";
 import { Profile } from "@/pages/Dashboard";
 
 interface MedicalStaffDashboardHomeProps {
@@ -39,7 +39,7 @@ const MedicalStaffDashboardHome = ({ profile }: MedicalStaffDashboardHomeProps) 
             <HeartPulse className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4</div>
+            <div className="text-2xl font-bold text-red-500">4</div>
             <p className="text-xs text-muted-foreground">Ver detalhes das lesões</p>
           </CardContent>
         </Card>
@@ -76,9 +76,58 @@ const MedicalStaffDashboardHome = ({ profile }: MedicalStaffDashboardHomeProps) 
             <p className="text-xs text-muted-foreground">Documentação</p>
           </CardContent>
         </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Risco de Lesão (Média)</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-500">Médio</div>
+            <p className="text-xs text-muted-foreground">Análise preditiva</p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Placeholder for more detailed sections */}
+      {/* Seções mais detalhadas */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <HeartPulse className="w-5 h-5" />
+              Jogadores com Lesões Ativas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>Jogador A: Torção no tornozelo (Retorno: 2 semanas)</li>
+              <li>Jogador B: Fadiga muscular (Retorno: 3 dias)</li>
+              <li>Jogador C: Recuperação pós-cirúrgica (Retorno: 3 meses)</li>
+            </ul>
+            <div className="mt-4 text-right">
+              <a href="/dashboard/medical/injuries" className="text-primary text-sm hover:underline">Ver todas as lesões</a>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Tendências de Saúde
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Observado um aumento de lesões musculares leves no último mês. Recomenda-se revisão dos protocolos de aquecimento.
+            </p>
+            <div className="mt-4 text-right">
+              <a href="#" className="text-primary text-sm hover:underline">Gerar relatório de tendências</a>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardContent className="p-12 text-center">
           <Stethoscope className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
