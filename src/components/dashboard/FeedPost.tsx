@@ -11,11 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
-import { AppProfile } from "@/types/app"; // Importar AppProfile
+import { FeedAuthorProfile } from "@/types/app"; // Importar FeedAuthorProfile
 
 interface PostProps {
   id: string;
-  author: AppProfile; // Usar AppProfile
+  author: FeedAuthorProfile; // Agora aceita FeedAuthorProfile
   content: string;
   images?: string[];
   postType: string;

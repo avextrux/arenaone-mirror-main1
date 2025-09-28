@@ -133,11 +133,7 @@ const Feed = ({ profile }: FeedProps) => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <CreatePost 
-        user={{
-          name: profile.full_name,
-          avatar: profile.avatar_url || undefined,
-          userType: profile.user_type,
-        }}
+        user={profile} // Passar o objeto profile diretamente
         onPost={handleCreatePost}
       />
 

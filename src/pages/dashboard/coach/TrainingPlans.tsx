@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
-import { AppClubMembership, AppTrainingPlan } from "@/types/app"; // Importar AppClubMembership e AppTrainingPlan
+import { AppClubMembership, AppTrainingPlan, AppProfile } from "@/types/app"; // Importar AppClubMembership, AppTrainingPlan e AppProfile
 
 interface TrainingPlan extends AppTrainingPlan {} // Usar AppTrainingPlan
 
@@ -54,7 +54,7 @@ const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
             user_type: "coach", // Default user_type
             verified: true, // Default verified
             email: user?.email || "coach@example.com" // Default email
-          },
+          } as Partial<AppProfile> as AppProfile, // Cast para Partial<AppProfile> e depois para AppProfile
           players_info: [{ id: "player1_id", first_name: "João", last_name: "Silva" }, { id: "player2_id", first_name: "Pedro", last_name: "Souza" }]
         },
         {
@@ -73,7 +73,7 @@ const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
             user_type: "coach", // Default user_type
             verified: true, // Default verified
             email: user?.email || "coach@example.com" // Default email
-          },
+          } as Partial<AppProfile> as AppProfile, // Cast para Partial<AppProfile> e depois para AppProfile
           players_info: [{ id: "player3_id", first_name: "Carlos", last_name: "Ferreira" }]
         }
       ];
