@@ -1,13 +1,13 @@
-import { useEffect, useState, createContext, useContext } from 'react';
+import { useEffect, useState, createContext, useContext, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { UserType } from '@/integrations/supabase/types'; // Importar UserType
+import { UserType } from '@/integrations/supabase/types';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName?: string, userType?: string) => Promise<{ user: User | null, session: Session | null, error: any }>; // fullName e userType opcionais
+  signUp: (email: string, password: string, fullName?: string, userType?: string) => Promise<{ user: User | null, session: Session | null, error: any }>;
   signIn: (email: string, password: string) => Promise<{ user: User | null, session: Session | null, error: any }>;
   signOut: () => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
@@ -21,40 +21,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const isMounted = useRef(true); // Ref para verificar se o componente está montado
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    isMounted.current = true; // Marca como montado
+    console.log("useAuth: useEffect iniciado. Configurando listener de auth state.");
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Show success toast for login/signup
+      (event, currentSession) => {
+        if (!isMounted.current) {
+          console.log("useAuth: Componente desmontado, ignorando atualização de estado.");
+          return;
+        }
+
+        console.log(`useAuth: onAuthStateChange event: ${event}, session:`, currentSession);
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setLoading(false); // Define loading como false após o primeiro evento de estado
+
+        // Exibir toasts para eventos de autenticação
         if (event === 'SIGNED_IN') {
           toast({
             title: "Login realizado com sucesso!",
             description: "Bem-vindo à ArenaOne.",
           });
+        } else if (event === 'SIGNED_OUT') {
+          toast({
+            title: "Logout realizado",
+            description: "Você foi desconectado com sucesso.",
+          });
+        } else if (event === 'USER_UPDATED') {
+          toast({
+            title: "Perfil atualizado",
+            description: "Suas informações foram atualizadas.",
+          });
         }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
+    // Cleanup function
     return () => {
+      isMounted.current = false; // Marca como desmontado
+      console.log("useAuth: useEffect cleanup. Desinscrevendo listener de auth state.");
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast]); // Dependência de toast para garantir que a função de toast esteja sempre atualizada
 
   const signUp = async (email: string, password: string, fullName?: string, userType?: string) => {
-    // O emailRedirectTo é para quando o usuário clica no link do email, não para o redirecionamento inicial após o signup.
-    const emailConfirmationRedirectUrl = `${window.location.origin}/email-confirmation-success`; 
+    const emailConfirmationRedirectUrl = `${window.location.origin}/email-confirmation-success`;
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -62,8 +77,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       options: {
         emailRedirectTo: emailConfirmationRedirectUrl,
         data: {
-          full_name: fullName, // fullName agora é opcional
-          user_type: userType // userType agora é opcional
+          full_name: fullName,
+          user_type: userType
         }
       }
     });
@@ -85,12 +100,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       return { user: null, session: null, error: authError };
     } else {
-      // A criação do perfil inicial (id, email, full_name) é tratada pelo trigger handle_new_user no Supabase.
-      // O user_type será atualizado no onboarding flow (UserTypeSetup) ou no registro de clube.
-      // Não mostramos um toast de sucesso aqui, pois o redirecionamento para RegistrationSuccess.tsx cuidará disso.
+      // O toast de sucesso para SIGNED_IN é tratado pelo onAuthStateChange
     }
 
-    return { user: authData.user, session: authData.session, error: null }; // Retorna o user e session aqui
+    return { user: authData.user, session: authData.session, error: null };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -103,9 +116,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       let message = "Email ou senha incorretos.";
       if (error.message.includes("Invalid login credentials")) {
         message = "Email ou senha incorretos. Verifique suas credenciais.";
-      } else if (error.message.includes("Email not confirmed")) {
-        message = "Sua conta ainda não foi confirmada. Verifique seu email e clique no link de confirmação. Você pode reenviar o email de confirmação abaixo.";
-      } else if (error.message.includes("email_not_confirmed")) {
+      } else if (error.message.includes("Email not confirmed") || 
+                 error.message.includes("email_not_confirmed")) {
         message = "Sua conta ainda não foi confirmada. Verifique seu email e clique no link de confirmação. Você pode reenviar o email de confirmação abaixo.";
       }
       
@@ -116,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
 
-    return { user: data.user, session: data.session, error }; // Retorna o user e session aqui
+    return { user: data.user, session: data.session, error };
   };
 
   const resendConfirmation = async (email: string) => {
@@ -124,7 +136,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${window.location.origin}/email-confirmation-success` // Redirecionar para a nova página
+        emailRedirectTo: `${window.location.origin}/email-confirmation-success`
       }
     });
 
@@ -155,20 +167,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      toast({
-        title: "Erro ao sair",
-        description: "Não foi possível fazer logout.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
-    }
-
+    // O toast de sucesso/erro para SIGNED_OUT é tratado pelo onAuthStateChange
     return { error };
   };
 
