@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Feed from "@/pages/dashboard/Feed";
 import Network from "@/pages/dashboard/Network";
 import Market from "@/pages/dashboard/Market";
@@ -8,9 +8,19 @@ import ClubManagement from "@/pages/dashboard/ClubManagement";
 import ClubPlayers from "@/pages/dashboard/ClubPlayers";
 import Notifications from "@/pages/dashboard/Notifications";
 import { Card, CardContent } from "@/components/ui/card";
-import { Construction } from "lucide-react";
-import { Profile as UserProfile, ClubMembership } from "@/pages/Dashboard"; // Import types from Dashboard
-import { UserType } from "@/integrations/supabase/types"; // Import UserType
+import { Construction, LayoutDashboard } from "lucide-react";
+import { Profile as UserProfile, ClubMembership } from "@/pages/Dashboard";
+import { UserType } from "@/integrations/supabase/types";
+
+// Importar as novas páginas de Dashboard Home
+import PlayerDashboardHome from "@/pages/dashboard/PlayerDashboardHome";
+import ClubDashboardHome from "@/pages/dashboard/ClubDashboardHome";
+import AgentDashboardHome from "@/pages/dashboard/AgentDashboardHome";
+import CoachDashboardHome from "@/pages/dashboard/CoachDashboardHome";
+import ScoutDashboardHome from "@/pages/dashboard/ScoutDashboardHome";
+import MedicalStaffDashboardHome from "@/pages/dashboard/MedicalStaffDashboardHome";
+import FinancialStaffDashboardHome from "@/pages/dashboard/FinancialStaffDashboardHome";
+import JournalistDashboardHome from "@/pages/dashboard/JournalistDashboardHome";
 
 interface DashboardRouterProps {
   profile: UserProfile | null;
@@ -19,7 +29,6 @@ interface DashboardRouterProps {
 
 const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => {
   const location = useLocation();
-  console.log("DashboardRouter current path:", location.pathname); // Para depuração
 
   if (!profile || !profile.user_type) {
     return (
@@ -32,14 +41,29 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
 
   const userType: UserType = profile.user_type;
 
+  // Função para obter a URL da página inicial específica do usuário
+  const getHomeRouteForUserType = (type: UserType) => {
+    switch (type) {
+      case 'player': return '/dashboard/player-home';
+      case 'club': return '/dashboard/club-home';
+      case 'agent': return '/dashboard/agent-home';
+      case 'coach': return '/dashboard/coach-home';
+      case 'scout': return '/dashboard/scout-home';
+      case 'medical_staff': return '/dashboard/medical-home';
+      case 'financial_staff': return '/dashboard/financial-home';
+      case 'technical_staff': return '/dashboard/technical-home';
+      case 'journalist': return '/dashboard/journalist-home';
+      default: return '/dashboard/profile'; // Fallback
+    }
+  };
+
   const renderCommonRoutes = () => (
     <>
-      <Route index element={<Feed profile={profile} />} />
-      <Route path="network" element={<UnderDevelopment page="Rede" />} />
+      <Route path="network" element={<Network />} />
       <Route path="messages" element={<Messages />} />
       <Route path="notifications" element={<Notifications />} />
       <Route path="profile" element={<Profile />} />
-      <Route path="market" element={<Market />} /> {/* Mercado é comum para alguns, mas pode ser mais relevante para outros */}
+      <Route path="market" element={<Market />} />
       <Route path="post" element={<UnderDevelopment page="Criar Post" />} />
       <Route path="search" element={<UnderDevelopment page="Pesquisar" />} />
       <Route path="settings" element={<UnderDevelopment page="Configurações" />} />
@@ -61,64 +85,86 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
     </>
   );
 
-  switch (userType) {
-    case 'player':
-      return (
-        <Routes>
-          {renderCommonRoutes()}
-          <Route path="stats" element={<UnderDevelopment page="Estatísticas" />} />
+  return (
+    <Routes>
+      {/* Rota padrão para o dashboard, redireciona para a home específica do usuário */}
+      <Route index element={<Navigate to={getHomeRouteForUserType(userType)} replace />} />
+      <Route path="feed" element={<Feed profile={profile} />} /> {/* Feed ainda é uma rota separada */}
+
+      {/* Rotas comuns a todos os usuários */}
+      {renderCommonRoutes()}
+
+      {/* Rotas específicas para cada tipo de usuário */}
+      <Route path="player-home" element={<PlayerDashboardHome profile={profile} />} />
+      <Route path="club-home" element={<ClubDashboardHome profile={profile} clubMemberships={clubMemberships} />} />
+      <Route path="agent-home" element={<AgentDashboardHome profile={profile} />} />
+      <Route path="coach-home" element={<CoachDashboardHome profile={profile} />} />
+      <Route path="scout-home" element={<ScoutDashboardHome profile={profile} />} />
+      <Route path="medical-home" element={<MedicalStaffDashboardHome profile={profile} />} />
+      <Route path="financial-home" element={<FinancialStaffDashboardHome profile={profile} />} />
+      <Route path="technical-home" element={<TechnicalStaffDashboardHome profile={profile} />} />
+      <Route path="journalist-home" element={<JournalistDashboardHome profile={profile} />} />
+
+      {/* Rotas relacionadas a clubes (acessíveis por membros de clubes) */}
+      {['club', 'coach', 'scout', 'medical_staff', 'financial_staff', 'technical_staff'].includes(userType) && renderClubRelatedRoutes()}
+
+      {/* Rotas específicas adicionais para cada tipo de usuário */}
+      {userType === 'player' && (
+        <>
+          <Route path="stats" element={<UnderDevelopment page="Estatísticas do Jogador" />} />
           <Route path="opportunities" element={<UnderDevelopment page="Minhas Oportunidades" />} />
-          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
-        </Routes>
-      );
-    case 'club':
-      return (
-        <Routes>
-          {renderCommonRoutes()}
-          {renderClubRelatedRoutes()}
-          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
-        </Routes>
-      );
-    case 'agent':
-      return (
-        <Routes>
-          {renderCommonRoutes()}
+          <Route path="training" element={<UnderDevelopment page="Meu Treinamento" />} />
+          <Route path="medical" element={<UnderDevelopment page="Meu Histórico Médico" />} />
+        </>
+      )}
+      {userType === 'agent' && (
+        <>
           <Route path="clients" element={<UnderDevelopment page="Meus Clientes" />} />
-          <Route path="contracts" element={<UnderDevelopment page="Contratos" />} />
-          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
-        </Routes>
-      );
-    case 'coach':
-    case 'scout':
-    case 'medical_staff':
-    case 'financial_staff':
-    case 'technical_staff':
-      return (
-        <Routes>
-          {renderCommonRoutes()}
-          {renderClubRelatedRoutes()}
-          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
-        </Routes>
-      );
-    case 'journalist':
-      return (
-        <Routes>
-          {renderCommonRoutes()}
-          <Route path="articles" element={<UnderDevelopment page="Artigos" />} />
-          <Route path="interviews" element={<UnderDevelopment page="Entrevistas" />} />
-          <Route path="events" element={<UnderDevelopment page="Eventos" />} />
-          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
-        </Routes>
-      );
-    default:
-      // Fallback para tipos de usuário não configurados ou novos
-      return (
-        <Routes>
-          {renderCommonRoutes()}
-          <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
-        </Routes>
-      );
-  }
+          <Route path="contracts" element={<UnderDevelopment page="Contratos de Clientes" />} />
+          <Route path="opportunities" element={<UnderDevelopment page="Oportunidades de Agente" />} />
+        </>
+      )}
+      {userType === 'coach' && (
+        <>
+          <Route path="team" element={<UnderDevelopment page="Minha Equipe" />} />
+          <Route path="match-analysis" element={<UnderDevelopment page="Análises de Jogo" />} />
+        </>
+      )}
+      {userType === 'scout' && (
+        <>
+          <Route path="scout-reports" element={<UnderDevelopment page="Relatórios de Scouting" />} />
+          <Route path="market-analysis" element={<UnderDevelopment page="Análises de Mercado" />} />
+        </>
+      )}
+      {userType === 'medical_staff' && (
+        <>
+          <Route path="recovery-plans" element={<UnderDevelopment page="Planos de Recuperação" />} />
+        </>
+      )}
+      {userType === 'financial_staff' && (
+        <>
+          <Route path="budget" element={<UnderDevelopment page="Orçamento do Clube" />} />
+        </>
+      )}
+      {userType === 'technical_staff' && (
+        <>
+          <Route path="performance-analysis" element={<UnderDevelopment page="Análises de Performance" />} />
+          <Route path="technical-reports" element={<UnderDevelopment page="Relatórios Técnicos" />} />
+          <Route path="tools" element={<UnderDevelopment page="Ferramentas Técnicas" />} />
+        </>
+      )}
+      {userType === 'journalist' && (
+        <>
+          <Route path="articles" element={<UnderDevelopment page="Meus Artigos" />} />
+          <Route path="interviews" element={<UnderDevelopment page="Minhas Entrevistas" />} />
+          <Route path="events" element={<UnderDevelopment page="Cobertura de Eventos" />} />
+        </>
+      )}
+
+      {/* Rota catch-all para páginas não encontradas no dashboard */}
+      <Route path="*" element={<UnderDevelopment page="Página Não Encontrada" />} />
+    </Routes>
+  );
 };
 
 const UnderDevelopment = ({ page }: { page: string }) => (

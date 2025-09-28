@@ -1,0 +1,95 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LayoutDashboard, Users, Activity, Target, LineChart, Calendar, Shield } from "lucide-react";
+import { Profile } from "@/pages/Dashboard";
+
+interface CoachDashboardHomeProps {
+  profile: Profile | null;
+}
+
+const CoachDashboardHome = ({ profile }: CoachDashboardHomeProps) => {
+  return (
+    <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+            <LayoutDashboard className="w-6 h-6" />
+            Dashboard do Técnico
+          </h1>
+          <p className="text-muted-foreground">
+            Bem-vindo, {profile?.full_name || "Técnico"}! Gerencie sua equipe e estratégias.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Jogadores da Equipe</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">25</div>
+            <p className="text-xs text-muted-foreground">Ver elenco completo</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Próximo Treinamento</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Tático</div>
+            <p className="text-xs text-muted-foreground">Amanhã, 09:00</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Próximo Jogo</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">vs Adversário</div>
+            <p className="text-xs text-muted-foreground">28/12/2024</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Análises de Performance</CardTitle>
+            <LineChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3 novas</div>
+            <p className="text-xs text-muted-foreground">Relatórios de jogadores</p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Táticas Ativas</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">4-3-3</div>
+            <p className="text-xs text-muted-foreground">Estratégia principal</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Placeholder for more detailed sections */}
+      <Card>
+        <CardContent className="p-12 text-center">
+          <Shield className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-semibold text-lg mb-2">Gestão Tática e de Equipe</h3>
+          <p className="text-muted-foreground">
+            Aqui você terá uma visão completa da performance e táticas da sua equipe.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default CoachDashboardHome;
