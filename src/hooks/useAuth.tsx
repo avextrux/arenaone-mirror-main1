@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName: string, userType?: string) => {
     console.log("useAuth.tsx: signUp - Attempting to sign up user:", email);
-    const redirectUrl = `${window.location.origin}/dashboard`; // Redirect to dashboard after signup
+    const redirectUrl = `${window.location.origin}/email-confirmation-success`; // Redirecionar para a nova página
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard` // Redirect to dashboard after confirmation
+        emailRedirectTo: `${window.location.origin}/email-confirmation-success` // Redirecionar para a nova página
       }
     });
 

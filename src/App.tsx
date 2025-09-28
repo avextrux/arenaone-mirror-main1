@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import EmailConfirmationSuccess from "./pages/EmailConfirmationSuccess"; // Importar a nova página
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/email-confirmation-success" element={<EmailConfirmationSuccess />} /> {/* Nova rota */}
             {/* Simplificando a rota do dashboard para capturar todas as sub-rotas */}
             <Route 
               path="/dashboard/*" 
