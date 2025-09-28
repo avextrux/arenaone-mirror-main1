@@ -95,6 +95,7 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
       medical_staff: [],
       financial_staff: [],
       technical_staff: [],
+      fan: [], // Adicionado para o tipo 'fan'
     };
 
     return [

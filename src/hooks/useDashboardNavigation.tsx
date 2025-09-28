@@ -92,6 +92,10 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: Club
       { title: "Entrevistas", url: "/dashboard/interviews", icon: Megaphone, disabled: true },
       { title: "Eventos", url: "/dashboard/events", icon: Calendar, disabled: true },
     ],
+    fan: [ // Adicionado para o tipo 'fan'
+      { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
+      { title: "Notícias", url: "/dashboard/feed", icon: Newspaper },
+    ],
   };
 
   // Combine base items with user-specific items
