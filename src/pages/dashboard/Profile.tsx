@@ -8,19 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit, Briefcase, Award, Target } from "lucide-react"; // Adicionei Briefcase, Award, Target
+import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit, Briefcase, Award, Target, Calendar, Flag, Foot, Ruler, Weight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
-import { UserType } from "@/integrations/supabase/types"; // Importando UserType
+import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
+import { UserType } from "@/integrations/supabase/types";
 
 interface Profile {
   id: string;
   full_name: string;
   email: string;
   avatar_url?: string;
-  user_type: UserType | null; // user_type pode ser nulo inicialmente
+  user_type: UserType | null;
   bio?: string;
   location?: string;
   website?: string;
@@ -28,15 +28,31 @@ interface Profile {
   followers_count: number;
   following_count: number;
   posts_count: number;
-  specialization?: string; // NEW FIELD
-  experience?: string;     // NEW FIELD
-  achievements?: string;   // NEW FIELD
+  specialization?: string;
+  experience?: string;
+  achievements?: string;
+}
+
+interface PlayerProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  nationality: string;
+  position: string;
+  date_of_birth: string;
+  height: number | null;
+  weight: number | null;
+  preferred_foot: string | null;
+  market_value: number | null;
+  contract_start: string | null;
+  contract_end: string | null;
 }
 
 const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [playerProfile, setPlayerProfile] = useState<PlayerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -45,10 +61,18 @@ const Profile = () => {
     bio: "",
     location: "",
     website: "",
-    user_type: "" as UserType | "", // <-- Aqui está a definição do tipo
-    specialization: "", // NEW FIELD
-    experience: "",     // NEW FIELD
-    achievements: ""    // NEW FIELD
+    user_type: "" as UserType | "",
+    specialization: "",
+    experience: "",
+    achievements: "",
+  });
+  const [playerFormData, setPlayerFormData] = useState({
+    date_of_birth: "",
+    nationality: "",
+    position: "",
+    preferred_foot: "",
+    height: "",
+    weight: "",
   });
 
   useEffect(() => {
@@ -80,10 +104,39 @@ const Profile = () => {
           location: data.location || "",
           website: data.website || "",
           user_type: data.user_type || "",
-          specialization: data.specialization || "", // NEW FIELD
-          experience: data.experience || "",         // NEW FIELD
-          achievements: data.achievements || ""      // NEW FIELD
+          specialization: data.specialization || "",
+          experience: data.experience || "",
+          achievements: data.achievements || ""
         });
+
+        if (data.user_type === 'player') {
+          const { data: playerData, error: playerError } = await supabase
+            .from('players')
+            .select('*')
+            .eq('profile_id', user.id)
+            .single();
+
+          if (playerError && playerError.code !== 'PGRST116') { // PGRST116 means no rows found
+            console.error('Error fetching player profile:', playerError);
+          }
+
+          if (playerData) {
+            setPlayerProfile(playerData);
+            setPlayerFormData({
+              date_of_birth: playerData.date_of_birth || "",
+              nationality: playerData.nationality || "",
+              position: playerData.position || "",
+              preferred_foot: playerData.preferred_foot || "",
+              height: playerData.height?.toString() || "",
+              weight: playerData.weight?.toString() || "",
+            });
+          }
+        } else {
+          setPlayerProfile(null);
+          setPlayerFormData({
+            date_of_birth: "", nationality: "", position: "", preferred_foot: "", height: "", weight: ""
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -97,28 +150,51 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: formData.full_name,
           bio: formData.bio,
           location: formData.location,
           website: formData.website,
-          user_type: formData.user_type as UserType, // CORREÇÃO 1: userType -> user_type
-          specialization: formData.specialization, // NEW FIELD
-          experience: formData.experience,         // NEW FIELD
-          achievements: formData.achievements      // NEW FIELD
+          specialization: formData.specialization,
+          experience: formData.experience,
+          achievements: formData.achievements
         })
         .eq('id', user.id);
 
-      if (error) {
-        console.error('Error updating profile:', error);
+      if (profileError) {
+        console.error('Error updating profile:', profileError);
         toast({
           title: "Erro ao atualizar perfil",
           description: "Ocorreu um erro ao salvar suas informações.",
           variant: "destructive",
         });
         return;
+      }
+
+      if (profile?.user_type === 'player') {
+        const { error: playerError } = await supabase
+          .from('players')
+          .update({
+            date_of_birth: playerFormData.date_of_birth,
+            nationality: playerFormData.nationality,
+            position: playerFormData.position,
+            preferred_foot: playerFormData.preferred_foot || null,
+            height: playerFormData.height ? parseInt(playerFormData.height) : null,
+            weight: playerFormData.weight ? parseInt(playerFormData.weight) : null,
+          })
+          .eq('profile_id', user.id);
+
+        if (playerError) {
+          console.error('Error updating player profile:', playerError);
+          toast({
+            title: "Erro ao atualizar perfil de jogador",
+            description: "Ocorreu um erro ao salvar suas informações de jogador.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       await fetchProfile();
@@ -133,6 +209,22 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePlayerInputChange = (field: string, value: string) => {
+    setPlayerFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const calculateAge = (dateOfBirth: string) => {
+    if (!dateOfBirth) return "N/A";
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
   };
 
   if (loading) {
@@ -279,8 +371,9 @@ const Profile = () => {
                   <Label htmlFor="user_type">Função</Label>
                   {editMode ? (
                     <Select 
-                      value={formData.user_type} // CORREÇÃO 2: userType -> user_type
-                      onValueChange={(value: UserType) => setFormData(prev => ({ ...prev, user_type: value }))} // CORREÇÃO 3: Adicionado tipagem explícita para 'value'
+                      value={formData.user_type}
+                      onValueChange={(value: UserType) => setFormData(prev => ({ ...prev, user_type: value }))}
+                      disabled={true} // User type should not be editable here
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -301,6 +394,128 @@ const Profile = () => {
                     <p className="text-sm text-muted-foreground mt-1">{getUserTypeLabel(profile.user_type)}</p>
                   )}
                 </div>
+
+                {profile.user_type === 'player' && playerProfile && (
+                  <>
+                    <div>
+                      <Label htmlFor="date_of_birth">Data de Nascimento</Label>
+                      {editMode ? (
+                        <Input
+                          id="date_of_birth"
+                          type="date"
+                          value={playerFormData.date_of_birth}
+                          onChange={(e) => handlePlayerInputChange("date_of_birth", e.target.value)}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            {playerProfile.date_of_birth ? `${new Date(playerProfile.date_of_birth).toLocaleDateString('pt-BR')} (${calculateAge(playerProfile.date_of_birth)} anos)` : "Não informado"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="nationality">Nacionalidade</Label>
+                      {editMode ? (
+                        <Input
+                          id="nationality"
+                          value={playerFormData.nationality}
+                          onChange={(e) => handlePlayerInputChange("nationality", e.target.value)}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Flag className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">{playerProfile.nationality || "Não informado"}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="position">Posição</Label>
+                      {editMode ? (
+                        <Select
+                          value={playerFormData.position}
+                          onValueChange={(value) => handlePlayerInputChange("position", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a posição" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Goleiro">Goleiro</SelectItem>
+                            <SelectItem value="Zagueiro">Zagueiro</SelectItem>
+                            <SelectItem value="Lateral Direito">Lateral Direito</SelectItem>
+                            <SelectItem value="Lateral Esquerdo">Lateral Esquerdo</SelectItem>
+                            <SelectItem value="Volante">Volante</SelectItem>
+                            <SelectItem value="Meio-campo">Meio-campo</SelectItem>
+                            <SelectItem value="Ponta Direita">Ponta Direita</SelectItem>
+                            <SelectItem value="Ponta Esquerda">Ponta Esquerda</SelectItem>
+                            <SelectItem value="Atacante">Atacante</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Target className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">{playerProfile.position || "Não informado"}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="preferred_foot">Pé Preferido</Label>
+                      {editMode ? (
+                        <Select
+                          value={playerFormData.preferred_foot}
+                          onValueChange={(value) => handlePlayerInputChange("preferred_foot", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o pé" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Direito">Direito</SelectItem>
+                            <SelectItem value="Esquerdo">Esquerdo</SelectItem>
+                            <SelectItem value="Ambos">Ambos</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Foot className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">{playerProfile.preferred_foot || "Não informado"}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="height">Altura (cm)</Label>
+                      {editMode ? (
+                        <Input
+                          id="height"
+                          type="number"
+                          value={playerFormData.height}
+                          onChange={(e) => handlePlayerInputChange("height", e.target.value)}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Ruler className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">{playerProfile.height ? `${playerProfile.height} cm` : "Não informado"}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="weight">Peso (kg)</Label>
+                      {editMode ? (
+                        <Input
+                          id="weight"
+                          type="number"
+                          value={playerFormData.weight}
+                          onChange={(e) => handlePlayerInputChange("weight", e.target.value)}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <Weight className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">{playerProfile.weight ? `${playerProfile.weight} kg` : "Não informado"}</p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <Label htmlFor="location">Localização</Label>
