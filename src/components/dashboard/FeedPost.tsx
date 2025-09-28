@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MessageCircle, Share, MoreHorizontal, Verified } from "lucide-react";
+import { Heart, MessageCircle, Share, MoveHorizontal as MoreHorizontal, EggFried as Verified } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";

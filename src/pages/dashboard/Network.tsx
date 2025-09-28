@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Users, UserPlus, MessageCircle, Verified, Check, Clock } from "lucide-react"; // Adicionado Check e Clock
+import { Search, Users, UserPlus, MessageCircle, EggFried as Verified, Check, Clock } from "lucide-react"; // Adicionado Check e Clock
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -196,24 +196,16 @@ const Network = () => {
 
       if (error) throw error;
 
+      // Send notification to the requester
       const connection = userConnections.find(c => c.id === connectionId);
       if (connection && user) {
-        // Get current user's profile for notification
-        const { data: currentUserProfile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-
-        const accepterName = currentUserProfile?.full_name || user.email;
-
         const { error: notificationError } = await supabase
           .from('notifications')
           .insert([{
             user_id: connection.requester_id,
             type: 'connection_request',
             title: 'Solicitação de conexão aceita!',
-            description: `${accepterName} aceitou sua solicitação de conexão.`,
+            description: `${user.user_metadata.full_name || user.email} aceitou sua solicitação de conexão.`,
             related_entity_id: connection.id,
           }]);
         if (notificationError) console.error('Error sending acceptance notification:', notificationError);
@@ -223,7 +215,7 @@ const Network = () => {
         title: "Conexão aceita!",
         description: "Você agora está conectado com este perfil.",
       });
-      fetchUserConnections();
+      fetchUserConnections(); // Refresh connections to update UI
     } catch (error) {
       console.error('Error accepting connection:', error);
       toast({
