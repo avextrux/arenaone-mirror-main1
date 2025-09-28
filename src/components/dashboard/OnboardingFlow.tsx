@@ -23,21 +23,22 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
   const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
     if (!user) return;
     try {
-      const { error } = await supabase
+      // Update generic profile data
+      const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({
           user_type: userType as UserType,
           bio: profileData.bio,
           location: profileData.location,
           website: profileData.website,
-          specialization: profileData.specialization, // NEW FIELD
-          experience: profileData.experience,         // NEW FIELD
-          achievements: profileData.achievements      // NEW FIELD
+          specialization: profileData.specialization,
+          experience: profileData.experience,
+          achievements: profileData.achievements
         })
         .eq('id', user.id);
 
-      if (error) {
-        console.error('Error updating profile:', error);
+      if (profileUpdateError) {
+        console.error('Error updating profile:', profileUpdateError);
         toast({
           title: "Erro ao atualizar perfil",
           description: "Ocorreu um erro ao salvar suas informações.",
@@ -45,6 +46,33 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         });
         return;
       }
+
+      // If user is a player, also create an entry in the players table
+      if (userType === 'player') {
+        const { error: playerInsertError } = await supabase
+          .from('players')
+          .insert([{
+            profile_id: user.id,
+            first_name: user.user_metadata.full_name.split(' ')[0] || '', // Assuming full_name is in user_metadata
+            last_name: user.user_metadata.full_name.split(' ').slice(1).join(' ') || '',
+            date_of_birth: profileData.date_of_birth,
+            nationality: profileData.nationality,
+            position: profileData.position,
+            preferred_foot: profileData.preferred_foot || null,
+            // Other player fields can be null initially or set to defaults
+          }]);
+
+        if (playerInsertError) {
+          console.error('Error creating player entry:', playerInsertError);
+          toast({
+            title: "Erro ao criar perfil de jogador",
+            description: "Ocorreu um erro ao salvar suas informações de jogador.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       toast({
         title: "Perfil configurado!",
         description: "Seu perfil foi configurado com sucesso.",

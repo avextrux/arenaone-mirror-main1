@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator } from "lucide-react"; // Adicionei Stethoscope e Calculator
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
+import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator, Calendar, Flag, Foot } from "lucide-react"; // Adicionei Calendar, Flag, Foot
 
 interface UserTypeSetupProps {
   onComplete: (userType: string, profileData: any) => Promise<void>;
@@ -21,7 +22,12 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
     website: "",
     specialization: "",
     experience: "",
-    achievements: ""
+    achievements: "",
+    // Player specific fields
+    date_of_birth: "",
+    nationality: "",
+    position: "",
+    preferred_foot: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -191,6 +197,74 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {selectedType === "player" && (
+            <>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date_of_birth">Data de Nascimento *</Label>
+                  <Input
+                    id="date_of_birth"
+                    type="date"
+                    value={profileData.date_of_birth}
+                    onChange={(e) => handleInputChange("date_of_birth", e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nationality">Nacionalidade *</Label>
+                  <Input
+                    id="nationality"
+                    placeholder="Ex: Brasileira"
+                    value={profileData.nationality}
+                    onChange={(e) => handleInputChange("nationality", e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="position">Posição *</Label>
+                  <Select
+                    value={profileData.position}
+                    onValueChange={(value) => handleInputChange("position", value)}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a posição" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Goleiro">Goleiro</SelectItem>
+                      <SelectItem value="Zagueiro">Zagueiro</SelectItem>
+                      <SelectItem value="Lateral Direito">Lateral Direito</SelectItem>
+                      <SelectItem value="Lateral Esquerdo">Lateral Esquerdo</SelectItem>
+                      <SelectItem value="Volante">Volante</SelectItem>
+                      <SelectItem value="Meio-campo">Meio-campo</SelectItem>
+                      <SelectItem value="Ponta Direita">Ponta Direita</SelectItem>
+                      <SelectItem value="Ponta Esquerda">Ponta Esquerda</SelectItem>
+                      <SelectItem value="Atacante">Atacante</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="preferred_foot">Pé Preferido</Label>
+                  <Select
+                    value={profileData.preferred_foot}
+                    onValueChange={(value) => handleInputChange("preferred_foot", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o pé" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Direito">Direito</SelectItem>
+                      <SelectItem value="Esquerdo">Esquerdo</SelectItem>
+                      <SelectItem value="Ambos">Ambos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="bio">Bio</Label>
             <Textarea
