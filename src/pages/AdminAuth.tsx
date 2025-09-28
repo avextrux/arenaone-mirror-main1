@@ -45,9 +45,23 @@ const AdminAuth = () => {
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      // Tratar o erro PGRST116 especificamente (nenhum perfil encontrado)
+      if (profileError && profileError.code === 'PGRST116') {
+        console.warn("AdminAuth.tsx: Perfil não encontrado para o usuário. Não é admin.");
+        toast({
+          title: "Acesso Negado",
+          description: "Seu perfil não foi encontrado ou não tem permissão de administrador.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        navigate("/"); // Redirecionar para a página inicial ou de login geral
+        return;
+      } else if (profileError) {
+        // Tratar outros tipos de erros do Supabase
+        throw profileError;
+      }
 
-      if (profileData?.user_type === UserType.Admin) { // Usar UserType.Admin
+      if (profileData?.user_type === UserType.Admin) {
         console.log("AdminAuth.tsx: Usuário é admin, navegando para /admin-dashboard.");
         navigate("/admin-dashboard");
       } else {
@@ -57,8 +71,8 @@ const AdminAuth = () => {
           description: "Você não tem permissão de administrador.",
           variant: "destructive",
         });
-        // Opcionalmente, deslogar usuários não-admin que tentam acessar o login de admin
         await supabase.auth.signOut();
+        navigate("/"); // Redirecionar para a página inicial ou de login geral
       }
     } catch (error: any) {
       console.error("AdminAuth.tsx: Erro ao verificar status de admin:", error);
@@ -68,6 +82,7 @@ const AdminAuth = () => {
         variant: "destructive",
       });
       await supabase.auth.signOut(); // Garantir que o usuário seja deslogado em caso de erro
+      navigate("/"); // Redirecionar para a página inicial ou de login geral
     } finally {
       setLoading(false);
     }
