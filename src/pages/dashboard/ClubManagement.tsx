@@ -12,27 +12,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ClubDepartment, PermissionLevel, Tables } from "@/integrations/supabase/types"; // Import Tables
-import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard";
+import { AppClubMembership, AppPlayer } from "@/types/app"; // Importar AppClubMembership e AppPlayer
 import { format } from 'date-fns'; // Importado para formatar datas
 
-interface Player {
-  id: string;
-  first_name: string;
-  last_name: string;
-  position: string;
-  nationality: string;
-  date_of_birth: string;
-  market_value: number;
-}
+interface Player extends AppPlayer {} // Usar AppPlayer
 
-interface ClubDetails {
-  id: string;
-  name: string;
-  founded_year: number;
-  stadium: string;
-  league: string;
-  country: string;
-  logo_url?: string;
+interface ClubDetails extends Tables<'clubs'> { // Estender de Tables<'clubs'>
   // Adicione outros campos do clube conforme necessário
 }
 
@@ -43,7 +28,7 @@ interface Match extends Tables<'matches'> {
 }
 
 interface ClubManagementProps {
-  clubMemberships: DashboardClubMembership[];
+  clubMemberships: AppClubMembership[]; // Usar AppClubMembership
 }
 
 const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
@@ -63,7 +48,7 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
         .single();
 
       if (error) throw error;
-      setClubInfo(data as ClubDetails);
+      setClubInfo(data as ClubDetails); // Cast para ClubDetails
     } catch (error) {
       console.error('Error fetching club details:', error);
       toast({
@@ -87,7 +72,7 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
         return;
       }
 
-      setPlayers(data || []);
+      setPlayers(data as Player[] || []); // Cast para Player[]
     } catch (error) {
       console.error('Error fetching players:', error);
     }
@@ -148,7 +133,8 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
     return age;
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | null) => { // Adicionado null check
+    if (amount === null) return 'N/A';
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'EUR',

@@ -12,35 +12,12 @@ import { useIsMobile } from "@/hooks/use-mobile"; // Import useIsMobile hook
 import NewConversationDialog from "@/components/dashboard/NewConversationDialog"; // Import new component
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
 import { useLocation, useNavigate } from "react-router-dom"; // Import useLocation and useNavigate
+import { AppProfile, AppMessage, AppConversation } from "@/types/app"; // Importar tipos centralizados
 
 // Define types based on Supabase schema
-interface Profile {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-  user_type: string;
-}
-
-interface Message {
-  id: string;
-  content: string;
-  created_at: string;
-  read: boolean | null;
-  sender_id: string;
-  conversation_id: string;
-  profiles?: Profile; // Joined profile of the sender
-}
-
-interface Conversation {
-  id: string;
-  created_at: string;
-  user1_id: string;
-  user2_id: string;
-  last_message_at: string | null;
-  other_user_profile?: Profile; // Profile of the other participant in the conversation
-  last_message_content?: string; // Content of the last message
-  unread_count?: number; // Number of unread messages for the current user
-}
+interface Profile extends AppProfile {} // Usar AppProfile
+interface Message extends AppMessage {} // Usar AppMessage
+interface Conversation extends AppConversation {} // Usar AppConversation
 
 const Messages = () => {
   const { user } = useAuth();
@@ -115,7 +92,7 @@ const Messages = () => {
 
         conversationsWithProfiles.push({
           ...conv,
-          other_user_profile: otherUserProfile || undefined,
+          other_user_profile: otherUserProfile as AppProfile || undefined, // Cast para AppProfile
           last_message_content: lastMessageData?.content || 'Nenhuma mensagem',
           unread_count: unreadCount || 0,
         });
@@ -224,7 +201,7 @@ const Messages = () => {
 
             if (profileError) console.error('Error fetching sender profile for new message:', profileError);
 
-            setMessages((prev) => [...prev, { ...newMessage, profiles: senderProfile || undefined }]);
+            setMessages((prev) => [...prev, { ...newMessage, profiles: senderProfile as AppProfile || undefined }]); // Cast para AppProfile
             
             // Mark new message as read if it's from the other user and conversation is open
             if (newMessage.sender_id !== user?.id) {
@@ -364,7 +341,7 @@ const Messages = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages(data as Message[] || []); // Cast para Message[]
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({

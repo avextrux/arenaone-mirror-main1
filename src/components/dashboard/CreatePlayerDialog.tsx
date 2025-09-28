@@ -14,6 +14,7 @@ import { UserPlus, Calendar, Ruler, Weight, Footprints, DollarSign } from "lucid
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { AppPlayer } from "@/types/app"; // Importar AppPlayer
 
 interface CreatePlayerDialogProps {
   open: boolean;
@@ -26,16 +27,16 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [playerForm, setPlayerForm] = useState({
+  const [playerForm, setPlayerForm] = useState<Partial<AppPlayer>>({ // Usar Partial<AppPlayer>
     first_name: "",
     last_name: "",
     nationality: "",
     position: "",
     date_of_birth: "",
-    height: "",
-    weight: "",
+    height: null, // Alterado para null
+    weight: null, // Alterado para null
     preferred_foot: "",
-    market_value: "",
+    market_value: null, // Alterado para null
     contract_start: "",
     contract_end: "",
   });
@@ -70,10 +71,10 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
           nationality: playerForm.nationality,
           position: playerForm.position,
           date_of_birth: playerForm.date_of_birth,
-          height: playerForm.height ? parseInt(playerForm.height) : null,
-          weight: playerForm.weight ? parseInt(playerForm.weight) : null,
+          height: playerForm.height,
+          weight: playerForm.weight,
           preferred_foot: playerForm.preferred_foot || null,
-          market_value: playerForm.market_value ? parseFloat(playerForm.market_value) : null,
+          market_value: playerForm.market_value,
           contract_start: playerForm.contract_start || null,
           contract_end: playerForm.contract_end || null,
           current_club_id: clubId, // Associate player with the current club
@@ -90,7 +91,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
       // Reset form
       setPlayerForm({
         first_name: "", last_name: "", nationality: "", position: "", date_of_birth: "",
-        height: "", weight: "", preferred_foot: "", market_value: "", contract_start: "", contract_end: "",
+        height: null, weight: null, preferred_foot: "", market_value: null, contract_start: "", contract_end: "",
       });
     } catch (error: any) {
       console.error('Error creating player:', error);
@@ -123,7 +124,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
               <Input
                 id="first_name"
                 placeholder="Ex: Vinicius"
-                value={playerForm.first_name}
+                value={playerForm.first_name || ""}
                 onChange={(e) => setPlayerForm(prev => ({ ...prev, first_name: e.target.value }))}
                 disabled={isSubmitting}
               />
@@ -133,7 +134,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
               <Input
                 id="last_name"
                 placeholder="Ex: Júnior"
-                value={playerForm.last_name}
+                value={playerForm.last_name || ""}
                 onChange={(e) => setPlayerForm(prev => ({ ...prev, last_name: e.target.value }))}
                 disabled={isSubmitting}
               />
@@ -146,7 +147,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
               <Input
                 id="nationality"
                 placeholder="Ex: Brasileira"
-                value={playerForm.nationality}
+                value={playerForm.nationality || ""}
                 onChange={(e) => setPlayerForm(prev => ({ ...prev, nationality: e.target.value }))}
                 disabled={isSubmitting}
               />
@@ -154,7 +155,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
             <div className="space-y-2">
               <Label htmlFor="position">Posição *</Label>
               <Select
-                value={playerForm.position}
+                value={playerForm.position || ""}
                 onValueChange={(value) => setPlayerForm(prev => ({ ...prev, position: value }))}
                 disabled={isSubmitting}
               >
@@ -182,7 +183,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
               <Input
                 id="date_of_birth"
                 type="date"
-                value={playerForm.date_of_birth}
+                value={playerForm.date_of_birth || ""}
                 onChange={(e) => setPlayerForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
                 disabled={isSubmitting}
               />
@@ -190,7 +191,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
             <div className="space-y-2">
               <Label htmlFor="preferred_foot">Pé Preferido</Label>
               <Select
-                value={playerForm.preferred_foot}
+                value={playerForm.preferred_foot || ""}
                 onValueChange={(value) => setPlayerForm(prev => ({ ...prev, preferred_foot: value }))}
                 disabled={isSubmitting}
               >
@@ -213,8 +214,8 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
                 id="height"
                 type="number"
                 placeholder="Ex: 176"
-                value={playerForm.height}
-                onChange={(e) => setPlayerForm(prev => ({ ...prev, height: e.target.value }))}
+                value={playerForm.height !== null ? playerForm.height.toString() : ""}
+                onChange={(e) => setPlayerForm(prev => ({ ...prev, height: e.target.value ? parseInt(e.target.value) : null }))}
                 disabled={isSubmitting}
               />
             </div>
@@ -224,8 +225,8 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
                 id="weight"
                 type="number"
                 placeholder="Ex: 70"
-                value={playerForm.weight}
-                onChange={(e) => setPlayerForm(prev => ({ ...prev, weight: e.target.value }))}
+                value={playerForm.weight !== null ? playerForm.weight.toString() : ""}
+                onChange={(e) => setPlayerForm(prev => ({ ...prev, weight: e.target.value ? parseInt(e.target.value) : null }))}
                 disabled={isSubmitting}
               />
             </div>
@@ -238,8 +239,8 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
                 id="market_value"
                 type="number"
                 placeholder="Ex: 5000000"
-                value={playerForm.market_value}
-                onChange={(e) => setPlayerForm(prev => ({ ...prev, market_value: e.target.value }))}
+                value={playerForm.market_value !== null ? playerForm.market_value.toString() : ""}
+                onChange={(e) => setPlayerForm(prev => ({ ...prev, market_value: e.target.value ? parseFloat(e.target.value) : null }))}
                 disabled={isSubmitting}
               />
             </div>
@@ -248,7 +249,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
               <Input
                 id="contract_start"
                 type="date"
-                value={playerForm.contract_start}
+                value={playerForm.contract_start || ""}
                 onChange={(e) => setPlayerForm(prev => ({ ...prev, contract_start: e.target.value }))}
                 disabled={isSubmitting}
               />
@@ -260,7 +261,7 @@ const CreatePlayerDialog = ({ open, onOpenChange, onPlayerCreated, clubId }: Cre
             <Input
               id="contract_end"
               type="date"
-              value={playerForm.contract_end}
+              value={playerForm.contract_end || ""}
               onChange={(e) => setPlayerForm(prev => ({ ...prev, contract_end: e.target.value }))}
               disabled={isSubmitting}
             />

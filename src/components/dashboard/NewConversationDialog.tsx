@@ -17,13 +17,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
+import { AppProfile } from "@/types/app"; // Importar AppProfile
 
-interface Profile {
-  id: string;
-  full_name: string;
-  avatar_url?: string;
-  user_type: string;
-}
+interface Profile extends AppProfile {} // Usar AppProfile
 
 interface NewConversationDialogProps {
   onConversationStarted: (conversationId: string) => void;
@@ -54,7 +50,7 @@ const NewConversationDialog = ({ onConversationStarted }: NewConversationDialogP
         .limit(10);
 
       if (error) throw error;
-      setSearchResults(data || []);
+      setSearchResults(data as Profile[] || []); // Cast para Profile[]
     } catch (error) {
       console.error("Error searching profiles:", error);
       toast({
@@ -161,15 +157,15 @@ const NewConversationDialog = ({ onConversationStarted }: NewConversationDialogP
                 <div key={profile.id} className="flex items-center justify-between p-3 border rounded-md">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-9 h-9">
-                      <AvatarImage src={profile.avatar_url} />
+                      <AvatarImage src={profile.avatar_url || undefined} />
                       <AvatarFallback>
                         {profile.full_name.split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-semibold text-sm">{profile.full_name}</p>
-                      <Badge className={`text-xs mt-1 ${getUserTypeColor(profile.user_type || null)}`}>
-                        {getUserTypeLabel(profile.user_type || null)}
+                      <Badge className={`text-xs mt-1 ${getUserTypeColor(profile.user_type)}`}>
+                        {getUserTypeLabel(profile.user_type)}
                       </Badge>
                     </div>
                   </div>

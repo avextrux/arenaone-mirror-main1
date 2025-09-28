@@ -15,39 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
 import { UserType } from "@/integrations/supabase/types";
 import { v4 as uuidv4 } from 'uuid'; // Import for unique file names
+import { AppProfile, AppPlayer } from "@/types/app"; // Importar AppProfile e AppPlayer
 
-interface Profile {
-  id: string;
-  full_name: string;
-  email: string;
-  avatar_url?: string;
-  user_type: UserType | null;
-  bio?: string;
-  location?: string;
-  website?: string;
-  verified: boolean;
-  followers_count: number;
-  following_count: number;
-  posts_count: number;
-  specialization?: string;
-  experience?: string;
-  achievements?: string;
-}
-
-interface PlayerProfile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  nationality: string;
-  position: string;
-  date_of_birth: string;
-  height: number | null;
-  weight: number | null;
-  preferred_foot: string | null;
-  market_value: number | null;
-  contract_start: string | null;
-  contract_end: string | null;
-}
+interface Profile extends AppProfile {} // Usar AppProfile
+interface PlayerProfile extends AppPlayer {} // Usar AppPlayer
 
 const Profile = () => {
   const { user } = useAuth();
@@ -100,7 +71,7 @@ const Profile = () => {
       }
 
       if (data) {
-        setProfile(data);
+        setProfile(data as Profile); // Cast para Profile
         setFormData({
           full_name: data.full_name || "",
           bio: data.bio || "",
@@ -125,7 +96,7 @@ const Profile = () => {
           }
 
           if (playerData) {
-            setPlayerProfile(playerData);
+            setPlayerProfile(playerData as PlayerProfile); // Cast para PlayerProfile
             setPlayerFormData({
               date_of_birth: playerData.date_of_birth || "",
               nationality: playerData.nationality || "",
@@ -371,7 +342,7 @@ const Profile = () => {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative">
                   <Avatar className="w-32 h-32 border-4 border-primary/20">
-                    <AvatarImage src={avatarPreview || profile.avatar_url} />
+                    <AvatarImage src={avatarPreview || profile.avatar_url || undefined} /> {/* Usar avatar_url */}
                     <AvatarFallback className="text-2xl">
                       {profile.full_name?.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
@@ -738,7 +709,7 @@ const Profile = () => {
 
           {editMode && (
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => { setEditMode(false); setAvatarFile(null); setAvatarPreview(profile?.avatar_url || null); }}>
+              <Button variant="outline" onClick={() => { setEditMode(false); setAvatarFile(null); setAvatarPreview(profile?.avatar_url || undefined); }}> {/* Usar avatar_url */}
                 Cancelar
               </Button>
               <Button onClick={handleSave} disabled={saving}>

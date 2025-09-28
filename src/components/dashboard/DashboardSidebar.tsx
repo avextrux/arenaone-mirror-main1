@@ -17,11 +17,11 @@ import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { getUserTypeColor, getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils";
 import { UserType } from "@/integrations/supabase/types";
 import { useDashboardNavigation } from "@/hooks/useDashboardNavigation"; // Importando o novo hook
-import { ClubMembership } from "@/pages/Dashboard"; // Importando ClubMembership de Dashboard
+import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
 
 interface DashboardSidebarProps {
   userType: UserType;
-  clubMemberships?: ClubMembership[];
+  clubMemberships?: AppClubMembership[]; // Usar AppClubMembership
 }
 
 const DashboardSidebar = ({ userType, clubMemberships = [] }: DashboardSidebarProps) => {

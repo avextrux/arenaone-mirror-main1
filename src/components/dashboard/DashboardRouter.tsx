@@ -9,7 +9,7 @@ import ClubPlayers from "@/pages/dashboard/ClubPlayers";
 import Notifications from "@/pages/dashboard/Notifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Construction, LayoutDashboard } from "lucide-react";
-import { Profile as UserProfile, ClubMembership } from "@/pages/Dashboard";
+import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
 import { UserType } from "@/integrations/supabase/types";
 
 // Importar as novas páginas de Dashboard Home
@@ -30,8 +30,8 @@ import TrainingPlans from "@/pages/dashboard/coach/TrainingPlans";
 import CreatePostPage from "@/pages/dashboard/CreatePostPage"; // Importar a nova página
 
 interface DashboardRouterProps {
-  profile: UserProfile | null;
-  clubMemberships: ClubMembership[];
+  profile: AppProfile | null; // Usar AppProfile
+  clubMemberships: AppClubMembership[]; // Usar AppClubMembership
 }
 
 const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => {

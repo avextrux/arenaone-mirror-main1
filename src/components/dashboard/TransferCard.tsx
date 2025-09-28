@@ -1,23 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Trophy } from "lucide-react";
+import { AppTransfer } from "@/types/app"; // Importar AppTransfer
 
-interface Transfer {
-  id: string;
-  player_id: string;
-  from_club_id?: string;
-  to_club_id?: string;
-  fee?: number;
-  contract_length?: number;
-  transfer_date: string;
-  created_at: string;
-}
+interface Transfer extends AppTransfer {} // Usar AppTransfer
 
 interface TransferCardProps {
   transfer: Transfer;
 }
 
-const formatCurrency = (amount: number) => {
+const formatCurrency = (amount: number | null) => { // Adicionado null check
+  if (amount === null) return 'N/A';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'EUR',

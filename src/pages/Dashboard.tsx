@@ -14,37 +14,11 @@ import { LogOut, Bell, Settings, Search } from "lucide-react";
 import { UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
+import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
 
-export interface Profile {
-  id: string;
-  full_name: string;
-  email: string;
-  avatar_url?: string;
-  user_type: UserType | null;
-  bio?: string;
-  location?: string;
-  website?: string;
-  verified: boolean;
-  followers_count: number;
-  following_count: number;
-  posts_count: number;
-  specialization?: string;
-  experience?: string;
-  achievements?: string;
-}
-
-export interface ClubMembership {
-  id: string;
-  club_id: string;
-  user_id: string;
-  department: ClubDepartment;
-  permission_level: PermissionLevel;
-  status: string;
-  clubs: {
-    name: string;
-    logo_url?: string;
-  };
-}
+// Exportar as interfaces centralizadas para uso em outros componentes que as importam de Dashboard
+export type Profile = AppProfile;
+export type ClubMembership = AppClubMembership;
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();

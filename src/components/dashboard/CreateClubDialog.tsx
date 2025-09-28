@@ -15,12 +15,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating unique file names
-import { ClubMembership } from "@/pages/Dashboard"; // Import ClubMembership type
+import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
 
 interface CreateClubDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onClubCreated: (newClub: any, newMembership: ClubMembership) => void; // Updated prop signature
+  onClubCreated: (newClub: any, newMembership: AppClubMembership) => void; // Updated prop signature
 }
 
 const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialogProps) => {
@@ -173,7 +173,7 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
       if (memberError) console.error('Error creating club member for manager:', memberError);
 
       if (newMembership) {
-        onClubCreated(newClub, newMembership as ClubMembership); // Pass both new club and membership
+        onClubCreated(newClub, newMembership as AppClubMembership); // Pass both new club and membership
       } else {
         // Fallback if membership creation failed but club succeeded
         onClubCreated(newClub, { // Create a dummy membership for state update

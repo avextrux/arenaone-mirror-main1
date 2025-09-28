@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Bell, CheckCircle, Archive, Trash2, MessageSquare, UserPlus, TrendingUp, Building } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -8,17 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus"; // Import useOnboardingStatus
+import { AppNotification } from "@/types/app"; // Importar AppNotification
 
-interface Notification {
-  id: string;
-  user_id: string;
-  type: 'message' | 'connection_request' | 'opportunity' | 'club_invite' | 'system';
-  title: string;
-  description: string;
-  created_at: string;
-  read: boolean;
-  related_entity_id?: string; // e.g., conversation_id, profile_id, opportunity_id
-}
+interface Notification extends AppNotification {} // Usar AppNotification
 
 const Notifications = () => {
   const { toast } = useToast();
@@ -78,7 +71,7 @@ const Notifications = () => {
         console.error('Error fetching notifications:', error);
         toast({ title: "Erro", description: "Não foi possível carregar notificações.", variant: "destructive" });
       } else {
-        setNotifications(data || []);
+        setNotifications(data as Notification[] || []); // Cast para Notification[]
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);

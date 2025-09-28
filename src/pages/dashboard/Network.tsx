@@ -11,20 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
 import { Tables } from "@/integrations/supabase/types"; // Importando Tables para tipagem
 import { useNavigate } from "react-router-dom"; // Importando useNavigate
+import { AppProfile } from "@/types/app"; // Importar AppProfile
 
 // Get the base row type from Supabase
 type ProfileRow = Tables<'profiles'>;
 
 // Define the Profile interface for this component, refining types as needed
-interface Profile extends ProfileRow {
-  // Override properties that are expected to be non-null in this component's context
-  full_name: NonNullable<ProfileRow['full_name']>;
-  user_type: NonNullable<ProfileRow['user_type']>; // Ensure it's UserType and non-nullable
-  verified: NonNullable<ProfileRow['verified']>;
-  // avatar_url, id, bio, location são herdados diretamente de ProfileRow (Tables<'profiles'>)
-  // e são `string | null` ou `string`.
-  // O uso de `profile.avatar_url || undefined` no AvatarImage é compatível com `string | null`.
-}
+interface Profile extends AppProfile {} // Usar AppProfile
 
 interface Connection extends Tables<'connections'> {} // Tipo para conexões
 
@@ -63,7 +56,7 @@ const Network = () => {
         return;
       }
 
-      setProfiles(data || []);
+      setProfiles(data as Profile[] || []); // Cast para Profile[]
     } catch (error) {
       console.error('Error fetching profiles:', error);
       toast({

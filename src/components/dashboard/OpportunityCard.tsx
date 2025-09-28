@@ -4,26 +4,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Eye, DollarSign, Globe, Calendar, MapPin } from "lucide-react";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
-
-interface Opportunity {
-  id: string;
-  title: string;
-  description: string;
-  opportunity_type: string;
-  location?: string;
-  salary_range?: string;
-  deadline?: string;
-  poster_id: string;
-  status: string;
-  profiles: {
-    full_name: string;
-    user_type: string;
-    avatar_url?: string;
-  };
-}
+import { AppOpportunity } from "@/types/app"; // Importar AppOpportunity
 
 interface OpportunityCardProps {
-  opportunity: Opportunity;
+  opportunity: AppOpportunity; // Usar AppOpportunity
 }
 
 const formatDate = (dateString: string) => {
@@ -37,7 +21,7 @@ const OpportunityCard = ({ opportunity }: OpportunityCardProps) => {
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={opportunity.profiles.avatar_url} />
+              <AvatarImage src={opportunity.profiles.avatar_url || undefined} />
               <AvatarFallback>
                 {opportunity.profiles.full_name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>

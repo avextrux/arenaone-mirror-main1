@@ -6,15 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Image, Video, MapPin, Smile, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { UserType } from "@/integrations/supabase/types";
-import { getPostTypeOptions } from "@/lib/userTypeUtils"; // Importando do novo utilitário
+import { UserType } from "@/integrations/supabase/types"; // Importando UserType
+import { AppProfile } from "@/types/app"; // Importar AppProfile
 
 interface CreatePostProps {
-  user: {
-    name: string;
-    avatar?: string;
-    userType: UserType;
-  };
+  user: AppProfile; // Usar AppProfile
   onPost: (content: string, postType: string, visibility: string) => Promise<void>;
 }
 
@@ -68,14 +64,51 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
     }
   };
 
+  const getPostTypeOptions = (userType: UserType) => { // Usando UserType
+    const baseOptions = [
+      { value: "post", label: "Post Normal" }
+    ];
+
+    const userTypeOptions: Record<UserType, { value: string; label: string }[]> = {
+      player: [
+        { value: "training", label: "Treinamento" },
+        { value: "match_result", label: "Resultado da Partida" }
+      ],
+      club: [
+        { value: "transfer", label: "Transferência" },
+        { value: "match_result", label: "Resultado da Partida" }
+      ],
+      agent: [
+        { value: "transfer", label: "Transferência" }
+      ],
+      coach: [
+        { value: "training", label: "Treinamento" },
+        { value: "match_result", label: "Resultado da Partida" }
+      ],
+      scout: [
+        { value: "match_result", label: "Análise da Partida" }
+      ],
+      journalist: [],
+      medical_staff: [],
+      financial_staff: [],
+      technical_staff: [],
+      fan: [], // Adicionado para o tipo 'fan'
+    };
+
+    return [
+      ...baseOptions,
+      ...(userTypeOptions[userType] || [])
+    ];
+  };
+
   return (
     <Card className="w-full mb-6">
       <CardContent className="p-4">
         <div className="flex space-x-3">
           <Avatar className="w-10 h-10">
-            <AvatarImage src={user.avatar} />
+            <AvatarImage src={user.avatar_url || undefined} /> {/* Usar avatar_url */}
             <AvatarFallback>
-              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              {user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
             </AvatarFallback>
           </Avatar>
           
@@ -86,7 +119,7 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border border-border">
-                  {getPostTypeOptions(user.userType).map((option) => (
+                  {getPostTypeOptions(user.user_type).map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>

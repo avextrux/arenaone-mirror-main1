@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
+import { AppProfile } from "@/types/app"; // Importar AppProfile
 
 const CreatePostPage = () => {
   const { user } = useAuth();
@@ -53,11 +54,7 @@ const CreatePostPage = () => {
     <div className="max-w-2xl mx-auto">
       <h1 className="text-2xl font-heading font-bold mb-6">Criar Novo Post</h1>
       <CreatePost 
-        user={{
-          name: profile.full_name,
-          avatar: profile.avatar_url,
-          userType: profile.user_type || "fan" // Fallback para fan se for null
-        }}
+        user={profile} // Passar o objeto profile diretamente
         onPost={handlePostSubmit} // Usando a função simulada
       />
     </div>

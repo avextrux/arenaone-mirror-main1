@@ -13,35 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import CreateOpportunityDialog from "@/components/dashboard/CreateOpportunityDialog";
 import OpportunityCard from "@/components/dashboard/OpportunityCard";
 import TransferCard from "@/components/dashboard/TransferCard";
+import { AppOpportunity, AppTransfer } from "@/types/app"; // Importar tipos centralizados
 
 // Define types based on Supabase schema
-interface Transfer {
-  id: string;
-  player_id: string;
-  from_club_id?: string;
-  to_club_id?: string;
-  fee?: number;
-  contract_length?: number;
-  transfer_date: string;
-  created_at: string;
-}
-
-interface Opportunity {
-  id: string;
-  title: string;
-  description: string;
-  opportunity_type: string;
-  location?: string;
-  salary_range?: string;
-  deadline?: string;
-  poster_id: string;
-  status: string;
-  profiles: {
-    full_name: string;
-    user_type: string;
-    avatar_url?: string;
-  };
-}
+interface Transfer extends AppTransfer {} // Usar AppTransfer
+interface Opportunity extends AppOpportunity {} // Usar AppOpportunity
 
 const Market = () => {
   const { user } = useAuth();
@@ -71,7 +47,7 @@ const Market = () => {
         return;
       }
 
-      setTransfers(data || []);
+      setTransfers(data as Transfer[] || []); // Cast para Transfer[]
     } catch (error) {
       console.error('Error fetching transfers:', error);
     }
@@ -98,7 +74,7 @@ const Market = () => {
         return;
       }
 
-      setOpportunities(data || []);
+      setOpportunities(data as Opportunity[] || []); // Cast para Opportunity[]
     } catch (error) {
       console.error('Error fetching opportunities:', error);
     } finally {

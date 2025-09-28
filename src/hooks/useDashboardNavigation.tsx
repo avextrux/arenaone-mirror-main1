@@ -3,7 +3,7 @@ import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as 
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { UserType } from "@/integrations/supabase/types";
-import { ClubMembership } from "@/pages/Dashboard";
+import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
 
 interface MenuItem {
   title: string;
@@ -12,7 +12,7 @@ interface MenuItem {
   disabled?: boolean;
 }
 
-export const useDashboardNavigation = (userType: UserType, clubMemberships: ClubMembership[]): MenuItem[] => {
+export const useDashboardNavigation = (userType: UserType, clubMemberships: AppClubMembership[]): MenuItem[] => { // Usar AppClubMembership
   const baseItems: MenuItem[] = [
     { title: "Feed", url: "/dashboard", icon: Home },
     { title: "Rede", url: "/dashboard/network", icon: Users },

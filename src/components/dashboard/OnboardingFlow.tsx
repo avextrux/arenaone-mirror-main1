@@ -6,12 +6,12 @@ import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
 import CreateClubDialog from "@/components/dashboard/CreateClubDialog";
 import { UserType } from "@/integrations/supabase/types";
-import { Profile, ClubMembership } from "@/pages/Dashboard"; // Importando tipos
+import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
 
 interface OnboardingFlowProps {
   onboardingStep: "userTypeSetup" | "createClub" | "clubInvite" | "complete";
-  profile: Profile | null;
-  clubMemberships: ClubMembership[];
+  profile: AppProfile | null; // Usar AppProfile
+  clubMemberships: AppClubMembership[]; // Usar AppClubMembership
   refetchStatus: () => Promise<void>;
 }
 
@@ -125,7 +125,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
     refetchStatus();
   };
 
-  const handleClubCreated = async (newClub: any, newMembership: ClubMembership) => {
+  const handleClubCreated = async (newClub: any, newMembership: AppClubMembership) => { // Usar AppClubMembership
     toast({
       title: "Clube criado!",
       description: "Seu perfil de clube foi criado com sucesso.",

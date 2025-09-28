@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Building, Mail, Users, CircleAlert as AlertCircle, CircleCheck as CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } => "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
 import { getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando a função de utilitário
+import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
@@ -26,7 +27,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   const [selectedClub, setSelectedClub] = useState("");
   const [department, setDepartment] = useState("");
   const [loading, setLoading] = useState(false);
-  const [pendingInvites, setPendingInvites] = useState<any[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<AppClubMembership[]>([]); // Usar AppClubMembership
 
   useEffect(() => {
     fetchClubs();
@@ -54,7 +55,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
       .eq('user_id', user.id)
       .eq('status', 'pending');
 
-    setPendingInvites(data || []);
+    setPendingInvites(data as AppClubMembership[] || []); // Cast para AppClubMembership[]
   };
 
   const handleAcceptInvite = async (inviteId: string) => {

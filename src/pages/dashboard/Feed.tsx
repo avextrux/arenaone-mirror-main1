@@ -5,27 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Profile as UserProfile } from "@/pages/Dashboard"; // Importando o tipo Profile
+import { AppProfile } from "@/types/app"; // Importando AppProfile
 
-interface Post {
-  id: string;
-  content: string;
-  post_type: string;
-  likes_count: number;
-  comments_count: number;
-  shares_count: number;
-  created_at: string;
-  user_id: string;
-  profiles?: { // Made profiles optional
-    full_name: string;
-    avatar_url?: string;
-    user_type: string;  
-    verified: boolean;
-  };
+interface Post extends Tables<'posts'> { // Estender de Tables<'posts'>
+  profiles?: AppProfile; // Usar AppProfile para o perfil do autor
 }
 
 interface FeedProps {
-  profile: UserProfile | null;
+  profile: AppProfile | null; // Usar AppProfile
 }
 
 const Feed = ({ profile }: FeedProps) => {
@@ -58,7 +45,7 @@ const Feed = ({ profile }: FeedProps) => {
       .limit(20);
 
     if (!error && data) {
-      setPosts(data);
+      setPosts(data as Post[]); // Cast para Post[]
     }
     setLoadingFeed(false);
   };
@@ -113,7 +100,7 @@ const Feed = ({ profile }: FeedProps) => {
 
       setPosts(prev => prev.map(post => 
         post.id === postId 
-          ? { ...post, likes_count: Math.max(0, post.likes_count - 1) }
+          ? { ...post, likes_count: Math.max(0, (post.likes_count || 0) - 1) } // Adicionado null check
           : post
       ));
     } else {
@@ -128,7 +115,7 @@ const Feed = ({ profile }: FeedProps) => {
 
       setPosts(prev => prev.map(post => 
         post.id === postId 
-          ? { ...post, likes_count: post.likes_count + 1 }
+          ? { ...post, likes_count: (post.likes_count || 0) + 1 } // Adicionado null check
           : post
       ));
     }
@@ -145,11 +132,7 @@ const Feed = ({ profile }: FeedProps) => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <CreatePost 
-        user={{
-          name: profile.full_name,
-          avatar: profile.avatar_url,
-          userType: profile.user_type || "player" // Fallback temporário, idealmente user_type nunca seria null aqui
-        }}
+        user={profile} // Passar o objeto profile diretamente
         onPost={handleCreatePost}
       />
 
@@ -159,19 +142,19 @@ const Feed = ({ profile }: FeedProps) => {
             <FeedPost
               key={post.id}
               id={post.id}
-              author={{
-                name: post.profiles?.full_name || "Usuário Desconhecido", // Null check
-                username: post.profiles?.full_name?.toLowerCase().replace(/\s+/g, '') || "desconhecido", // Null check
-                avatar: post.profiles?.avatar_url, // Null check
-                userType: post.profiles?.user_type || "player", // Null check
-                verified: post.profiles?.verified || false // Null check
+              author={post.profiles || { // Garantir que author seja AppProfile
+                id: post.user_id,
+                full_name: "Usuário Desconhecido",
+                user_type: "fan",
+                verified: false,
+                email: "" // Adicionar email para satisfazer AppProfile
               }}
               content={post.content}
-              postType={post.post_type}
-              likes={post.likes_count}
-              comments={post.comments_count}
-              shares={post.shares_count}
-              timestamp={post.created_at}
+              postType={post.post_type || "post"} // Fallback para post_type
+              likes={post.likes_count || 0} // Fallback para likes_count
+              comments={post.comments_count || 0} // Fallback para comments_count
+              shares={post.shares_count || 0} // Fallback para shares_count
+              timestamp={post.created_at || new Date().toISOString()} // Fallback para created_at
               isLiked={likedPosts.has(post.id)}
               onLike={() => handleLikePost(post.id)}
               onComment={() => {}}
@@ -182,7 +165,7 @@ const Feed = ({ profile }: FeedProps) => {
           <Card>
             <CardContent className="p-8 text-center">
               <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Nenhum post ainda</h3>
+              <h3 className="font-semibold text-lg mb-2">Nenhum post ainda</h3>
               <p className="text-sm text-muted-foreground">
                 Seja o primeiro a compartilhar algo interessante!
               </p>

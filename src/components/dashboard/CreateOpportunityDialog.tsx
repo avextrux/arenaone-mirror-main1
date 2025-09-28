@@ -16,6 +16,7 @@ import { Globe, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { AppOpportunity } from "@/types/app"; // Importar AppOpportunity
 
 interface CreateOpportunityDialogProps {
   onOpportunityCreated: () => void;
@@ -27,7 +28,7 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [opportunityForm, setOpportunityForm] = useState({
+  const [opportunityForm, setOpportunityForm] = useState<Partial<AppOpportunity>>({ // Usar Partial<AppOpportunity>
     title: "",
     description: "",
     opportunity_type: "",

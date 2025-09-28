@@ -11,16 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils"; // Importando as funções de utilitário
+import { AppProfile } from "@/types/app"; // Importar AppProfile
 
 interface PostProps {
   id: string;
-  author: {
-    name: string;
-    username: string;
-    avatar?: string;
-    userType: string;
-    verified: boolean;
-  };
+  author: AppProfile; // Usar AppProfile
   content: string;
   images?: string[];
   postType: string;
@@ -86,24 +81,24 @@ const FeedPost = ({
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={author.avatar} />
+              <AvatarImage src={author.avatar_url || undefined} /> {/* Usar avatar_url */}
               <AvatarFallback>
-                {author.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                {author.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm">{author.name}</h3>
+                <h3 className="font-semibold text-sm">{author.full_name}</h3>
                 {author.verified && (
                   <Verified className="w-4 h-4 text-blue-500 fill-blue-500" />
                 )}
-                <Badge variant="secondary" className={`text-xs ${getUserTypeColor(author.userType || null)}`}>
-                  {getUserTypeLabel(author.userType || null)}
+                <Badge variant="secondary" className={`text-xs ${getUserTypeColor(author.user_type)}`}>
+                  {getUserTypeLabel(author.user_type)}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                @{author.username} · {formatTimestamp(timestamp)}
+                @{author.full_name.toLowerCase().replace(/\s+/g, '')} · {formatTimestamp(timestamp)} {/* Usar full_name para username */}
               </p>
             </div>
           </div>

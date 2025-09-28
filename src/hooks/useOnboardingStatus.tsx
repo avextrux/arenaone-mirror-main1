@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Profile, ClubMembership } from "@/pages/Dashboard"; // Re-importando tipos
+import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
 
 type OnboardingStep = "userTypeSetup" | "createClub" | "clubInvite" | "complete";
 
 interface UseOnboardingStatusResult {
   loading: boolean;
   onboardingStep: OnboardingStep;
-  profile: Profile | null;
-  clubMemberships: ClubMembership[];
+  profile: AppProfile | null;
+  clubMemberships: AppClubMembership[];
   unreadNotificationCount: number; // Adicionado: contagem de notificações não lidas
   refetchStatus: () => Promise<void>;
 }
@@ -21,8 +21,8 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
   const location = useLocation();
 
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [clubMemberships, setClubMemberships] = useState<ClubMembership[]>([]);
+  const [profile, setProfile] = useState<AppProfile | null>(null);
+  const [clubMemberships, setClubMemberships] = useState<AppClubMembership[]>([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0); // Novo estado
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("complete");
 
@@ -37,8 +37,8 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       console.error('Error fetching profile:', error);
       return null;
     }
-    setProfile(data);
-    return data;
+    setProfile(data as AppProfile); // Cast para AppProfile
+    return data as AppProfile;
   }, [user]);
 
   const fetchClubMemberships = useCallback(async () => {
@@ -52,8 +52,8 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       console.error('Error fetching club memberships:', error);
       return [];
     }
-    setClubMemberships(data || []);
-    return data || [];
+    setClubMemberships(data as AppClubMembership[] || []); // Cast para AppClubMembership[]
+    return data as AppClubMembership[] || [];
   }, [user]);
 
   const fetchUnreadNotificationCount = useCallback(async () => {
