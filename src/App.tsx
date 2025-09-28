@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import EmailConfirmationSuccess from "./pages/EmailConfirmationSuccess";
+import LoginSuccess from "./pages/LoginSuccess"; // Importar a nova página de sucesso de login
 import ClubAuth from "./pages/ClubAuth";
 import AdminAuth from "./pages/AdminAuth"; // Importar AdminAuth
 import AdminDashboard from "./pages/AdminDashboard"; // Importar AdminDashboard
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/email-confirmation-success" element={<EmailConfirmationSuccess />} />
+            <Route path="/login-success" element={<LoginSuccess />} /> {/* Nova rota para sucesso de login */}
             
             <Route 
               path="/dashboard/*" 

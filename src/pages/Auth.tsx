@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Adicionado useLocation
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,12 +39,14 @@ const Auth = () => {
 
   const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation(); // Inicializa useLocation
 
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
+    // Se o usuário já estiver logado e tentar acessar /auth, redirecionar para o dashboard
+    if (user && location.pathname === '/auth') {
+      navigate("/dashboard", { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]); // Adiciona location.pathname às dependências
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +62,8 @@ const Auth = () => {
         });
         // Chamada signUp sem fullName e userType
         await signUp(formData.email.trim(), formData.password);
+        // Para o cadastro, o usuário é redirecionado para email-confirmation-success,
+        // então não há redirecionamento direto para login-success aqui.
       } else {
         // Validação para o formulário de LOGIN
         signInSchema.parse({ 
@@ -68,7 +72,9 @@ const Auth = () => {
         });
         const result = await signIn(formData.email.trim(), formData.password);
         
-        if (result.error) {
+        if (result.user) {
+          navigate("/login-success"); // Redireciona para a página de sucesso após o login
+        } else if (result.error) {
           if (result.error.message.includes("Email not confirmed") || 
               result.error.message.includes("email_not_confirmed")) {
             setShowResendButton(true);
