@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const isMounted = useRef(true); // Ref para verificar se o componente está montado
+  const initialSessionChecked = useRef(false); // Ref para garantir que o loading seja definido como false apenas uma vez após a verificação inicial
 
   useEffect(() => {
     isMounted.current = true; // Marca como montado
@@ -38,7 +39,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        setLoading(false); // Define loading como false após o primeiro evento de estado
+
+        // Define loading como false apenas após a primeira verificação de sessão
+        if (!initialSessionChecked.current) {
+          setLoading(false);
+          initialSessionChecked.current = true;
+        }
 
         // Exibir toasts para eventos de autenticação
         if (event === 'SIGNED_IN') {
