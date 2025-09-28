@@ -21,8 +21,8 @@ export type Profile = AppProfile;
 export type ClubMembership = AppClubMembership;
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
-  const { loading, onboardingStep, profile, clubMemberships, unreadNotificationCount, refetchStatus } = useOnboardingStatus();
+  const { user, signOut, loading: authLoading } = useAuth(); // Obter authLoading do useAuth
+  const { loading: onboardingLoading, onboardingStep, profile, clubMemberships, unreadNotificationCount, refetchStatus } = useOnboardingStatus();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -35,19 +35,42 @@ const Dashboard = () => {
     navigate('/dashboard/notifications');
   };
 
-  if (loading) {
+  // Se o useAuth ainda estiver carregando, mostre o spinner
+  if (authLoading) {
+    console.log("Dashboard.tsx: useAuth ainda carregando.");
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando dashboard...</p>
+          <p className="text-muted-foreground">Verificando autenticação...</p>
         </div>
       </div>
     );
   }
 
-  console.log("Dashboard: onboardingStep =", onboardingStep); // NOVO LOG AQUI
+  // Se o usuário não estiver autenticado (e authLoading já terminou), ProtectedRoute deve redirecionar.
+  // Este bloco é mais uma salvaguarda, mas ProtectedRoute deve lidar com isso.
+  if (!user) {
+    console.log("Dashboard.tsx: Usuário não autenticado após authLoading. ProtectedRoute deve redirecionar.");
+    return null; 
+  }
+
+  // Se o onboarding ainda estiver carregando, mostre o spinner do onboarding
+  if (onboardingLoading) {
+    console.log("Dashboard.tsx: Onboarding ainda carregando.");
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando status do perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log("Dashboard.tsx: onboardingStep =", onboardingStep);
   if (onboardingStep !== "complete") {
+    console.log("Dashboard.tsx: Onboarding não completo, renderizando OnboardingFlow.");
     return (
       <OnboardingFlow 
         onboardingStep={onboardingStep} 
@@ -58,8 +81,9 @@ const Dashboard = () => {
     );
   }
 
+  // Se o onboarding estiver completo, mas o perfil ou user_type ainda estiver faltando, é um erro.
   if (!profile || !profile.user_type) {
-    console.error("Dashboard.tsx: Profile or user_type is missing after onboarding. Profile:", profile);
+    console.error("Dashboard.tsx: Perfil ou user_type está faltando após o onboarding. Perfil:", profile);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -72,6 +96,7 @@ const Dashboard = () => {
     );
   }
 
+  console.log("Dashboard.tsx: Onboarding completo, renderizando Dashboard principal.");
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-background to-muted/20">

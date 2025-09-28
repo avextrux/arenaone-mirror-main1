@@ -42,6 +42,7 @@ const Auth = () => {
   useEffect(() => {
     // Se o usuário já estiver logado e tentar acessar /auth, redirecionar para o dashboard
     if (user && location.pathname === '/auth') {
+      console.log("Auth.tsx: Usuário já logado, redirecionando para /dashboard.");
       navigate("/dashboard", { replace: true });
     }
   }, [user, navigate, location.pathname]);
@@ -50,6 +51,7 @@ const Auth = () => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
+    console.log(`Auth.tsx: Tentando ${isSignUp ? 'registrar' : 'logar'}...`);
 
     try {
       if (isSignUp) {
@@ -59,7 +61,10 @@ const Auth = () => {
         });
         const result = await signUp(formData.email.trim(), formData.password);
         if (!result.error) {
+          console.log("Auth.tsx: Registro bem-sucedido, navegando para /registration-success.");
           navigate("/registration-success");
+        } else {
+          console.error("Auth.tsx: Erro no registro:", result.error);
         }
       } else {
         signInSchema.parse({ 
@@ -69,8 +74,10 @@ const Auth = () => {
         const result = await signIn(formData.email.trim(), formData.password);
         
         if (result.user) {
+          console.log("Auth.tsx: Login bem-sucedido, navegando para /dashboard.");
           navigate("/dashboard"); // Redireciona diretamente para o dashboard
         } else if (result.error) {
+          console.error("Auth.tsx: Erro no login:", result.error);
           if (result.error.message.includes("Email not confirmed") || 
               result.error.message.includes("email_not_confirmed")) {
             setShowResendButton(true);
@@ -87,9 +94,13 @@ const Auth = () => {
           }
         });
         setErrors(fieldErrors);
+        console.error("Auth.tsx: Erro de validação Zod:", fieldErrors);
+      } else {
+        console.error("Auth.tsx: Erro inesperado no handleSubmit:", error);
       }
     } finally {
       setLoading(false);
+      console.log(`Auth.tsx: Submit finalizado para ${isSignUp ? 'registro' : 'login'}.`);
     }
   };
 
@@ -102,6 +113,7 @@ const Auth = () => {
 
   const handleResendConfirmation = async () => {
     setLoading(true);
+    console.log("Auth.tsx: Reenviando email de confirmação...");
     await resendConfirmation(formData.email.trim());
     setLoading(false);
   };

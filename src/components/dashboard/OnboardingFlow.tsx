@@ -21,6 +21,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
 
   const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
     if (!user) return;
+    console.log("OnboardingFlow: handleUserTypeSetupComplete iniciado. UserType:", userType, "ProfileData:", profileData);
     try {
       const updatedProfileData = {
         user_type: userType as UserType,
@@ -38,7 +39,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         .eq('id', user.id);
 
       if (profileUpdateError) {
-        console.error('Error updating profile:', profileUpdateError);
+        console.error('OnboardingFlow: Erro ao atualizar perfil:', profileUpdateError);
         toast({
           title: "Erro ao atualizar perfil",
           description: `Ocorreu um erro ao salvar suas informações: ${profileUpdateError.message || JSON.stringify(profileUpdateError)}.`,
@@ -46,16 +47,18 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         });
         return;
       }
+      console.log("OnboardingFlow: Perfil atualizado com sucesso.");
 
       if (userType === 'player') {
+        console.log("OnboardingFlow: Usuário é jogador, verificando entrada de jogador.");
         const { data: existingPlayer, error: fetchPlayerError } = await supabase
           .from('players')
           .select('id')
           .eq('profile_id', user.id)
           .single();
 
-        if (fetchPlayerError && fetchPlayerError.code !== 'PGRST116') {
-          console.error('Error checking existing player entry:', fetchPlayerError);
+        if (fetchPlayerError && fetchPlayerError.code !== 'PGRST116') { // PGRST116 means no rows found
+          console.error('OnboardingFlow: Erro ao verificar entrada de jogador existente:', fetchPlayerError);
           throw fetchPlayerError;
         }
 
@@ -70,12 +73,13 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         };
 
         if (!existingPlayer) {
+          console.log("OnboardingFlow: Criando nova entrada de jogador.");
           const { error: playerInsertError } = await supabase
             .from('players')
             .insert([playerPayload]);
 
           if (playerInsertError) {
-            console.error('Error creating player entry:', playerInsertError);
+            console.error('OnboardingFlow: Erro ao criar entrada de jogador:', playerInsertError);
             toast({
               title: "Erro ao criar perfil de jogador",
               description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerInsertError.message || JSON.stringify(playerInsertError)}.`,
@@ -83,14 +87,16 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
             });
             return;
           }
+          console.log("OnboardingFlow: Entrada de jogador criada com sucesso.");
         } else {
+          console.log("OnboardingFlow: Atualizando entrada de jogador existente.");
           const { error: playerUpdateError } = await supabase
             .from('players')
             .update(playerPayload)
             .eq('profile_id', user.id);
 
           if (playerUpdateError) {
-            console.error('Error updating player entry:', playerUpdateError);
+            console.error('OnboardingFlow: Erro ao atualizar entrada de jogador:', playerUpdateError);
             toast({
               title: "Erro ao atualizar perfil de jogador",
               description: `Ocorreu um erro ao atualizar suas informações de jogador: ${playerUpdateError.message || JSON.stringify(playerUpdateError)}.`,
@@ -98,6 +104,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
             });
             return;
           }
+          console.log("OnboardingFlow: Entrada de jogador atualizada com sucesso.");
         }
       }
 
@@ -105,9 +112,10 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         title: "Perfil configurado!",
         description: "Seu perfil foi configurado com sucesso.",
       });
+      console.log("OnboardingFlow: Refetching status após handleUserTypeSetupComplete.");
       refetchStatus();
     } catch (error) {
-      console.error('Error in handleUserTypeSetup:', error);
+      console.error('OnboardingFlow: Erro em handleUserTypeSetupComplete (bloco catch):', error);
       toast({
         title: "Erro inesperado",
         description: `Ocorreu um erro inesperado durante a configuração do perfil: ${error instanceof Error ? error.message : JSON.stringify(error)}.`,
@@ -117,22 +125,28 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
   };
 
   const handleClubInviteSetupComplete = async () => {
+    console.log("OnboardingFlow: handleClubInviteSetupComplete iniciado.");
     toast({
       title: "Afiliação ao clube!",
       description: "Você agora está vinculado a um clube.",
     });
+    console.log("OnboardingFlow: Refetching status após handleClubInviteSetupComplete.");
     refetchStatus();
   };
 
   switch (onboardingStep) {
     case "userTypeSetup":
+      console.log("OnboardingFlow: Renderizando UserTypeSetup.");
       return <UserTypeSetup onComplete={handleUserTypeSetupComplete} />;
     case "clubInvite":
+      console.log("OnboardingFlow: Renderizando ClubInviteSetup. Profile user_type:", profile?.user_type);
       return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || UserType.Fan} />;
     case "complete":
+      console.log("OnboardingFlow: Onboarding completo, navegando para /dashboard.");
       navigate('/dashboard', { replace: true });
       return null;
     default:
+      console.warn("OnboardingFlow: Passo de onboarding desconhecido:", onboardingStep);
       return null;
   }
 };

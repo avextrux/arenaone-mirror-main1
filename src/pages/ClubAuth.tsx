@@ -48,8 +48,8 @@ const ClubAuth = () => {
 
   useEffect(() => {
     if (user) {
-      console.log("ClubAuth: User already logged in, navigating to dashboard.");
-      navigate("/dashboard");
+      console.log("ClubAuth: Usuário já logado, navegando para /dashboard.");
+      navigate("/dashboard", { replace: true });
     }
   }, [user, navigate]);
 
@@ -107,7 +107,7 @@ const ClubAuth = () => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
-    console.log("ClubAuth: Submit initiated.");
+    console.log("ClubAuth: Submit iniciado.");
 
     try {
       clubSignUpSchema.parse({
@@ -118,58 +118,58 @@ const ClubAuth = () => {
         managerPassword: formData.managerPassword,
         inviteCode: formData.inviteCode.trim(),
       });
-      console.log("ClubAuth: Form data validated.");
+      console.log("ClubAuth: Dados do formulário validados.");
 
-      // 1. Validate Invite Code
+      // 1. Validar Código de Convite
       const { data: inviteData, error: inviteError } = await supabase
         .from('club_members')
         .select('*')
         .eq('invite_code', formData.inviteCode.trim())
         .eq('status', 'pending')
-        .is('user_id', null) // Must be an unassigned invite
-        .eq('department', ClubDepartment.Management) // Must be for a manager
-        .eq('permission_level', PermissionLevel.Admin) // Must have admin permissions
+        .is('user_id', null) // Deve ser um convite não atribuído
+        .eq('department', ClubDepartment.Management) // Deve ser para um gerente
+        .eq('permission_level', PermissionLevel.Admin) // Deve ter permissões de admin
         .single();
 
       if (inviteError || !inviteData) {
-        console.error("ClubAuth: Invite code validation failed.", inviteError);
+        console.error("ClubAuth: Falha na validação do código de convite.", inviteError);
         throw new Error("Código de convite inválido, expirado ou não é para registro de clube.");
       }
-      console.log("ClubAuth: Invite code validated. Invite data:", inviteData);
+      console.log("ClubAuth: Código de convite validado. Dados do convite:", inviteData);
 
       let managerUserId: string;
       let authResult;
 
-      // 2. Attempt to sign up the manager. If email exists, attempt to sign in.
-      // Pass UserType.Club directly to signUp, which will be used by handle_new_user trigger
+      // 2. Tentar registrar o gerente. Se o email já existe, tentar fazer login.
+      // Passar UserType.Club diretamente para signUp, que será usado pelo trigger handle_new_user
       authResult = await signUp(formData.managerEmail.trim(), formData.managerPassword, formData.clubName.trim(), UserType.Club);
       
       if (authResult.error) {
         if (authResult.error.message.includes("User already registered")) {
-          console.log("ClubAuth: User already registered, attempting sign in.");
+          console.log("ClubAuth: Usuário já registrado, tentando fazer login.");
           authResult = await signIn(formData.managerEmail.trim(), formData.managerPassword);
           if (authResult.error) {
-            console.error("ClubAuth: Sign in failed for existing user:", authResult.error);
+            console.error("ClubAuth: Falha no login para usuário existente:", authResult.error);
             throw new Error("Email já registrado. Por favor, faça login com sua senha existente ou use um email diferente.");
           }
         } else {
-          console.error("ClubAuth: Sign up failed:", authResult.error);
+          console.error("ClubAuth: Falha no registro:", authResult.error);
           throw authResult.error;
         }
       }
 
       if (!authResult.user) {
-        console.error("ClubAuth: Authentication failed, no user returned.");
+        console.error("ClubAuth: Falha na autenticação, nenhum usuário retornado.");
         throw new Error("Falha ao autenticar o usuário. Por favor, tente novamente.");
       }
       managerUserId = authResult.user.id;
-      console.log("ClubAuth: Manager User ID:", managerUserId);
+      console.log("ClubAuth: ID do Usuário Gerente:", managerUserId);
 
       if (authResult.session) {
         await supabase.auth.setSession(authResult.session);
-        console.log("ClubAuth: Session set for manager.");
+        console.log("ClubAuth: Sessão definida para o gerente.");
       } else {
-        console.log("ClubAuth: No session returned, likely email confirmation needed.");
+        console.log("ClubAuth: Nenhuma sessão retornada, provavelmente é necessária a confirmação por email.");
         toast({
           title: "Registro pendente de confirmação",
           description: "Por favor, confirme seu email para prosseguir com o registro do clube.",
@@ -178,14 +178,14 @@ const ClubAuth = () => {
         return;
       }
 
-      // 3. Upload Club Logo
+      // 3. Upload da Logo do Clube
       let logoUrl: string | null = null;
       if (logoFile) {
         logoUrl = await uploadLogo(logoFile, managerUserId);
-        console.log("ClubAuth: Logo uploaded, URL:", logoUrl);
+        console.log("ClubAuth: Logo carregada, URL:", logoUrl);
       }
 
-      // 4. Create Club
+      // 4. Criar Clube
       const clubPayload: TablesInsert<'clubs'> = {
         name: formData.clubName.trim(),
         country: formData.country.trim(),
@@ -203,12 +203,12 @@ const ClubAuth = () => {
         .single();
 
       if (clubError) {
-        console.error("ClubAuth: Club creation failed:", clubError);
+        console.error("ClubAuth: Falha na criação do clube:", clubError);
         throw clubError;
       }
-      console.log("ClubAuth: Club created:", newClub);
+      console.log("ClubAuth: Clube criado:", newClub);
 
-      // 5. Update Club Membership (the invite)
+      // 5. Atualizar Membro do Clube (o convite)
       const { error: updateInviteError } = await supabase
         .from('club_members')
         .update({
@@ -221,32 +221,22 @@ const ClubAuth = () => {
         .eq('id', inviteData.id);
 
       if (updateInviteError) {
-        console.error("ClubAuth: Club membership update failed:", updateInviteError);
+        console.error("ClubAuth: Falha na atualização da associação ao clube:", updateInviteError);
         throw updateInviteError;
       }
-      console.log("ClubAuth: Club membership updated for invite ID:", inviteData.id);
+      console.log("ClubAuth: Associação ao clube atualizada para o ID do convite:", inviteData.id);
 
-      // 6. The manager's profile user_type should already be 'club' due to the updated handle_new_user trigger.
-      // We can remove the explicit update here.
-      // const { error: profileUpdateError } = await supabase
-      //   .from('profiles')
-      //   .update({ user_type: UserType.Club })
-      //   .eq('id', managerUserId);
+      // 6. O user_type do perfil do gerente já deve ser 'club' devido ao trigger handle_new_user.
+      console.log("ClubAuth: O user_type do perfil do gerente já deve ser 'club' do trigger.");
 
-      // if (profileUpdateError) {
-      //   console.error('ClubAuth: Error updating manager profile user_type:', profileUpdateError.message);
-      //   throw profileUpdateError; // Re-throw to be caught by outer catch block
-      // }
-      console.log("ClubAuth: Manager profile user_type should already be 'club' from trigger.");
-
-      // Add a small delay to allow database changes to propagate
+      // Adicionar um pequeno atraso para permitir que as alterações no banco de dados se propaguem
       await new Promise(resolve => setTimeout(resolve, 500)); 
       
-      // 7. Refetch onboarding status to ensure the dashboard recognizes the complete state
+      // 7. Refetch o status de onboarding para garantir que o dashboard reconheça o estado completo
       await refetchStatus();
-      console.log("ClubAuth: Onboarding status refetched.");
+      console.log("ClubAuth: Status de onboarding refetched.");
 
-      // Verify profile user_type after refetch
+      // Verificar o user_type do perfil após o refetch
       const { data: updatedProfile, error: fetchUpdatedProfileError } = await supabase
         .from('profiles')
         .select('user_type')
@@ -254,9 +244,9 @@ const ClubAuth = () => {
         .single();
 
       if (fetchUpdatedProfileError) {
-        console.error('ClubAuth: Error fetching updated profile for verification:', fetchUpdatedProfileError);
+        console.error('ClubAuth: Erro ao buscar perfil atualizado para verificação:', fetchUpdatedProfileError);
       } else {
-        console.log('ClubAuth: Verified user_type after refetch:', updatedProfile?.user_type);
+        console.log('ClubAuth: user_type verificado após refetch:', updatedProfile?.user_type);
       }
 
       toast({
@@ -265,7 +255,7 @@ const ClubAuth = () => {
       });
       navigate("/dashboard");
     } catch (error: any) {
-      console.error('ClubAuth: Error during club registration (catch block):', error);
+      console.error('ClubAuth: Erro durante o registro do clube (bloco catch):', error);
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -283,7 +273,7 @@ const ClubAuth = () => {
       }
     } finally {
       setLoading(false);
-      console.log("ClubAuth: Submit finished.");
+      console.log("ClubAuth: Submit finalizado.");
     }
   };
 

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { UserType } from "@/integrations/supabase/types"; // Importar UserType
 
 const adminSignInSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -30,6 +31,7 @@ const AdminAuth = () => {
 
   useEffect(() => {
     if (user) {
+      console.log("AdminAuth.tsx: Usuário logado, verificando status de admin...");
       checkAdminStatus(user.id);
     }
   }, [user]);
@@ -45,25 +47,27 @@ const AdminAuth = () => {
 
       if (profileError) throw profileError;
 
-      if (profileData?.user_type === 'admin') {
+      if (profileData?.user_type === UserType.Admin) { // Usar UserType.Admin
+        console.log("AdminAuth.tsx: Usuário é admin, navegando para /admin-dashboard.");
         navigate("/admin-dashboard");
       } else {
+        console.warn("AdminAuth.tsx: Usuário não é admin. Tipo:", profileData?.user_type);
         toast({
           title: "Acesso Negado",
           description: "Você não tem permissão de administrador.",
           variant: "destructive",
         });
-        // Optionally sign out non-admin users who try to access admin login
+        // Opcionalmente, deslogar usuários não-admin que tentam acessar o login de admin
         await supabase.auth.signOut();
       }
     } catch (error: any) {
-      console.error("Error checking admin status:", error);
+      console.error("AdminAuth.tsx: Erro ao verificar status de admin:", error);
       toast({
         title: "Erro de Verificação",
         description: error.message || "Não foi possível verificar seu status de administrador.",
         variant: "destructive",
       });
-      await supabase.auth.signOut(); // Ensure user is signed out on error
+      await supabase.auth.signOut(); // Garantir que o usuário seja deslogado em caso de erro
     } finally {
       setLoading(false);
     }
@@ -73,6 +77,7 @@ const AdminAuth = () => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
+    console.log("AdminAuth.tsx: Tentando login de admin...");
 
     try {
       adminSignInSchema.parse({
@@ -83,12 +88,14 @@ const AdminAuth = () => {
       const { error: signInError } = await signIn(formData.email.trim(), formData.password);
 
       if (signInError) {
-        // Error message is already handled by useAuth toast
+        // A mensagem de erro já é tratada pelo toast do useAuth
         setLoading(false);
+        console.error("AdminAuth.tsx: Erro no login:", signInError);
         return;
       }
 
-      // If sign-in is successful, useEffect will trigger checkAdminStatus
+      // Se o login for bem-sucedido, o useEffect acionará checkAdminStatus
+      console.log("AdminAuth.tsx: Login bem-sucedido, aguardando verificação de status de admin.");
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
@@ -98,9 +105,13 @@ const AdminAuth = () => {
           }
         });
         setErrors(fieldErrors);
+        console.error("AdminAuth.tsx: Erro de validação Zod:", fieldErrors);
+      } else {
+        console.error("AdminAuth.tsx: Erro inesperado no handleSubmit:", error);
       }
     } finally {
       setLoading(false);
+      console.log("AdminAuth.tsx: Submit finalizado.");
     }
   };
 
