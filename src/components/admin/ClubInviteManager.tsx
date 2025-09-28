@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { format, addDays } from 'date-fns';
 import { AppClubMembership } from "@/types/app";
-import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
+import { ClubDepartment, PermissionLevel, Constants } from "@/integrations/supabase/types"; // Importar Constants
 
 interface ClubInvite extends AppClubMembership {
   clubs: { name: string } | null;
@@ -209,7 +209,7 @@ const ClubInviteManager = () => {
                   <SelectValue placeholder="Selecione o departamento" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(ClubDepartment).map((dept) => (
+                  {Constants.public.Enums.club_department.map((dept) => (
                     <SelectItem key={dept} value={dept}>
                       {getDepartmentLabel(dept)}
                     </SelectItem>
@@ -227,7 +227,7 @@ const ClubInviteManager = () => {
                   <SelectValue placeholder="Selecione o nível" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(PermissionLevel).map((level) => (
+                  {Constants.public.Enums.permission_level.map((level) => (
                     <SelectItem key={level} value={level}>
                       {getPermissionLabel(level)}
                     </SelectItem>

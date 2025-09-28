@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Search, LayoutDashboard, DollarSign, HeartPulse, BookOpen, ClipboardList, GraduationCap, Handshake, Lightbulb, LineChart, ShieldCheck, TrendingUp, Megaphone, Newspaper, Camera, Video, MapPin, Smile, PlusCircle, Bell, Target } from "lucide-react";
+import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Search, LayoutDashboard, DollarSign, HeartPulse, BookOpen, ClipboardList, GraduationCap, Handshake, Lightbulb, LineChart, ShieldCheck, TrendingUp, Megaphone, Newspaper, Camera, Video, MapPin, Smile, PlusCircle, Bell, Target, Shield } from "lucide-react";
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { UserType } from "@/integrations/supabase/types";
@@ -95,6 +95,12 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
     fan: [ // Adicionado para o tipo 'fan'
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Notícias", url: "/dashboard/feed", icon: Newspaper },
+    ],
+    admin: [ // Adicionado para o tipo 'admin'
+      { title: "Dashboard Admin", url: "/admin-dashboard", icon: Shield },
+      { title: "Gerenciar Convites", url: "/admin-dashboard/club-invites", icon: KeyRound },
+      { title: "Moderação do Site", url: "/admin-dashboard/moderation", icon: Shield, disabled: true },
+      { title: "Configurações", url: "/admin-dashboard/settings", icon: Settings, disabled: true },
     ],
   };
 

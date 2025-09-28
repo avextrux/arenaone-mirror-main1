@@ -40,16 +40,15 @@ const ClubAuth = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const { signUp, signIn, user } = useAuth(); // Usar signIn para verificar se o usuário já existe
+  const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
       navigate("/dashboard");
     }
   }, [user, navigate]);
-
-  const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -131,35 +130,29 @@ const ClubAuth = () => {
         throw new Error("Código de convite inválido, já utilizado ou não é para registro de clube.");
       }
 
-      let managerUserId = user?.id; // If already logged in
-      let isNewUser = false;
+      let managerUserId: string | undefined = user?.id; // If already logged in
+      let authResult;
 
-      // 2. Check if manager email already exists as a user
-      const { data: existingUsers, error: fetchUserError } = await supabase.auth.admin.listUsers({
-        email: formData.managerEmail.trim(),
-      });
-
-      if (fetchUserError) throw fetchUserError;
-
-      if (existingUsers.users.length > 0) {
-        // User already exists, try to sign them in
-        const { error: signInError } = await signIn(formData.managerEmail.trim(), formData.managerPassword);
-        if (signInError) {
-          throw new Error("Email já registrado. Por favor, faça login com sua senha existente ou use um email diferente.");
+      // 2. Attempt to sign up the manager. If email exists, attempt to sign in.
+      authResult = await signUp(formData.managerEmail.trim(), formData.managerPassword, formData.clubName.trim(), 'club');
+      
+      if (authResult.error) {
+        if (authResult.error.message.includes("User already registered")) {
+          // User already exists, try to sign them in
+          authResult = await signIn(formData.managerEmail.trim(), formData.managerPassword);
+          if (authResult.error) {
+            throw new Error("Email já registrado. Por favor, faça login com sua senha existente ou use um email diferente.");
+          }
+        } else {
+          throw authResult.error;
         }
-        managerUserId = existingUsers.users[0].id;
-      } else {
-        // User does not exist, create new user
-        const { error: signUpError } = await signUp(formData.managerEmail.trim(), formData.managerPassword, formData.clubName.trim(), 'club'); // Pass 'club' as userType
-        if (signUpError) throw signUpError;
-        
-        // After successful signup, the user object in useAuth should be updated
-        // We need to wait for the session to be established to get the new user ID
-        const { data: { user: newUser } } = await supabase.auth.getUser();
-        if (!newUser) throw new Error("Erro ao obter informações do novo usuário após o registro.");
-        managerUserId = newUser.id;
-        isNewUser = true;
       }
+
+      // After successful signUp or signIn, the user object in useAuth should be updated
+      // We need to ensure the session is established to get the user ID
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) throw new Error("Erro ao obter informações do usuário após o registro/login.");
+      managerUserId = currentUser.id;
 
       if (!managerUserId) throw new Error("Não foi possível determinar o ID do gerente.");
 

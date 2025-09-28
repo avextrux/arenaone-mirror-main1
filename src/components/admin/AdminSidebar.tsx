@@ -13,6 +13,7 @@ import {
 import { LayoutDashboard, KeyRound, Shield, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button"; // Importar Button
 
 const AdminSidebar = () => {
   const { state } = useSidebar();
