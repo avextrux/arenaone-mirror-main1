@@ -23,8 +23,8 @@ const ClubInviteManager = () => {
   const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
   const [invites, setInvites] = useState<ClubInvite[]>([]);
   const [selectedClubId, setSelectedClubId] = useState("");
-  const [department, setDepartment] = useState<ClubDepartment>("management");
-  const [permissionLevel, setPermissionLevel] = useState<PermissionLevel>("admin");
+  const [department, setDepartment] = useState<ClubDepartment>(ClubDepartment.Management); // Usar enum
+  const [permissionLevel, setPermissionLevel] = useState<PermissionLevel>(PermissionLevel.Admin); // Usar enum
   const [expiresInDays, setExpiresInDays] = useState("7"); // Default 7 days
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -134,21 +134,21 @@ const ClubInviteManager = () => {
 
   const getDepartmentLabel = (dept: ClubDepartment) => {
     const labels: Record<ClubDepartment, string> = {
-      medical: "Médico",
-      financial: "Financeiro",
-      technical: "Técnico",
-      scouting: "Scouting",
-      management: "Diretoria",
-      admin: "Admin"
+      [ClubDepartment.Medical]: "Médico",
+      [ClubDepartment.Financial]: "Financeiro",
+      [ClubDepartment.Technical]: "Técnico",
+      [ClubDepartment.Scouting]: "Scouting",
+      [ClubDepartment.Management]: "Diretoria",
+      [ClubDepartment.Admin]: "Admin"
     };
     return labels[dept] || dept;
   };
 
   const getPermissionLabel = (level: PermissionLevel) => {
     const labels: Record<PermissionLevel, string> = {
-      read: "Leitura",
-      write: "Escrita",
-      admin: "Administrador"
+      [PermissionLevel.Read]: "Leitura",
+      [PermissionLevel.Write]: "Escrita",
+      [PermissionLevel.Admin]: "Administrador"
     };
     return labels[level] || level;
   };
@@ -211,7 +211,7 @@ const ClubInviteManager = () => {
                 <SelectContent>
                   {Constants.public.Enums.club_department.map((dept) => (
                     <SelectItem key={dept} value={dept}>
-                      {getDepartmentLabel(dept)}
+                      {getDepartmentLabel(dept as ClubDepartment)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -229,7 +229,7 @@ const ClubInviteManager = () => {
                 <SelectContent>
                   {Constants.public.Enums.permission_level.map((level) => (
                     <SelectItem key={level} value={level}>
-                      {getPermissionLabel(level)}
+                      {getPermissionLabel(level as PermissionLevel)}
                     </SelectItem>
                   ))}
                 </SelectContent>

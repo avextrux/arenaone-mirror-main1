@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
 import { getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando a função de utilitário
 import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
+import { ClubDepartment, Constants } from "@/integrations/supabase/types"; // Importar Constants
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
@@ -25,7 +26,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   const [inviteCode, setInviteCode] = useState("");
   const [clubs, setClubs] = useState<any[]>([]);
   const [selectedClub, setSelectedClub] = useState("");
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] = useState<ClubDepartment>(ClubDepartment.Management); // Usar enum
   const [loading, setLoading] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<AppClubMembership[]>([]); // Usar AppClubMembership
 
@@ -67,8 +68,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
           status: 'accepted',
           accepted_at: new Date().toISOString(),
           user_id: user?.id, // Ensure user_id is set if it was null initially
-          // Also update user_type in profiles if it's not set yet
-          // This assumes the invite has a department that maps to a user_type
+          used: true, // Mark as used
         })
         .eq('id', inviteId);
 
@@ -107,7 +107,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
     try {
       const { error } = await supabase
         .from('club_members')
-        .update({ status: 'rejected' })
+        .update({ status: 'rejected', used: true }) // Mark as rejected and used
         .eq('id', inviteId);
 
       if (error) throw error;
@@ -137,10 +137,12 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
         .eq('invite_code', inviteCode.trim())
         .eq('status', 'pending')
         .is('user_id', null) // Ensure it's an unassigned invite
+        .gte('expires_at', new Date().toISOString()) // Check if not expired
+        .eq('used', false) // Ensure it's not used
         .single();
 
       if (error || !data) {
-        throw new Error("Código de convite inválido ou já utilizado.");
+        throw new Error("Código de convite inválido, expirado ou já utilizado.");
       }
 
       // Update the invite to link to the current user and set status to accepted
@@ -149,7 +151,8 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
         .update({ 
           user_id: user.id,
           status: 'accepted',
-          accepted_at: new Date().toISOString()
+          accepted_at: new Date().toISOString(),
+          used: true, // Mark as used
         })
         .eq('id', data.id);
 
@@ -199,7 +202,10 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
           permission_level: 'read', // Default for requests
           status: 'pending',
           invite_code: newInviteCode, // Store the generated code
-          invited_at: new Date().toISOString()
+          invited_by: user.id,
+          invited_at: new Date().toISOString(),
+          expires_at: null, // No expiration for requests, admin will handle
+          used: false,
         }]);
 
       if (error) throw error;
@@ -210,7 +216,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
       });
 
       setStep(1);
-      setDepartment("");
+      setDepartment(ClubDepartment.Management); // Reset to default enum value
       setSelectedClub("");
       await fetchPendingInvites();
     } catch (error) {
@@ -227,20 +233,20 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
 
   const getDepartmentOptions = (userType: string) => {
     const options = {
-      medical_staff: [{ value: "medical", label: "Departamento Médico" }],
-      financial_staff: [{ value: "financial", label: "Departamento Financeiro" }],
-      technical_staff: [{ value: "technical", label: "Comissão Técnica" }],
-      scout: [{ value: "scouting", label: "Departamento de Scouting" }],
-      coach: [{ value: "technical", label: "Comissão Técnica" }]
+      medical_staff: [{ value: ClubDepartment.Medical, label: "Departamento Médico" }],
+      financial_staff: [{ value: ClubDepartment.Financial, label: "Departamento Financeiro" }],
+      technical_staff: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }],
+      scout: [{ value: ClubDepartment.Scouting, label: "Departamento de Scouting" }],
+      coach: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }]
     };
     
     return options[userType as keyof typeof options] || [
-      { value: "management", label: "Diretoria" },
-      { value: "admin", label: "Administração" },
-      { value: "medical", label: "Departamento Médico" },
-      { value: "scouting", label: "Departamento de Scouting" },
-      { value: "technical", label: "Comissão Técnica" },
-      { value: "financial", label: "Departamento Financeiro" },
+      { value: ClubDepartment.Management, label: "Diretoria" },
+      { value: ClubDepartment.Admin, label: "Administração" },
+      { value: ClubDepartment.Medical, label: "Departamento Médico" },
+      { value: ClubDepartment.Scouting, label: "Departamento de Scouting" },
+      { value: ClubDepartment.Technical, label: "Comissão Técnica" },
+      { value: ClubDepartment.Financial, label: "Departamento Financeiro" },
     ];
   };
 
@@ -391,7 +397,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
 
                 <div className="space-y-2">
                   <Label htmlFor="department">Departamento</Label>
-                  <Select value={department} onValueChange={setDepartment}>
+                  <Select value={department} onValueChange={(value) => setDepartment(value as ClubDepartment)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o departamento" />
                     </SelectTrigger>

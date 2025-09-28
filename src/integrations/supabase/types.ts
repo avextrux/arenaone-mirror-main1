@@ -11,28 +11,34 @@ export type Json =
   | Json[]
 
 // --- ENUMS ---
-export type ClubDepartment =
-  | "medical"
-  | "scouting"
-  | "technical"
-  | "financial"
-  | "management"
-  | "admin"
+export enum ClubDepartment {
+  Medical = "medical",
+  Scouting = "scouting",
+  Technical = "technical",
+  Financial = "financial",
+  Management = "management",
+  Admin = "admin",
+}
 
-export type PermissionLevel = "read" | "write" | "admin"
+export enum PermissionLevel {
+  Read = "read",
+  Write = "write",
+  Admin = "admin",
+}
 
-export type UserType =
-  | "player"
-  | "club"
-  | "agent"
-  | "coach"
-  | "scout"
-  | "journalist"
-  | "medical_staff"
-  | "financial_staff"
-  | "technical_staff"
-  | "fan" // Adicionado 'fan' aqui
-  | "admin" // NOVO: Adicionado 'admin'
+export enum UserType {
+  Player = "player",
+  Club = "club",
+  Agent = "agent",
+  Coach = "coach",
+  Scout = "scout",
+  Journalist = "journalist",
+  MedicalStaff = "medical_staff",
+  FinancialStaff = "financial_staff",
+  TechnicalStaff = "technical_staff",
+  Fan = "fan",
+  Admin = "admin",
+}
 
 // --- MAIN DATABASE TYPE ---
 export type Database = {
