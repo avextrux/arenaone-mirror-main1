@@ -43,7 +43,10 @@ const AdminAuth = () => {
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      // Handle the case where no profile is found (PGRST116 error code)
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
 
       if (profileData?.user_type === 'admin') {
         navigate("/admin-dashboard");
