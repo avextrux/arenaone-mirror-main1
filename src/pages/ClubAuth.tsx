@@ -141,6 +141,7 @@ const ClubAuth = () => {
       let authResult;
 
       // 2. Attempt to sign up the manager. If email exists, attempt to sign in.
+      // Pass UserType.Club directly to signUp, which will be used by handle_new_user trigger
       authResult = await signUp(formData.managerEmail.trim(), formData.managerPassword, formData.clubName.trim(), UserType.Club);
       
       if (authResult.error) {
@@ -225,17 +226,18 @@ const ClubAuth = () => {
       }
       console.log("ClubAuth: Club membership updated for invite ID:", inviteData.id);
 
-      // 6. Update Manager's Profile to user_type 'club'
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({ user_type: UserType.Club })
-        .eq('id', managerUserId);
+      // 6. The manager's profile user_type should already be 'club' due to the updated handle_new_user trigger.
+      // We can remove the explicit update here.
+      // const { error: profileUpdateError } = await supabase
+      //   .from('profiles')
+      //   .update({ user_type: UserType.Club })
+      //   .eq('id', managerUserId);
 
-      if (profileUpdateError) {
-        console.error('ClubAuth: Error updating manager profile user_type:', profileUpdateError.message);
-        throw profileUpdateError; // Re-throw to be caught by outer catch block
-      }
-      console.log("ClubAuth: Manager profile user_type updated to 'club'.");
+      // if (profileUpdateError) {
+      //   console.error('ClubAuth: Error updating manager profile user_type:', profileUpdateError.message);
+      //   throw profileUpdateError; // Re-throw to be caught by outer catch block
+      // }
+      console.log("ClubAuth: Manager profile user_type should already be 'club' from trigger.");
 
       // Add a small delay to allow database changes to propagate
       await new Promise(resolve => setTimeout(resolve, 500)); 
