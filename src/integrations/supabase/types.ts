@@ -32,6 +32,7 @@ export type UserType =
   | "financial_staff"
   | "technical_staff"
   | "fan" // Adicionado 'fan' aqui
+  | "admin" // NOVO: Adicionado 'admin'
 
 // --- MAIN DATABASE TYPE ---
 export type Database = {
@@ -52,8 +53,8 @@ export type Database = {
           invited_at: string | null
           invited_by: string | null
           invite_code: string | null // Added invite_code column
-          expires_at: string | null // Added expires_at column
-          used: boolean | null // Added used column
+          expires_at: string | null // NOVO: Added expires_at column
+          used: boolean | null // NOVO: Added used column
           permission_level: PermissionLevel // Using top-level enum type
           status: string | null
           updated_at: string | null
@@ -68,8 +69,8 @@ export type Database = {
           invited_at?: string | null
           invited_by?: string | null
           invite_code?: string | null // Added invite_code column
-          expires_at?: string | null // Added expires_at column
-          used?: boolean | null // Added used column
+          expires_at?: string | null // NOVO: Added expires_at column
+          used?: boolean | null // NOVO: Added used column
           permission_level?: PermissionLevel // Using top-level enum type
           status?: string | null
           updated_at?: string | null
@@ -84,8 +85,8 @@ export type Database = {
           invited_at?: string | null
           invited_by?: string | null
           invite_code?: string | null // Added invite_code column
-          expires_at?: string | null // Added expires_at column
-          used?: boolean | null // Added used column
+          expires_at?: string | null // NOVO: Added expires_at column
+          used?: boolean | null // NOVO: Added used column
           permission_level?: PermissionLevel // Using top-level enum type
           status?: string | null
           updated_at?: string | null
@@ -1521,6 +1522,7 @@ export const Constants = {
         "financial_staff",
         "technical_staff",
         "fan", // Adicionado 'fan' aqui
+        "admin", // NOVO: Adicionado 'admin'
       ],
     },
   },

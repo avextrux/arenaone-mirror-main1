@@ -8,11 +8,14 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminProtectedRoute from "@/components/AdminProtectedRoute"; // Importar AdminProtectedRoute
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
-import EmailConfirmationSuccess from "./pages/EmailConfirmationSuccess"; // Importar a nova página
-import ClubAuth from "./pages/ClubAuth"; // Importar a nova página ClubAuth
+import EmailConfirmationSuccess from "./pages/EmailConfirmationSuccess";
+import ClubAuth from "./pages/ClubAuth";
+import AdminAuth from "./pages/AdminAuth"; // Importar AdminAuth
+import AdminDashboard from "./pages/AdminDashboard"; // Importar AdminDashboard
 
 const queryClient = new QueryClient();
 
@@ -22,21 +25,30 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter future={{ v7_relativeSplatPath: true }}> {/* Adicionado future flag */}
+        <BrowserRouter future={{ v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/club-auth" element={<ClubAuth />} /> {/* Nova rota para registro de clube */}
+            <Route path="/club-auth" element={<ClubAuth />} />
+            <Route path="/admin-auth" element={<AdminAuth />} /> {/* Nova rota para login de admin */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/email-confirmation-success" element={<EmailConfirmationSuccess />} /> {/* Nova rota */}
-            {/* Simplificando a rota do dashboard para capturar todas as sub-rotas */}
+            <Route path="/email-confirmation-success" element={<EmailConfirmationSuccess />} />
+            
             <Route 
               path="/dashboard/*" 
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin-dashboard/*" 
+              element={
+                <AdminProtectedRoute> {/* Proteger o dashboard de admin */}
+                  <AdminDashboard />
+                </AdminProtectedRoute>
               } 
             />
             <Route path="/404" element={<NotFound />} />

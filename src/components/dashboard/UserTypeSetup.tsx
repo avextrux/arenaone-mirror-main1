@@ -32,9 +32,9 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Filtrar userTypeOptions para remover 'club' e 'fan' se não precisarem de setup adicional aqui
+  // Filtrar userTypeOptions para remover 'club', 'fan' e 'admin' se não precisarem de setup adicional aqui
   const filteredUserTypeOptions = userTypeOptions.filter(
-    (type) => type.value !== "club" && type.value !== "fan"
+    (type) => type.value !== "club" && type.value !== "fan" && type.value !== "admin"
   );
 
   const handleSubmit = async () => {

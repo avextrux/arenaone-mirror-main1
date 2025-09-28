@@ -1,4 +1,4 @@
-import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator, Smile, LucideProps } from "lucide-react";
+import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator, Smile, LucideProps, Shield } from "lucide-react";
 import { UserType } from "@/integrations/supabase/types";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 
@@ -80,6 +80,13 @@ export const userTypeOptions: UserTypeOption[] = [
     icon: Smile,
     description: "Acompanhe seu time e jogadores favoritos",
     color: "bg-gray-100 text-gray-800"
+  },
+  {
+    value: "admin",
+    label: "Administrador",
+    icon: Shield,
+    description: "Gerenciamento e moderação do site",
+    color: "bg-red-100 text-red-800"
   }
 ];
 
@@ -94,7 +101,8 @@ export const getSpecializationPlaceholder = (userType: UserType | string) => {
     medical_staff: "Ex: Fisioterapia, Nutrição esportiva, Preparação física...",
     financial_staff: "Ex: Contabilidade, Orçamento, Análise de investimentos...",
     technical_staff: "Ex: Análise de dados, Suporte de vídeo, Tecnologia esportiva...",
-    fan: "Ex: Acompanhamento de notícias, Interação com outros torcedores..."
+    fan: "Ex: Acompanhamento de notícias, Interação com outros torcedores...",
+    admin: "Ex: Gerenciamento de usuários, Moderação de conteúdo..."
   };
   return placeholders[userType] || "Descreva sua especialização...";
 };
@@ -128,6 +136,7 @@ export const getPostTypeOptions = (userType: UserType) => {
     financial_staff: [],
     technical_staff: [],
     fan: [],
+    admin: [], // Admin doesn't have specific post types for now
   };
 
   return [
