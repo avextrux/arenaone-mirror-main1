@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus"; // Importar useOnboardingStatus
 import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, Building, Flag, Calendar, Globe, Upload, FileText, Image as ImageIcon, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +42,7 @@ const ClubAuth = () => {
   const [loading, setLoading] = useState(false);
 
   const { signUp, signIn, user } = useAuth();
+  const { refetchStatus } = useOnboardingStatus(); // Usar refetchStatus
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -116,6 +118,7 @@ const ClubAuth = () => {
         managerPassword: formData.managerPassword,
         inviteCode: formData.inviteCode.trim(),
       });
+      console.log("ClubAuth: Form data validated.");
 
       // 1. Validate Invite Code
       const { data: inviteData, error: inviteError } = await supabase
@@ -230,6 +233,10 @@ const ClubAuth = () => {
 
       if (profileUpdateError) console.error('ClubAuth: Error updating manager profile user_type:', profileUpdateError);
       console.log("ClubAuth: Manager profile user_type updated to 'club'.");
+
+      // 7. Refetch onboarding status to ensure the dashboard recognizes the complete state
+      await refetchStatus();
+      console.log("ClubAuth: Onboarding status refetched.");
 
       toast({
         title: "Clube registrado com sucesso!",

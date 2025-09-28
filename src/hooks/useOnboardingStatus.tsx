@@ -88,32 +88,37 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
   const checkOnboardingStatus = useCallback(async () => {
     setLoading(true);
+    console.log("useOnboardingStatus: Starting checkOnboardingStatus...");
     const currentProfile = await fetchProfile();
     const currentMemberships = await fetchClubMemberships();
     await fetchUnreadNotificationCount();
 
     if (!currentProfile) {
+      console.log("useOnboardingStatus: No profile found, setting loading to false.");
       setLoading(false);
       return;
     }
 
+    console.log("useOnboardingStatus: Current Profile User Type:", currentProfile.user_type);
+    console.log("useOnboardingStatus: Current Club Memberships Count:", currentMemberships.length);
+
     let nextStep: OnboardingStep = "complete";
 
     if (!currentProfile.user_type || currentProfile.user_type === UserType.Fan) {
+      console.log("useOnboardingStatus: User type is null or Fan, setting next step to userTypeSetup.");
       nextStep = "userTypeSetup";
     } else {
-      // Tratamento especial para UserType.Club
       if (currentProfile.user_type === UserType.Club) {
         const managedClubs = await fetchManagedClubs();
+        console.log("useOnboardingStatus: User is Club type. Managed Clubs Count:", managedClubs.length);
         if (managedClubs.length === 0) {
-          // Se um usuário do tipo clube não gerencia nenhum clube, ele precisa passar pelo convite/criação de clube
+          console.log("useOnboardingStatus: Club type user manages no clubs, setting next step to clubInvite.");
           nextStep = "clubInvite";
         } else {
-          // Se ele gerencia um clube, seu onboarding está completo para a afiliação ao clube.
+          console.log("useOnboardingStatus: Club type user manages clubs, setting next step to complete.");
           nextStep = "complete";
         }
       } else {
-        // Para outros tipos de usuário que precisam de afiliação a um clube
         const needsClubAffiliation = [
           UserType.Player,
           UserType.Agent,
@@ -126,12 +131,20 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
         
         if (needsClubAffiliation.includes(currentProfile.user_type)) {
           if (!currentMemberships || currentMemberships.length === 0) {
+            console.log(`useOnboardingStatus: ${currentProfile.user_type} type user has no club memberships, setting next step to clubInvite.`);
             nextStep = "clubInvite";
+          } else {
+            console.log(`useOnboardingStatus: ${currentProfile.user_type} type user has club memberships, setting next step to complete.`);
+            nextStep = "complete";
           }
+        } else {
+          console.log(`useOnboardingStatus: User type ${currentProfile.user_type} does not require club affiliation, setting next step to complete.`);
+          nextStep = "complete";
         }
       }
     }
 
+    console.log("useOnboardingStatus: Final onboarding step determined:", nextStep);
     setOnboardingStep(nextStep);
     setLoading(false);
 
