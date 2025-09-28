@@ -2,6 +2,7 @@ import { useEffect, useState, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { UserType } from '@/integrations/supabase/types'; // Importar UserType
 
 interface AuthContextType {
   user: User | null;
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("useAuth.tsx: signUp - Attempting to sign up user:", email);
     const redirectUrl = `${window.location.origin}/dashboard`; // Redirect to dashboard after signup
     
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -71,14 +72,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    if (error) {
-      console.error("useAuth.tsx: signUp - Error:", error);
+    if (authError) {
+      console.error("useAuth.tsx: signUp - Error:", authError);
       let message = "Erro ao criar conta.";
-      if (error.message.includes("User already registered")) {
+      if (authError.message.includes("User already registered")) {
         message = "Este email já está cadastrado. Tente fazer login.";
-      } else if (error.message.includes("Password")) {
+      } else if (authError.message.includes("Password")) {
         message = "A senha deve ter pelo menos 6 caracteres.";
-      } else if (error.message.includes("Email")) {
+      } else if (authError.message.includes("Email")) {
         message = "Por favor, insira um email válido.";
       }
       
@@ -87,15 +88,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: message,
         variant: "destructive",
       });
+      return { error: authError };
     } else {
       console.log("useAuth.tsx: signUp - Sign up successful, check email for confirmation.");
+      
+      // Se o registro for bem-sucedido, garanta que a tabela de perfis seja atualizada com user_type
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: authData.user.id,
+            email: authData.user.email!,
+            full_name: fullName,
+            user_type: userType as UserType, // Garante que o user_type seja salvo
+          }, { onConflict: 'id' }); // Usa upsert para criar ou atualizar o perfil
+
+        if (profileError) {
+          console.error("useAuth.tsx: signUp - Erro ao atualizar a tabela de perfis:", profileError);
+          toast({
+            title: "Erro ao configurar perfil",
+            description: "Sua conta foi criada, mas houve um problema ao configurar seu perfil inicial. Por favor, entre em contato com o suporte.",
+            variant: "destructive",
+          });
+        }
+      }
+
       toast({
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para confirmar a conta.",
       });
     }
 
-    return { error };
+    return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -122,7 +146,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         variant: "destructive",
       });
     } else {
-      console.log("useAuth.tsx: signIn - Supabase signInWithPassword call completed without error.");
+      console.log("useAuth.tsx: signIn - Supabase signInWithPassword call completed without direct error.");
     }
 
     return { error };
