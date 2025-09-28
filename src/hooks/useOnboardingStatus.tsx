@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
+import { UserType } from "@/integrations/supabase/types"; // Importar UserType
 
-type OnboardingStep = "userTypeSetup" | "createClub" | "clubInvite" | "complete";
+type OnboardingStep = "userTypeSetup" | "clubInvite" | "complete"; // Removido "createClub"
 
 interface UseOnboardingStatusResult {
   loading: boolean;
@@ -86,16 +87,21 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     let nextStep: OnboardingStep = "complete";
 
     // Se user_type for null OU 'fan', direcionar para userTypeSetup
-    if (!currentProfile.user_type || currentProfile.user_type === 'fan') {
+    if (!currentProfile.user_type || currentProfile.user_type === UserType.Fan) {
       nextStep = "userTypeSetup";
     } else {
-      const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach'].includes(currentProfile.user_type);
+      // Tipos de usuário que precisam de vínculo com clube
+      const needsClubAffiliation = [
+        UserType.Player,
+        UserType.Agent,
+        UserType.MedicalStaff,
+        UserType.FinancialStaff,
+        UserType.TechnicalStaff,
+        UserType.Scout,
+        UserType.Coach
+      ];
       
-      // O tipo 'club' agora é definido no registro de clube, então não precisa de 'createClub' aqui.
-      // Se um usuário com user_type 'club' chegar aqui, ele já deve ter um clube.
-      // Se não tiver, algo deu errado no registro de clube, e ele será tratado como 'complete'
-      // e o DashboardRouter o levará para a home do clube, onde a falta de clube será notada.
-      if (isClubRelatedUser) { // Apenas para staff de clube (não o gerente do clube)
+      if (needsClubAffiliation.includes(currentProfile.user_type)) {
         if (!currentMemberships || currentMemberships.length === 0) {
           nextStep = "clubInvite";
         }

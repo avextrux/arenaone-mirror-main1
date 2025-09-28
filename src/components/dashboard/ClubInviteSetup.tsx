@@ -30,6 +30,8 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
   const [loading, setLoading] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<AppClubMembership[]>([]); // Usar AppClubMembership
 
+  const isPlayerOrAgent = userType === UserType.Player || userType === UserType.Agent;
+
   useEffect(() => {
     fetchClubs();
     fetchPendingInvites();
@@ -233,15 +235,15 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
     }
   };
 
-  const getDepartmentOptions = (userType: UserType) => { // Alterado para UserType
+  const getDepartmentOptions = (userType: UserType) => {
     const options: Record<UserType, { value: ClubDepartment; label: string }[]> = {
       [UserType.MedicalStaff]: [{ value: ClubDepartment.Medical, label: "Departamento Médico" }],
       [UserType.FinancialStaff]: [{ value: ClubDepartment.Financial, label: "Departamento Financeiro" }],
       [UserType.TechnicalStaff]: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }],
       [UserType.Scout]: [{ value: ClubDepartment.Scouting, label: "Departamento de Scouting" }],
       [UserType.Coach]: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }],
-      [UserType.Player]: [],
-      [UserType.Agent]: [],
+      [UserType.Player]: [], // Players don't have a specific department in this context
+      [UserType.Agent]: [], // Agents don't have a specific department in this context
       [UserType.Journalist]: [],
       [UserType.Fan]: [],
       [UserType.Admin]: [],
@@ -333,15 +335,17 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
                 </CardContent>
               </Card>
 
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStep(3)}>
-                <CardContent className="p-6 text-center">
-                  <Users className="w-8 h-8 text-primary mx-auto mb-3" />
-                  <h3 className="font-semibold mb-2">Solicitar Acesso</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Solicite acesso a um clube específico
-                  </p>
-                </CardContent>
-              </Card>
+              {!isPlayerOrAgent && ( // Hide "Solicitar Acesso" for Player/Agent
+                <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setStep(3)}>
+                  <CardContent className="p-6 text-center">
+                    <Users className="w-8 h-8 text-primary mx-auto mb-3" />
+                    <h3 className="font-semibold mb-2">Solicitar Acesso</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Solicite acesso a um clube específico
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
 
@@ -377,7 +381,7 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
           )}
 
           {/* Step 3: Request Access */}
-          {step === 3 && (
+          {step === 3 && !isPlayerOrAgent && ( // Hide "Request Access" for Player/Agent
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={() => setStep(1)}>
@@ -410,9 +414,9 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
                       <SelectValue placeholder="Selecione o departamento" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Constants.public.Enums.club_department.map((dept) => (
-                        <SelectItem key={dept} value={dept}>
-                          {getDepartmentLabel(dept as ClubDepartment)}
+                      {getDepartmentOptions(userType).map((deptOption) => (
+                        <SelectItem key={deptOption.value} value={deptOption.value}>
+                          {deptOption.label}
                         </SelectItem>
                       ))}
                     </SelectContent>

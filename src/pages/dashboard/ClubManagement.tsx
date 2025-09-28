@@ -1,19 +1,19 @@
 import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input }
- from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Building, Users, Trophy, TrendingUp, Calendar, Star, MapPin, Phone, Mail, Globe, Edit, Plus, BarChart3, Construction } from "lucide-react";
+import { Building, Users, Trophy, TrendingUp, Calendar, Star, MapPin, Phone, Mail, Globe, Edit, Plus, BarChart3, Construction, KeyRound, Copy, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ClubDepartment, PermissionLevel, Tables } from "@/integrations/supabase/types"; // Import Tables
 import { AppClubMembership, AppPlayer } from "@/types/app"; // Importar AppClubMembership e AppPlayer
 import { format } from 'date-fns'; // Importado para formatar datas
+import CreateMemberInviteDialog from "@/components/dashboard/CreateMemberInviteDialog"; // Importar o novo diálogo
 
 interface Player extends AppPlayer {} // Usar AppPlayer
 
@@ -27,6 +27,10 @@ interface Match extends Tables<'matches'> {
   away_clubs: { name: string } | null;
 }
 
+interface ClubInvite extends AppClubMembership {
+  clubs: { name: string } | null; // Já está em AppClubMembership, mas para clareza
+}
+
 interface ClubManagementProps {
   clubMemberships: AppClubMembership[]; // Usar AppClubMembership
 }
@@ -38,6 +42,9 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
   const [loading, setLoading] = useState(true);
   const [clubInfo, setClubInfo] = useState<ClubDetails | null>(null);
   const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]); // Novo estado para próximos jogos
+  const [clubInvites, setClubInvites] = useState<ClubInvite[]>([]); // Novo estado para convites de membros
+
+  const primaryClubId = clubMemberships.length > 0 ? clubMemberships[0].club_id : null;
 
   const fetchClubDetails = useCallback(async (clubId: string) => {
     try {
@@ -105,22 +112,48 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
     }
   }, [toast]);
 
+  const fetchClubInvites = useCallback(async (clubId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('club_members')
+        .select(`
+          *,
+          clubs (name)
+        `)
+        .eq('club_id', clubId)
+        .eq('status', 'pending')
+        .is('user_id', null) // Only unassigned invites
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setClubInvites(data as ClubInvite[] || []);
+    } catch (error) {
+      console.error('Error fetching club invites:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os convites do clube.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      if (clubMemberships.length > 0) {
-        const primaryClubId = clubMemberships[0].club_id;
+      if (primaryClubId) {
         await fetchClubDetails(primaryClubId);
         await fetchPlayers(primaryClubId);
         await fetchUpcomingMatches(primaryClubId); // Fetch matches
+        await fetchClubInvites(primaryClubId); // Fetch club member invites
       } else {
         setClubInfo(null);
         setUpcomingMatches([]); // Clear matches if no club
+        setClubInvites([]); // Clear invites if no club
       }
       setLoading(false);
     };
     loadData();
-  }, [clubMemberships, fetchClubDetails, fetchPlayers, fetchUpcomingMatches]);
+  }, [clubMemberships, fetchClubDetails, fetchPlayers, fetchUpcomingMatches, fetchClubInvites, primaryClubId]);
 
   const calculateAge = (birthDate: string) => {
     const today = new Date();
@@ -153,6 +186,51 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
       'Atacante': 'bg-red-100 text-red-800'
     };
     return colors[position as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getDepartmentLabel = (dept: ClubDepartment) => {
+    const labels: Record<ClubDepartment, string> = {
+      [ClubDepartment.Medical]: "Médico",
+      [ClubDepartment.Financial]: "Financeiro",
+      [ClubDepartment.Technical]: "Técnico",
+      [ClubDepartment.Scouting]: "Scouting",
+      [ClubDepartment.Management]: "Diretoria",
+      [ClubDepartment.Admin]: "Admin"
+    };
+    return labels[dept] || dept;
+  };
+
+  const getPermissionLabel = (level: PermissionLevel) => {
+    const labels: Record<PermissionLevel, string> = {
+      [PermissionLevel.Read]: "Leitura",
+      [PermissionLevel.Write]: "Escrita",
+      [PermissionLevel.Admin]: "Administrador"
+    };
+    return labels[level] || level;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copiado!", description: "O código de convite foi copiado para a área de transferência." });
+  };
+
+  const deleteInvite = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este convite?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('club_members')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({ title: "Convite Excluído", description: "O convite foi removido com sucesso." });
+      if (primaryClubId) await fetchClubInvites(primaryClubId);
+    } catch (error: any) {
+      console.error('Error deleting invite:', error);
+      toast({ title: "Erro", description: error.message || "Não foi possível excluir o convite.", variant: "destructive" });
+    }
   };
 
   if (loading) {
@@ -428,7 +506,65 @@ const ClubManagement = ({ clubMemberships }: ClubManagementProps) => {
           )}
         </TabsContent>
 
-        <TabsContent value="staff">
+        <TabsContent value="staff" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Staff do Clube</h2>
+            {primaryClubId && (
+              <CreateMemberInviteDialog clubId={primaryClubId} onInviteCreated={() => fetchClubInvites(primaryClubId)} />
+            )}
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <KeyRound className="w-5 h-5" />
+                Convites de Membro Ativos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {clubInvites.length === 0 ? (
+                <div className="text-center text-muted-foreground py-4">
+                  Nenhum convite de membro ativo para este clube.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {clubInvites.map((invite) => (
+                    <div key={invite.id} className="flex items-center justify-between p-3 border rounded-md">
+                      <div className="flex items-center gap-3">
+                        <Users className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="font-semibold text-sm">Convite para {getDepartmentLabel(invite.department)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Nível: {getPermissionLabel(invite.permission_level)}
+                          </p>
+                          {invite.expires_at && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Calendar className="w-3 h-3" /> Expira em: {format(new Date(invite.expires_at), 'dd/MM/yyyy')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="text"
+                          value={invite.invite_code || ''}
+                          readOnly
+                          className="w-40 text-xs"
+                        />
+                        <Button size="sm" variant="outline" onClick={() => copyToClipboard(invite.invite_code || '')}>
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => deleteInvite(invite.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardContent className="p-12 text-center">
               <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
