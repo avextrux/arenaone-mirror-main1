@@ -1,4 +1,4 @@
-import { Tables, UserType, ClubDepartment, PermissionLevel } from "@/integrations/supabase/types";
+import { Tables, UserType, ClubDepartment, PermissionLevel, Json } from "@/integrations/supabase/types";
 
 // Perfil de usuário com campos essenciais garantidos como não-nulos para uso na UI
 export interface AppProfile extends Tables<'profiles'> {
@@ -18,6 +18,9 @@ export interface FeedAuthorProfile {
   verified: NonNullable<Tables<'profiles'>['verified']>;
   email: NonNullable<Tables<'profiles'>['email']>;
 }
+
+// Perfil de usuário para planos de treino (subconjunto de AppProfile)
+export interface TrainingPlanProfile extends Pick<AppProfile, 'id' | 'full_name' | 'user_type' | 'verified' | 'email'> {}
 
 // Membro do clube com informações do clube aninhadas
 export interface AppClubMembership extends Tables<'club_members'> {
@@ -72,6 +75,7 @@ export interface PlayerInjuryHistoryEntry {
 
 export interface PlayerTechnicalSkills {
   description?: string;
+  [key: string]: Json | undefined; // Adicionado assinatura de índice para compatibilidade com Json
   // Adicione outros campos se houver mais estrutura para habilidades técnicas
 }
 // --- Fim das novas interfaces ---
@@ -108,7 +112,7 @@ export interface AppTrainingPlan {
   assigned_players: string[]; // Player IDs
   coach_id: string;
   created_at: string;
-  profiles: AppProfile | null; // Agora espera AppProfile completo ou null
+  profiles: TrainingPlanProfile | null; // Agora usa TrainingPlanProfile
   players_info?: Array<{ id: string; first_name: string; last_name: string }>;
 }
 
