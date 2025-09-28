@@ -196,6 +196,19 @@ const Profile = () => {
     let newAvatarUrl = profile?.avatar_url;
 
     try {
+      // Client-side validation for player-specific required fields
+      if (profile?.user_type === 'player') {
+        if (!playerFormData.date_of_birth || !playerFormData.nationality || !playerFormData.position) {
+          toast({
+            title: "Campos obrigatórios do jogador",
+            description: "Data de Nascimento, Nacionalidade e Posição são obrigatórios para jogadores.",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
+      }
+
       if (avatarFile) {
         newAvatarUrl = await uploadAvatar(avatarFile);
       }
@@ -218,7 +231,7 @@ const Profile = () => {
         console.error('Profile.tsx: Error updating profile:', profileError);
         toast({
           title: "Erro ao atualizar perfil",
-          description: "Ocorreu um erro ao salvar suas informações.",
+          description: `Ocorreu um erro ao salvar suas informações: ${profileError.message}. Verifique as políticas de RLS para a tabela 'profiles'.`,
           variant: "destructive",
         });
         return;
@@ -241,7 +254,7 @@ const Profile = () => {
           console.error('Profile.tsx: Error updating player profile:', playerError);
           toast({
             title: "Erro ao atualizar perfil de jogador",
-            description: "Ocorreu um erro ao salvar suas informações de jogador.",
+            description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerError.message}. Verifique as políticas de RLS para a tabela 'players'.`,
             variant: "destructive",
           });
           return;
@@ -256,8 +269,13 @@ const Profile = () => {
         title: "Perfil atualizado!",
         description: "Suas informações foram salvas com sucesso.",
       });
-    } catch (error) {
-      console.error('Profile.tsx: Error updating profile:', error);
+    } catch (error: any) {
+      console.error('Profile.tsx: Error updating profile (catch block):', error);
+      toast({
+        title: "Erro inesperado ao salvar",
+        description: `Ocorreu um erro inesperado: ${error.message}.`,
+        variant: "destructive",
+      });
     } finally {
       setSaving(false);
     }
@@ -466,6 +484,7 @@ const Profile = () => {
                           type="date"
                           value={playerFormData.date_of_birth}
                           onChange={(e) => handlePlayerInputChange("date_of_birth", e.target.value)}
+                          required // Adicionado required
                         />
                       ) : (
                         <div className="flex items-center gap-2 mt-1">
@@ -483,6 +502,7 @@ const Profile = () => {
                           id="nationality"
                           value={playerFormData.nationality}
                           onChange={(e) => handlePlayerInputChange("nationality", e.target.value)}
+                          required // Adicionado required
                         />
                       ) : (
                         <div className="flex items-center gap-2 mt-1">
@@ -497,6 +517,7 @@ const Profile = () => {
                         <Select
                           value={playerFormData.position}
                           onValueChange={(value) => handlePlayerInputChange("position", value)}
+                          required // Adicionado required
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione a posição" />
