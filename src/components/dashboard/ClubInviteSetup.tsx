@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid'; // For generating invite codes
 import { getUserTypeLabel, getDepartmentLabel } from "@/lib/userUtils"; // Importando a função de utilitário
 import { AppClubMembership } from "@/types/app"; // Importar AppClubMembership
-import { ClubDepartment, Constants } from "@/integrations/supabase/types"; // Importar Constants
+import { ClubDepartment, PermissionLevel, Constants } from "@/integrations/supabase/types"; // Importar Constants
 
 interface ClubInviteSetupProps {
   onComplete: (clubData: any) => Promise<void>;
@@ -195,18 +195,18 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
 
       const { error } = await supabase
         .from('club_members')
-        .insert([{
+        .insert({ // Pass a single object, not an array
           club_id: selectedClub,
           user_id: user.id, // User is requesting, so user_id is known
-          department: department as any,
-          permission_level: 'read', // Default for requests
+          department: department,
+          permission_level: PermissionLevel.Read, // Default for requests
           status: 'pending',
           invite_code: newInviteCode, // Store the generated code
           invited_by: user.id,
           invited_at: new Date().toISOString(),
           expires_at: null, // No expiration for requests, admin will handle
           used: false,
-        }]);
+        });
 
       if (error) throw error;
 
@@ -233,11 +233,11 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
 
   const getDepartmentOptions = (userType: string) => {
     const options = {
-      medical_staff: [{ value: ClubDepartment.Medical, label: "Departamento Médico" }],
-      financial_staff: [{ value: ClubDepartment.Financial, label: "Departamento Financeiro" }],
-      technical_staff: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }],
-      scout: [{ value: ClubDepartment.Scouting, label: "Departamento de Scouting" }],
-      coach: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }]
+      [UserType.MedicalStaff]: [{ value: ClubDepartment.Medical, label: "Departamento Médico" }],
+      [UserType.FinancialStaff]: [{ value: ClubDepartment.Financial, label: "Departamento Financeiro" }],
+      [UserType.TechnicalStaff]: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }],
+      [UserType.Scout]: [{ value: ClubDepartment.Scouting, label: "Departamento de Scouting" }],
+      [UserType.Coach]: [{ value: ClubDepartment.Technical, label: "Comissão Técnica" }]
     };
     
     return options[userType as keyof typeof options] || [
@@ -402,9 +402,9 @@ const ClubInviteSetup = ({ onComplete, userType }: ClubInviteSetupProps) => {
                       <SelectValue placeholder="Selecione o departamento" />
                     </SelectTrigger>
                     <SelectContent>
-                      {getDepartmentOptions(userType).map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                      {Constants.public.Enums.club_department.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {getDepartmentLabel(dept as ClubDepartment)}
                         </SelectItem>
                       ))}
                     </SelectContent>
