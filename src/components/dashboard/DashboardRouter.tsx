@@ -27,7 +27,7 @@ import JournalistDashboardHome from "@/pages/dashboard/JournalistDashboardHome";
 import InjuriesOverview from "@/pages/dashboard/medical/InjuriesOverview";
 import ScoutReports from "@/pages/dashboard/scout/ScoutReports";
 import TrainingPlans from "@/pages/dashboard/coach/TrainingPlans";
-
+import CreatePostPage from "@/pages/dashboard/CreatePostPage"; // Importar a nova página
 
 interface DashboardRouterProps {
   profile: UserProfile | null;
@@ -60,6 +60,7 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
       case 'financial_staff': return '/dashboard/financial-home';
       case 'technical_staff': return '/dashboard/technical-home';
       case 'journalist': return '/dashboard/journalist-home';
+      case 'fan': return '/dashboard/feed'; // Redirecionar fan para o feed
       default: return '/dashboard/profile'; // Fallback
     }
   };
@@ -71,7 +72,7 @@ const DashboardRouter = ({ profile, clubMemberships }: DashboardRouterProps) => 
       <Route path="notifications" element={<Notifications />} />
       <Route path="profile" element={<Profile />} />
       <Route path="market" element={<Market />} />
-      <Route path="post" element={<UnderDevelopment page="Criar Post" />} />
+      <Route path="post" element={<CreatePostPage />} /> {/* Rota para a nova página de criação de posts */}
       <Route path="search" element={<UnderDevelopment page="Pesquisar" />} />
       <Route path="settings" element={<UnderDevelopment page="Configurações" />} />
     </>
