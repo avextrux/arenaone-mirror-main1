@@ -173,7 +173,9 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
           salary: financialData.salary,
           contract_value: financialData.contract_value,
           agent_commission: financialData.agent_commission,
-          bonuses: financialData.bonuses
+          bonuses: (financialData.bonuses && typeof financialData.bonuses === 'object' && 'description' in financialData.bonuses)
+            ? { description: (financialData.bonuses as { description?: string }).description || '' }
+            : null
         });
       } else {
         setFinancialForm(prev => ({ ...prev, id: undefined })); // Reset ID if no data
@@ -194,7 +196,9 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
         setTechnicalForm({
           id: technicalData.id,
           overall_rating: technicalData.overall_rating || 5,
-          technical_skills: technicalData.technical_skills,
+          technical_skills: (technicalData.technical_skills && typeof technicalData.technical_skills === 'object' && 'description' in technicalData.technical_skills)
+            ? { description: (technicalData.technical_skills as { description?: string }).description || '' }
+            : null,
           strengths: technicalData.strengths || [],
           weaknesses: technicalData.weaknesses || [],
           detailed_notes: technicalData.detailed_notes || ""
