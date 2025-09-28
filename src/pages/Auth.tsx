@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Adicionado useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,15 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles, Building } from "lucide-react"; // Adicionado Building
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles, Building } from "lucide-react";
 import { UserType, Constants } from "@/integrations/supabase/types";
-import { userTypeOptions } from "@/lib/userTypeUtils"; // Importando do novo utilitário
+import { userTypeOptions } from "@/lib/userTypeUtils";
 
 // Esquema de validação para o formulário de REGISTRO
 const signUpSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
-  // fullName e userType removidos do esquema de validação de registro
 });
 
 // Esquema de validação para o formulário de LOGIN
@@ -31,7 +30,6 @@ const Auth = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    // fullName e userType removidos do estado inicial
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -39,14 +37,14 @@ const Auth = () => {
 
   const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation(); // Inicializa useLocation
+  const location = useLocation();
 
   useEffect(() => {
     // Se o usuário já estiver logado e tentar acessar /auth, redirecionar para o dashboard
     if (user && location.pathname === '/auth') {
       navigate("/dashboard", { replace: true });
     }
-  }, [user, navigate, location.pathname]); // Adiciona location.pathname às dependências
+  }, [user, navigate, location.pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,17 +53,15 @@ const Auth = () => {
 
     try {
       if (isSignUp) {
-        // Validação para o formulário de REGISTRO
         signUpSchema.parse({ 
           email: formData.email.trim(), 
           password: formData.password, 
         });
         const result = await signUp(formData.email.trim(), formData.password);
         if (!result.error) {
-          navigate("/registration-success"); // Redireciona para a página de sucesso de registro
+          navigate("/registration-success");
         }
       } else {
-        // Validação para o formulário de LOGIN
         signInSchema.parse({ 
           email: formData.email.trim(), 
           password: formData.password 
@@ -73,7 +69,7 @@ const Auth = () => {
         const result = await signIn(formData.email.trim(), formData.password);
         
         if (result.user) {
-          navigate("/login-success"); // Redireciona para a página de sucesso após o login
+          navigate("/dashboard"); // Redireciona diretamente para o dashboard
         } else if (result.error) {
           if (result.error.message.includes("Email not confirmed") || 
               result.error.message.includes("email_not_confirmed")) {
@@ -257,7 +253,6 @@ const Auth = () => {
 
               <TabsContent value="signup" className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Nome Completo e Tipo de Usuário removidos do formulário de registro */}
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                     <div className="relative">
