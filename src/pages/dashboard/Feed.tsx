@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { AppProfile, AppPost, FeedAuthorProfile } from "@/types/app"; // Importando AppProfile e AppPost
 import { Tables, UserType } from "@/integrations/supabase/types"; // Importando Tables e UserType
 
@@ -16,16 +17,17 @@ interface FeedProps {
 
 const Feed = ({ profile }: FeedProps) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-  const [loadingFeed, setLoadingFeed] = useState(true); // Novo estado de carregamento para o feed
+  const [loadingFeed, setLoadingFeed] = useState(true);
 
   useEffect(() => {
-    if (user && profile) { // Garante que o perfil está disponível
+    if (user && profile) {
       fetchFeed();
       fetchLikedPosts();
     }
-  }, [user, profile]); // Adiciona profile como dependência
+  }, [user, profile]);
 
   const fetchFeed = async () => {
     setLoadingFeed(true);

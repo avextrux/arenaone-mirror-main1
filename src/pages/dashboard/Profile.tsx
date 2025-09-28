@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Settings, Camera, MapPin, Globe, Mail, Save, Edit, Briefcase, Award, Target, Calendar, Flag, Ruler, Weight, Footprints } from "lucide-react";
+import { User, Settings, Camera, MapPin, Globe, Mail, Save, CreditCard as Edit, Briefcase, Award, Target, Calendar, Flag, Ruler, Weight, Footprints } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -210,6 +210,7 @@ const Profile = () => {
     let newAvatarUrl = profile?.avatar_url;
 
     try {
+      // Client-side validation for player-specific required fields
       if (profile?.user_type === 'player') {
         if (!playerFormData.date_of_birth || !playerFormData.nationality || !playerFormData.position) {
           toast({
@@ -223,12 +224,7 @@ const Profile = () => {
       }
 
       if (avatarFile) {
-        try {
-          newAvatarUrl = await uploadAvatar(avatarFile);
-        } catch (uploadError) {
-          // Continue with profile update even if avatar upload fails
-          console.error('Avatar upload failed, continuing with profile update:', uploadError);
-        }
+        newAvatarUrl = await uploadAvatar(avatarFile);
       }
 
       const { error: profileError } = await supabase
@@ -242,7 +238,6 @@ const Profile = () => {
           experience: formData.experience,
           achievements: formData.achievements,
           avatar_url: newAvatarUrl,
-          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
@@ -250,7 +245,7 @@ const Profile = () => {
         console.error('Profile.tsx: Error updating profile:', profileError);
         toast({
           title: "Erro ao atualizar perfil",
-          description: `Ocorreu um erro ao salvar suas informações: ${profileError.message}.`,
+          description: `Ocorreu um erro ao salvar suas informações: ${profileError.message}.`, // Exibir mensagem de erro do Supabase
           variant: "destructive",
         });
         return;
@@ -259,24 +254,21 @@ const Profile = () => {
       if (profile?.user_type === 'player') {
         const { error: playerError } = await supabase
           .from('players')
-          .upsert({
-            profile_id: user.id,
+          .update({
             date_of_birth: playerFormData.date_of_birth,
             nationality: playerFormData.nationality,
             position: playerFormData.position,
             preferred_foot: playerFormData.preferred_foot || null,
             height: playerFormData.height ? parseInt(playerFormData.height) : null,
             weight: playerFormData.weight ? parseInt(playerFormData.weight) : null,
-            first_name: formData.full_name.split(' ')[0] || '',
-            last_name: formData.full_name.split(' ').slice(1).join(' ') || '',
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'profile_id' });
+          })
+          .eq('profile_id', user.id);
 
         if (playerError) {
           console.error('Profile.tsx: Error updating player profile:', playerError);
           toast({
             title: "Erro ao atualizar perfil de jogador",
-            description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerError.message}.`,
+            description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerError.message}.`, // Exibir mensagem de erro do Supabase
             variant: "destructive",
           });
           return;
@@ -285,7 +277,7 @@ const Profile = () => {
 
       await fetchProfile();
       setEditMode(false);
-      setAvatarFile(null);
+      setAvatarFile(null); // Clear file input after successful save
       
       toast({
         title: "Perfil atualizado!",
