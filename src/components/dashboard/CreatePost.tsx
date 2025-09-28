@@ -6,13 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Image, Video, MapPin, Smile, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { UserType } from "@/integrations/supabase/types"; // Importando UserType
+import { UserType } from "@/integrations/supabase/types";
+import { getPostTypeOptions } from "@/lib/userTypeUtils"; // Importando do novo utilitário
 
 interface CreatePostProps {
   user: {
     name: string;
     avatar?: string;
-    userType: UserType; // Usando o tipo UserType
+    userType: UserType;
   };
   onPost: (content: string, postType: string, visibility: string) => Promise<void>;
 }
@@ -65,43 +66,6 @@ const CreatePost = ({ user, onPost }: CreatePostProps) => {
       default:
         return "O que está acontecendo?";
     }
-  };
-
-  const getPostTypeOptions = (userType: UserType) => { // Usando UserType
-    const baseOptions = [
-      { value: "post", label: "Post Normal" }
-    ];
-
-    const userTypeOptions: Record<UserType, { value: string; label: string }[]> = {
-      player: [
-        { value: "training", label: "Treinamento" },
-        { value: "match_result", label: "Resultado da Partida" }
-      ],
-      club: [
-        { value: "transfer", label: "Transferência" },
-        { value: "match_result", label: "Resultado da Partida" }
-      ],
-      agent: [
-        { value: "transfer", label: "Transferência" }
-      ],
-      coach: [
-        { value: "training", label: "Treinamento" },
-        { value: "match_result", label: "Resultado da Partida" }
-      ],
-      scout: [
-        { value: "match_result", label: "Análise da Partida" }
-      ],
-      journalist: [],
-      medical_staff: [],
-      financial_staff: [],
-      technical_staff: [],
-      fan: [], // Adicionado para o tipo 'fan'
-    };
-
-    return [
-      ...baseOptions,
-      ...(userTypeOptions[userType] || [])
-    ];
   };
 
   return (

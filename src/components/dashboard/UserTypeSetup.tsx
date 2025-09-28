@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select components
-import { User, Building, Briefcase, Target, Trophy, PenTool, Activity, Stethoscope, Calculator, Calendar, Flag, Footprints } from "lucide-react"; // Adicionei Calendar, Flag, Footprints
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { User, Calendar, Flag, Footprints } from "lucide-react"; // Mantendo apenas os ícones específicos do player
+import { userTypeOptions, getSpecializationPlaceholder } from "@/lib/userTypeUtils"; // Importando do novo utilitário
 
 interface UserTypeSetupProps {
   onComplete: (userType: string, profileData: any) => Promise<void>;
@@ -31,72 +32,10 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const userTypes = [
-    {
-      value: "player",
-      label: "Jogador",
-      icon: User,
-      description: "Atleta profissional ou amador",
-      color: "bg-blue-100 text-blue-800"
-    },
-    // Removido o tipo "club" daqui
-    {
-      value: "agent",
-      label: "Agente",
-      icon: Briefcase,
-      description: "Representante de jogadores",
-      color: "bg-green-100 text-green-800"
-    },
-    {
-      value: "coach",
-      label: "Técnico",
-      icon: Target,
-      description: "Treinador ou preparador",
-      color: "bg-purple-100 text-purple-800"
-    },
-    {
-      value: "scout",
-      label: "Olheiro",
-      icon: Trophy,
-      description: "Observador de talentos",
-      color: "bg-orange-100 text-orange-800"
-    },
-    {
-      value: "journalist",
-      label: "Jornalista",
-      icon: PenTool,
-      description: "Profissional de mídia esportiva",
-      color: "bg-yellow-100 text-yellow-800"
-    },
-    {
-      value: "medical_staff",
-      label: "Staff Médico",
-      icon: Stethoscope, // Ícone atualizado
-      description: "Profissional de saúde esportiva",
-      color: "bg-teal-100 text-teal-800"
-    },
-    {
-      value: "financial_staff",
-      label: "Staff Financeiro",
-      icon: Calculator, // Ícone atualizado
-      description: "Profissional de finanças do clube",
-      color: "bg-indigo-100 text-indigo-800"
-    },
-    {
-      value: "technical_staff",
-      label: "Staff Técnico",
-      icon: Activity,
-      description: "Profissional de apoio técnico",
-      color: "bg-cyan-100 text-cyan-800"
-    },
-    {
-      value: "fan",
-      label: "Torcedor",
-      icon: Smile,
-      description: "Acompanhe seu time e jogadores favoritos",
-      color: "bg-gray-100 text-gray-800"
-    }
-  ];
+  // Filtrar userTypeOptions para remover 'club' e 'fan' se não precisarem de setup adicional aqui
+  const filteredUserTypeOptions = userTypeOptions.filter(
+    (type) => type.value !== "club" && type.value !== "fan"
+  );
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -113,22 +52,6 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
-  const getSpecializationPlaceholder = (type: string) => {
-    const placeholders = {
-      player: "Ex: Meio-campo, Atacante, Goleiro...",
-      // club: "Ex: Futebol profissional, Base, Feminino...", // Removido
-      agent: "Ex: Negociação de contratos, Transferências internacionais...",
-      coach: "Ex: Futebol de base, Preparação física, Análise técnica...",
-      scout: "Ex: Talentos jovens, Mercado europeu, Futebol brasileiro...",
-      journalist: "Ex: Cobertura de jogos, Entrevistas, Análise tática...",
-      medical_staff: "Ex: Fisioterapia, Nutrição esportiva, Preparação física...",
-      financial_staff: "Ex: Contabilidade, Orçamento, Análise de investimentos...",
-      technical_staff: "Ex: Análise de dados, Suporte de vídeo, Tecnologia esportiva...",
-      fan: "Ex: Acompanhamento de notícias, Interação com outros torcedores..."
-    };
-    return placeholders[type as keyof typeof placeholders] || "Descreva sua especialização...";
-  };
-
   if (step === 1) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">
@@ -142,7 +65,7 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
           <CardContent>
             <RadioGroup value={selectedType} onValueChange={setSelectedType}>
               <div className="grid md:grid-cols-3 gap-4">
-                {userTypes.map((type) => {
+                {filteredUserTypeOptions.map((type) => {
                   const Icon = type.icon;
                   return (
                     <div key={type.value} className="relative">
@@ -180,7 +103,7 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
     );
   }
 
-  const selectedTypeData = userTypes.find(t => t.value === selectedType);
+  const selectedTypeData = userTypeOptions.find(t => t.value === selectedType);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4">

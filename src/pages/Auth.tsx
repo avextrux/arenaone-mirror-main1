@@ -8,15 +8,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, User, Sparkles, Briefcase, Building, Target, Trophy, PenTool, Activity, Stethoscope, Calculator } from "lucide-react";
-import { UserType, Constants } from "@/integrations/supabase/types"; // Importando Constants
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles } from "lucide-react"; // Removendo ícones não utilizados
+import { UserType, Constants } from "@/integrations/supabase/types";
+import { userTypeOptions } from "@/lib/userTypeUtils"; // Importando do novo utilitário
 
 // Esquema de validação para o formulário de REGISTRO
 const signUpSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
   fullName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
-  userType: z.enum(Constants.public.Enums.user_type, { // Usando z.enum com o array de valores do Supabase
+  userType: z.enum(Constants.public.Enums.user_type, {
     errorMap: () => ({ message: "Por favor, selecione sua função" })
   }),
 });
@@ -108,18 +109,6 @@ const Auth = () => {
     setLoading(false);
   };
 
-  const userTypeOptions = [
-    { value: "player", label: "Jogador", icon: User },
-    { value: "club", label: "Clube", icon: Building },
-    { value: "agent", label: "Agente", icon: Briefcase },
-    { value: "coach", label: "Técnico", icon: Target },
-    { value: "scout", label: "Olheiro", icon: Trophy },
-    { value: "journalist", label: "Jornalista", icon: PenTool },
-    { value: "medical_staff", label: "Staff Médico", icon: Stethoscope },
-    { value: "financial_staff", label: "Staff Financeiro", icon: Calculator },
-    { value: "technical_staff", label: "Staff Técnico", icon: Activity },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
@@ -208,7 +197,7 @@ const Auth = () => {
                       <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Digite sua senha"
+                        placeholder="Mínimo 6 caracteres"
                         value={formData.password}
                         onChange={(e) => handleInputChange("password", e.target.value)}
                         className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
@@ -270,7 +259,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-sm font-medium">Nome Completo</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" /> {/* Reutilizando Mail para o ícone de usuário */}
                       <Input
                         id="fullName"
                         type="text"
