@@ -52,7 +52,7 @@ export type Database = {
       club_members: {
         Row: {
           accepted_at: string | null
-          club_id: string
+          club_id: string | null
           created_at: string | null
           department: ClubDepartment // Using top-level enum type
           id: string
@@ -68,7 +68,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
-          club_id: string
+          club_id?: string | null
           created_at?: string | null
           department: ClubDepartment // Using top-level enum type
           id?: string
@@ -84,7 +84,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
-          club_id?: string
+          club_id?: string | null
           created_at?: string | null
           department?: ClubDepartment // Using top-level enum type
           id?: string
