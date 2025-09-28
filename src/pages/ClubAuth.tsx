@@ -127,10 +127,10 @@ const ClubAuth = () => {
         .single();
 
       if (inviteError || !inviteData) {
-        throw new Error("Código de convite inválido, já utilizado ou não é para registro de clube.");
+        throw new Error("Código de convite inválido, expirado ou não é para registro de clube.");
       }
 
-      let managerUserId: string | undefined = user?.id; // If already logged in
+      let managerUserId: string;
       let authResult;
 
       // 2. Attempt to sign up the manager. If email exists, attempt to sign in.
@@ -148,13 +148,11 @@ const ClubAuth = () => {
         }
       }
 
-      // After successful signUp or signIn, the user object in useAuth should be updated
-      // We need to ensure the session is established to get the user ID
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) throw new Error("Erro ao obter informações do usuário após o registro/login.");
-      managerUserId = currentUser.id;
-
-      if (!managerUserId) throw new Error("Não foi possível determinar o ID do gerente.");
+      // Use the user object returned by signUp or signIn
+      if (!authResult.user) {
+        throw new Error("Erro ao obter informações do usuário após o registro/login.");
+      }
+      managerUserId = authResult.user.id;
 
       // 3. Upload Club Logo
       let logoUrl: string | null = null;

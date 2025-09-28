@@ -7,8 +7,8 @@ import { UserType } from '@/integrations/supabase/types'; // Importar UserType
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, fullName?: string, userType?: string) => Promise<{ error: any }>; // fullName e userType opcionais
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string, userType?: string) => Promise<{ user: User | null, error: any }>; // fullName e userType opcionais
+  signIn: (email: string, password: string) => Promise<{ user: User | null, error: any }>;
   signOut: () => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
   loading: boolean;
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: message,
         variant: "destructive",
       });
-      return { error: authError };
+      return { user: null, error: authError };
     } else {
       // A criação do perfil inicial (id, email, full_name) é tratada pelo trigger handle_new_user no Supabase.
       // O user_type será atualizado no onboarding flow (UserTypeSetup) ou no registro de clube.
@@ -92,11 +92,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
 
-    return { error: null };
+    return { user: authData.user, error: null }; // Retorna o user aqui
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
 
-    return { error };
+    return { user: data.user, error }; // Retorna o user aqui
   };
 
   const resendConfirmation = async (email: string) => {
