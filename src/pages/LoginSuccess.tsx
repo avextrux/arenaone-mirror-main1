@@ -1,17 +1,24 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth'; // Importar useAuth
 
 const LoginSuccess = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth(); // Obter user e loading do contexto de autenticação
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate('/dashboard', { replace: true });
-    }, 3000); // Redireciona após 3 segundos
+    if (!loading && user) { // Apenas redirecionar se não estiver carregando e o usuário estiver presente
+      const timer = setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 1000); // Reduzir o atraso, pois já estamos esperando pelo estado de autenticação
 
-    return () => clearTimeout(timer);
-  }, [navigate]);
+      return () => clearTimeout(timer);
+    } else if (!loading && !user) {
+      // Se não estiver carregando e não houver usuário, algo deu errado com o login, redirecionar para o auth
+      navigate('/auth', { replace: true });
+    }
+  }, [user, loading, navigate]); // Depender de user e loading
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4">
