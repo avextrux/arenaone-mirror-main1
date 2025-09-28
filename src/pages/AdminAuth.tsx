@@ -36,31 +36,33 @@ const AdminAuth = () => {
 
   const checkAdminStatus = async (userId: string) => {
     setLoading(true);
+    console.log("AdminAuth: Checking admin status for user ID:", userId); // Log user ID
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('user_type')
+        .select('*') // Changed to select all columns
         .eq('id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle to handle no row found gracefully
 
-      // Handle the case where no profile is found (PGRST116 error code)
-      if (profileError && profileError.code !== 'PGRST116') {
+      if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found
+        console.error("AdminAuth: Error fetching profile:", profileError);
         throw profileError;
       }
 
       if (profileData?.user_type === 'admin') {
+        console.log("AdminAuth: User is admin, navigating to dashboard.");
         navigate("/admin-dashboard");
       } else {
+        console.log("AdminAuth: User is NOT admin or profile not found. User type:", profileData?.user_type);
         toast({
           title: "Acesso Negado",
           description: "Você não tem permissão de administrador.",
           variant: "destructive",
         });
-        // Optionally sign out non-admin users who try to access admin login
-        await supabase.auth.signOut();
+        await supabase.auth.signOut(); // Sign out non-admin users
       }
     } catch (error: any) {
-      console.error("Error checking admin status:", error);
+      console.error("AdminAuth: Error checking admin status (catch block):", error);
       toast({
         title: "Erro de Verificação",
         description: error.message || "Não foi possível verificar seu status de administrador.",
@@ -86,7 +88,6 @@ const AdminAuth = () => {
       const { error: signInError } = await signIn(formData.email.trim(), formData.password);
 
       if (signInError) {
-        // Error message is already handled by useAuth toast
         setLoading(false);
         return;
       }
