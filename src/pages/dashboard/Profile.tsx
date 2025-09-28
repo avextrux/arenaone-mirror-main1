@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { getUserTypeColor, getUserTypeLabel } from "@/lib/userUtils";
 import { UserType } from "@/integrations/supabase/types";
+import { v4 as uuidv4 } from 'uuid'; // Import for unique file names
 
 interface Profile {
   id: string;
@@ -74,6 +75,8 @@ const Profile = () => {
     height: "",
     weight: "",
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -108,6 +111,7 @@ const Profile = () => {
           experience: data.experience || "",
           achievements: data.achievements || ""
         });
+        setAvatarPreview(data.avatar_url || null);
 
         if (data.user_type === 'player') {
           const { data: playerData, error: playerError } = await supabase
@@ -145,11 +149,86 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Tipo de arquivo inválido",
+          description: "Por favor, selecione uma imagem (JPG, PNG, GIF, SVG, WEBP).",
+          variant: "destructive",
+        });
+        setAvatarFile(null);
+        setAvatarPreview(profile?.avatar_url || null); // Revert to current avatar
+        return;
+      }
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    } else {
+      setAvatarFile(null);
+      setAvatarPreview(profile?.avatar_url || null); // Revert to current avatar
+    }
+  };
+
+  const uploadAvatar = async (file: File) => {
+    if (!user) {
+      toast({
+        title: "Erro de Autenticação",
+        description: "Você precisa estar logado para fazer upload de arquivos.",
+        variant: "destructive",
+      });
+      throw new Error("Usuário não autenticado.");
+    }
+
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExtension}`;
+    const filePath = `avatars/${user.id}/${fileName}`; // Store under user's ID
+
+    const { data, error } = await supabase.storage
+      .from('avatars') // Ensure you have a bucket named 'avatars' in Supabase
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      console.error("Supabase Storage Upload Error:", error);
+      toast({
+        title: "Erro no Upload do Avatar",
+        description: `Não foi possível fazer upload do avatar: ${error.message}. Verifique as políticas de RLS do seu bucket 'avatars'.`,
+        variant: "destructive",
+      });
+      throw new Error(`Erro ao fazer upload do avatar: ${error.message}`);
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    if (!publicUrlData.publicUrl) {
+      console.error("Supabase Public URL Error: No public URL returned.");
+      toast({
+        title: "Erro ao obter URL",
+        description: "O upload foi feito, mas não foi possível obter a URL pública do avatar.",
+        variant: "destructive",
+      });
+      throw new Error("Não foi possível obter a URL pública do avatar.");
+    }
+
+    return publicUrlData.publicUrl;
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
     setSaving(true);
+    let newAvatarUrl = profile?.avatar_url;
+
     try {
+      if (avatarFile) {
+        newAvatarUrl = await uploadAvatar(avatarFile);
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -159,7 +238,8 @@ const Profile = () => {
           website: formData.website,
           specialization: formData.specialization,
           experience: formData.experience,
-          achievements: formData.achievements
+          achievements: formData.achievements,
+          avatar_url: newAvatarUrl,
         })
         .eq('id', user.id);
 
@@ -199,6 +279,7 @@ const Profile = () => {
 
       await fetchProfile();
       setEditMode(false);
+      setAvatarFile(null); // Clear file input after successful save
       
       toast({
         title: "Perfil atualizado!",
@@ -290,19 +371,27 @@ const Profile = () => {
               <div className="flex flex-col md:flex-row items-center gap-8">
                 <div className="relative">
                   <Avatar className="w-32 h-32 border-4 border-primary/20">
-                    <AvatarImage src={profile.avatar_url} />
+                    <AvatarImage src={avatarPreview || profile.avatar_url} />
                     <AvatarFallback className="text-2xl">
                       {profile.full_name?.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {editMode && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="absolute bottom-0 right-0 rounded-full w-10 h-10 p-0"
-                    >
-                      <Camera className="w-4 h-4" />
-                    </Button>
+                    <>
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
+                      <label 
+                        htmlFor="avatar-upload" 
+                        className="absolute bottom-0 right-0 rounded-full w-10 h-10 p-0 bg-background border border-border flex items-center justify-center cursor-pointer hover:bg-muted"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </label>
+                    </>
                   )}
                 </div>
                 
@@ -388,6 +477,7 @@ const Profile = () => {
                         <SelectItem value="medical_staff">Staff Médico</SelectItem>
                         <SelectItem value="financial_staff">Staff Financeiro</SelectItem>
                         <SelectItem value="technical_staff">Staff Técnico</SelectItem>
+                        <SelectItem value="fan">Torcedor</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
@@ -648,7 +738,7 @@ const Profile = () => {
 
           {editMode && (
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setEditMode(false)}>
+              <Button variant="outline" onClick={() => { setEditMode(false); setAvatarFile(null); setAvatarPreview(profile?.avatar_url || null); }}>
                 Cancelar
               </Button>
               <Button onClick={handleSave} disabled={saving}>

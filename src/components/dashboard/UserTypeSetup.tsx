@@ -39,13 +39,7 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
       description: "Atleta profissional ou amador",
       color: "bg-blue-100 text-blue-800"
     },
-    {
-      value: "club",
-      label: "Clube",
-      icon: Building,
-      description: "Organização esportiva",
-      color: "bg-red-100 text-red-800"
-    },
+    // Removido o tipo "club" daqui
     {
       value: "agent",
       label: "Agente",
@@ -94,6 +88,13 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
       icon: Activity,
       description: "Profissional de apoio técnico",
       color: "bg-cyan-100 text-cyan-800"
+    },
+    {
+      value: "fan",
+      label: "Torcedor",
+      icon: Smile,
+      description: "Acompanhe seu time e jogadores favoritos",
+      color: "bg-gray-100 text-gray-800"
     }
   ];
 
@@ -115,14 +116,15 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
   const getSpecializationPlaceholder = (type: string) => {
     const placeholders = {
       player: "Ex: Meio-campo, Atacante, Goleiro...",
-      club: "Ex: Futebol profissional, Base, Feminino...",
+      // club: "Ex: Futebol profissional, Base, Feminino...", // Removido
       agent: "Ex: Negociação de contratos, Transferências internacionais...",
       coach: "Ex: Futebol de base, Preparação física, Análise técnica...",
       scout: "Ex: Talentos jovens, Mercado europeu, Futebol brasileiro...",
       journalist: "Ex: Cobertura de jogos, Entrevistas, Análise tática...",
       medical_staff: "Ex: Fisioterapia, Nutrição esportiva, Preparação física...",
       financial_staff: "Ex: Contabilidade, Orçamento, Análise de investimentos...",
-      technical_staff: "Ex: Análise de dados, Suporte de vídeo, Tecnologia esportiva..."
+      technical_staff: "Ex: Análise de dados, Suporte de vídeo, Tecnologia esportiva...",
+      fan: "Ex: Acompanhamento de notícias, Interação com outros torcedores..."
     };
     return placeholders[type as keyof typeof placeholders] || "Descreva sua especialização...";
   };

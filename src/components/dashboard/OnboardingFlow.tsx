@@ -49,27 +49,61 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
 
       // If user is a player, also create an entry in the players table
       if (userType === 'player') {
-        const { error: playerInsertError } = await supabase
+        const { data: existingPlayer, error: fetchPlayerError } = await supabase
           .from('players')
-          .insert([{
-            profile_id: user.id,
-            first_name: user.user_metadata.full_name.split(' ')[0] || '', // Assuming full_name is in user_metadata
-            last_name: user.user_metadata.full_name.split(' ').slice(1).join(' ') || '',
-            date_of_birth: profileData.date_of_birth,
-            nationality: profileData.nationality,
-            position: profileData.position,
-            preferred_foot: profileData.preferred_foot || null,
-            // Other player fields can be null initially or set to defaults
-          }]);
+          .select('id')
+          .eq('profile_id', user.id)
+          .single();
 
-        if (playerInsertError) {
-          console.error('Error creating player entry:', playerInsertError);
-          toast({
-            title: "Erro ao criar perfil de jogador",
-            description: "Ocorreu um erro ao salvar suas informações de jogador.",
-            variant: "destructive",
-          });
-          return;
+        if (fetchPlayerError && fetchPlayerError.code !== 'PGRST116') { // PGRST116 means no rows found
+          console.error('Error checking existing player entry:', fetchPlayerError);
+          throw fetchPlayerError;
+        }
+
+        if (!existingPlayer) {
+          const { error: playerInsertError } = await supabase
+            .from('players')
+            .insert([{
+              profile_id: user.id,
+              first_name: user.user_metadata.full_name.split(' ')[0] || '', // Assuming full_name is in user_metadata
+              last_name: user.user_metadata.full_name.split(' ').slice(1).join(' ') || '',
+              date_of_birth: profileData.date_of_birth,
+              nationality: profileData.nationality,
+              position: profileData.position,
+              preferred_foot: profileData.preferred_foot || null,
+              // Other player fields can be null initially or set to defaults
+            }]);
+
+          if (playerInsertError) {
+            console.error('Error creating player entry:', playerInsertError);
+            toast({
+              title: "Erro ao criar perfil de jogador",
+              description: "Ocorreu um erro ao salvar suas informações de jogador.",
+              variant: "destructive",
+            });
+            return;
+          }
+        } else {
+          // If player entry already exists, update it
+          const { error: playerUpdateError } = await supabase
+            .from('players')
+            .update({
+              date_of_birth: profileData.date_of_birth,
+              nationality: profileData.nationality,
+              position: profileData.position,
+              preferred_foot: profileData.preferred_foot || null,
+            })
+            .eq('profile_id', user.id);
+
+          if (playerUpdateError) {
+            console.error('Error updating player entry:', playerUpdateError);
+            toast({
+              title: "Erro ao atualizar perfil de jogador",
+              description: "Ocorreu um erro ao atualizar suas informações de jogador.",
+              variant: "destructive",
+            });
+            return;
+          }
         }
       }
 
