@@ -106,21 +106,9 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     setOnboardingStep(nextStep);
     setLoading(false);
 
-    // Redirecionamento após o onboarding estar completo
-    if (nextStep === "complete" && location.pathname === '/dashboard') {
-      if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
-        navigate('/dashboard/club', { replace: true });
-      } else if (currentProfile.user_type === 'player') {
-        navigate('/dashboard/profile', { replace: true });
-      } else if (currentProfile.user_type === 'agent') {
-        navigate('/dashboard/market', { replace: true });
-      } else if (currentProfile.user_type === 'journalist') {
-        navigate('/dashboard/notifications', { replace: true });
-      } else {
-        navigate('/dashboard/profile', { replace: true });
-      }
-    }
-  }, [user, navigate, location.pathname, fetchProfile, fetchClubMemberships, fetchUnreadNotificationCount]);
+    // REMOVIDO: A lógica de redirecionamento para o estado "complete" será tratada pelo DashboardRouter.
+    // Isso evita conflitos e loops de redirecionamento.
+  }, [user, location.pathname, fetchProfile, fetchClubMemberships, fetchUnreadNotificationCount]);
 
   useEffect(() => {
     if (user) {
