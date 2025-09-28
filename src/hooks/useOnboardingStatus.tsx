@@ -5,14 +5,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
 import { UserType } from "@/integrations/supabase/types"; // Importar UserType
 
-type OnboardingStep = "userTypeSetup" | "clubInvite" | "complete"; // Removido "createClub"
+type OnboardingStep = "userTypeSetup" | "clubInvite" | "complete";
 
 interface UseOnboardingStatusResult {
   loading: boolean;
   onboardingStep: OnboardingStep;
   profile: AppProfile | null;
   clubMemberships: AppClubMembership[];
-  unreadNotificationCount: number; // Adicionado: contagem de notificações não lidas
+  unreadNotificationCount: number;
   refetchStatus: () => Promise<void>;
 }
 
@@ -24,7 +24,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<AppProfile | null>(null);
   const [clubMemberships, setClubMemberships] = useState<AppClubMembership[]>([]);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0); // Novo estado
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>("complete");
 
   const fetchProfile = useCallback(async () => {
@@ -35,10 +35,10 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       .eq('id', user.id)
       .single();
     if (error) {
-      console.error('Error fetching profile:', error);
+      console.error('useOnboardingStatus: Error fetching profile:', error);
       return null;
     }
-    setProfile(data as AppProfile); // Cast para AppProfile
+    setProfile(data as AppProfile);
     return data as AppProfile;
   }, [user]);
 
@@ -50,11 +50,24 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       .eq('user_id', user.id)
       .eq('status', 'accepted');
     if (error) {
-      console.error('Error fetching club memberships:', error);
+      console.error('useOnboardingStatus: Error fetching club memberships:', error);
       return [];
     }
-    setClubMemberships(data as AppClubMembership[] || []); // Cast para AppClubMembership[]
+    setClubMemberships(data as AppClubMembership[] || []);
     return data as AppClubMembership[] || [];
+  }, [user]);
+
+  const fetchManagedClubs = useCallback(async () => {
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('id, name')
+      .eq('manager_id', user.id);
+    if (error) {
+      console.error('useOnboardingStatus: Error fetching managed clubs:', error);
+      return [];
+    }
+    return data || [];
   }, [user]);
 
   const fetchUnreadNotificationCount = useCallback(async () => {
@@ -66,7 +79,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
       .eq('read', false);
     
     if (error) {
-      console.error('Error fetching unread notification count:', error);
+      console.error('useOnboardingStatus: Error fetching unread notification count:', error);
       return 0;
     }
     setUnreadNotificationCount(count || 0);
@@ -77,7 +90,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     setLoading(true);
     const currentProfile = await fetchProfile();
     const currentMemberships = await fetchClubMemberships();
-    await fetchUnreadNotificationCount(); // Buscar contagem de notificações
+    await fetchUnreadNotificationCount();
 
     if (!currentProfile) {
       setLoading(false);
@@ -86,25 +99,35 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
     let nextStep: OnboardingStep = "complete";
 
-    // Se user_type for null OU 'fan', direcionar para userTypeSetup
     if (!currentProfile.user_type || currentProfile.user_type === UserType.Fan) {
       nextStep = "userTypeSetup";
     } else {
-      // Tipos de usuário que precisam de vínculo com clube
-      const needsClubAffiliation = [
-        UserType.Player,
-        UserType.Agent,
-        UserType.MedicalStaff,
-        UserType.FinancialStaff,
-        UserType.TechnicalStaff,
-        UserType.Scout,
-        UserType.Coach,
-        UserType.Club // Adicionado UserType.Club aqui
-      ];
-      
-      if (needsClubAffiliation.includes(currentProfile.user_type)) {
-        if (!currentMemberships || currentMemberships.length === 0) {
+      // Tratamento especial para UserType.Club
+      if (currentProfile.user_type === UserType.Club) {
+        const managedClubs = await fetchManagedClubs();
+        if (managedClubs.length === 0) {
+          // Se um usuário do tipo clube não gerencia nenhum clube, ele precisa passar pelo convite/criação de clube
           nextStep = "clubInvite";
+        } else {
+          // Se ele gerencia um clube, seu onboarding está completo para a afiliação ao clube.
+          nextStep = "complete";
+        }
+      } else {
+        // Para outros tipos de usuário que precisam de afiliação a um clube
+        const needsClubAffiliation = [
+          UserType.Player,
+          UserType.Agent,
+          UserType.MedicalStaff,
+          UserType.FinancialStaff,
+          UserType.TechnicalStaff,
+          UserType.Scout,
+          UserType.Coach,
+        ];
+        
+        if (needsClubAffiliation.includes(currentProfile.user_type)) {
+          if (!currentMemberships || currentMemberships.length === 0) {
+            nextStep = "clubInvite";
+          }
         }
       }
     }
@@ -112,7 +135,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     setOnboardingStep(nextStep);
     setLoading(false);
 
-  }, [user, location.pathname, fetchProfile, fetchClubMemberships, fetchUnreadNotificationCount]);
+  }, [user, location.pathname, fetchProfile, fetchClubMemberships, fetchUnreadNotificationCount, fetchManagedClubs]);
 
   useEffect(() => {
     if (user) {
