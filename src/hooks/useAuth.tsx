@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("useAuth.tsx: onAuthStateChange - Event:", event, "Session:", session);
+        console.log("useAuth.tsx: onAuthStateChange - Event:", event, "Session user_type (from metadata):", session?.user?.user_metadata?.user_type);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("useAuth.tsx: getSession - Initial session check:", session);
+      console.log("useAuth.tsx: getSession - Initial session user_type (from metadata):", session?.user?.user_metadata?.user_type);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
-          user_type: userType
+          user_type: userType // Pass userType to user_metadata
         }
       }
     });
@@ -94,6 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Se o registro for bem-sucedido, garanta que a tabela de perfis seja atualizada com user_type
       if (authData.user) {
+        console.log("useAuth.tsx: signUp - User created in auth. Attempting to upsert profile with user_type:", userType);
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
@@ -110,6 +111,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             description: "Sua conta foi criada, mas houve um problema ao configurar seu perfil inicial. Por favor, entre em contato com o suporte.",
             variant: "destructive",
           });
+        } else {
+          console.log("useAuth.tsx: signUp - Profile upserted successfully with user_type:", userType);
         }
       }
 

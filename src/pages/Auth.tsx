@@ -54,7 +54,7 @@ const Auth = () => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
-    console.log("Auth.tsx: handleSubmit - Attempting to submit form...");
+    console.log("Auth.tsx: Submitting form. isSignUp:", isSignUp, "formData.userType:", formData.userType);
 
     try {
       if (isSignUp) {
@@ -65,7 +65,7 @@ const Auth = () => {
           fullName: formData.fullName.trim(), 
           userType: formData.userType as UserType 
         });
-        console.log("Auth.tsx: handleSubmit - Calling signUp...");
+        console.log("Auth.tsx: Calling signUp with userType:", formData.userType);
         await signUp(formData.email.trim(), formData.password, formData.fullName.trim(), formData.userType);
       } else {
         // Validação para o formulário de LOGIN

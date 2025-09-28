@@ -92,12 +92,14 @@ const Profile = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Profile.tsx: Error fetching profile:', error);
         return;
       }
 
       if (data) {
         setProfile(data);
+        console.log("Profile.tsx: Fetched profile data:", data);
+        console.log("Profile.tsx: Profile user_type:", data.user_type);
         setFormData({
           full_name: data.full_name || "",
           bio: data.bio || "",
@@ -117,7 +119,7 @@ const Profile = () => {
             .single();
 
           if (playerError && playerError.code !== 'PGRST116') { // PGRST116 means no rows found
-            console.error('Error fetching player profile:', playerError);
+            console.error('Profile.tsx: Error fetching player profile:', playerError);
           }
 
           if (playerData) {
@@ -139,7 +141,7 @@ const Profile = () => {
         }
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Profile.tsx: Error fetching profile (catch block):', error);
     } finally {
       setLoading(false);
     }
@@ -164,7 +166,7 @@ const Profile = () => {
         .eq('id', user.id);
 
       if (profileError) {
-        console.error('Error updating profile:', profileError);
+        console.error('Profile.tsx: Error updating profile:', profileError);
         toast({
           title: "Erro ao atualizar perfil",
           description: "Ocorreu um erro ao salvar suas informações.",
@@ -187,7 +189,7 @@ const Profile = () => {
           .eq('profile_id', user.id);
 
         if (playerError) {
-          console.error('Error updating player profile:', playerError);
+          console.error('Profile.tsx: Error updating player profile:', playerError);
           toast({
             title: "Erro ao atualizar perfil de jogador",
             description: "Ocorreu um erro ao salvar suas informações de jogador.",
@@ -205,7 +207,7 @@ const Profile = () => {
         description: "Suas informações foram salvas com sucesso.",
       });
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Profile.tsx: Error updating profile:', error);
     } finally {
       setSaving(false);
     }
