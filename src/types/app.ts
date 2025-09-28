@@ -59,10 +59,26 @@ export interface AppNotification extends Tables<'notifications'> {}
 // Transferência
 export interface AppTransfer extends Tables<'transfers'> {}
 
+// --- Novas interfaces para tipos JSONB refinados ---
+export interface PlayerInjuryHistoryEntry {
+  type: string;
+  body_part: string;
+  severity: string;
+  diagnosis_date: string;
+  recovery_date_estimate?: string;
+  status: string;
+  notes?: string;
+}
+
+export interface PlayerTechnicalSkills {
+  description?: string;
+  // Adicione outros campos se houver mais estrutura para habilidades técnicas
+}
+// --- Fim das novas interfaces ---
+
 // Informações Médicas do Jogador
-export interface AppPlayerMedicalInfo extends Tables<'player_medical_info'> {
-  // Refinando o tipo de 'injuries_history' se for um array de objetos com estrutura conhecida
-  // Por exemplo: injuries_history?: Array<{ type: string; body_part: string; severity: string; diagnosis_date: string; recovery_date_estimate?: string; status: string; notes?: string }>;
+export interface AppPlayerMedicalInfo extends Omit<Tables<'player_medical_info'>, 'injuries_history'> {
+  injuries_history?: PlayerInjuryHistoryEntry[] | null; // Refinando o tipo de 'injuries_history'
 }
 
 // Informações Financeiras do Jogador
@@ -72,7 +88,7 @@ export interface AppPlayerFinancialInfo extends Omit<Tables<'player_financial_in
 
 // Relatório Técnico do Jogador
 export interface AppPlayerTechnicalReport extends Omit<Tables<'player_technical_reports'>, 'technical_skills'> {
-  technical_skills?: { description?: string } | null; // Refinando o tipo de Json
+  technical_skills?: PlayerTechnicalSkills | null; // Refinando o tipo de 'technical_skills'
 }
 
 // Relatório de Scouting com jogador e perfil do olheiro aninhados

@@ -84,26 +84,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       return { error: authError };
     } else {
-      // Se o registro for bem-sucedido, garanta que a tabela de perfis seja atualizada com user_type
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: authData.user.id,
-            email: authData.user.email!,
-            full_name: fullName,
-            user_type: userType as UserType, // Garante que o user_type seja salvo
-          }, { onConflict: 'id' }); // Usa upsert para criar ou atualizar o perfil
-
-        if (profileError) {
-          toast({
-            title: "Erro ao configurar perfil",
-            description: "Sua conta foi criada, mas houve um problema ao configurar seu perfil inicial. Por favor, entre em contato com o suporte.",
-            variant: "destructive",
-          });
-        }
-      }
-
+      // A criação do perfil inicial (id, email, full_name) é tratada pelo trigger handle_new_user no Supabase.
+      // O user_type será atualizado no onboarding flow (UserTypeSetup).
       toast({
         title: "Conta criada com sucesso!",
         description: "Verifique seu email para confirmar a conta.",
