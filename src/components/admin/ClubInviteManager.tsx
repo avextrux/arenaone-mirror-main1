@@ -15,7 +15,9 @@ import { ClubDepartment, PermissionLevel, Constants } from "@/integrations/supab
 import { getDepartmentLabel, getPermissionLabel } from "@/lib/userUtils";
 
 interface ClubInvite extends AppClubMembership {
-  clubs: { name: string } | null;
+  // Removido 'clubs' property aqui, pois não é relevante para convites não atribuídos
+  // e pode causar problemas com a consulta select quando club_id é nulo.
+  // A base AppClubMembership já estende Tables<'club_members'> que tem club_id.
 }
 
 const ClubInviteManager = () => {
@@ -25,24 +27,22 @@ const ClubInviteManager = () => {
   const [expiresInDays, setExpiresInDays] = useState("7"); // Default 7 days
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null); // Estado para exibir o código gerado temporariamente
 
   useEffect(() => {
     fetchInvites();
   }, []);
 
   const fetchInvites = async () => {
-    setLoading(true); // Definir loading como true no início
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('club_members')
-        .select(`
-          *,
-          clubs (name)
-        `)
+        .select(`*`) // Alterado para selecionar todas as colunas sem o join
         .eq('status', 'pending')
-        .is('user_id', null) // Only unassigned invites
-        .eq('department', ClubDepartment.Management) // Only invites for club registration
-        .eq('permission_level', PermissionLevel.Admin) // Only invites for club registration
+        .is('user_id', null) // Apenas convites não atribuídos
+        .eq('department', ClubDepartment.Management) // Apenas convites para registro de clube
+        .eq('permission_level', PermissionLevel.Admin) // Apenas convites para registro de clube
         .order('created_at', { ascending: false });
       if (error) {
         console.error('Error fetching invites:', error);
@@ -54,7 +54,7 @@ const ClubInviteManager = () => {
       console.error('Unexpected error in fetchInvites:', error);
       toast({ title: "Erro Inesperado", description: "Ocorreu um erro inesperado ao buscar convites.", variant: "destructive" });
     } finally {
-      setLoading(false); // Garantir que loading seja sempre definido como false
+      setLoading(false);
     }
   };
 
@@ -72,10 +72,10 @@ const ClubInviteManager = () => {
       const { error } = await supabase
         .from('club_members')
         .insert([{
-          club_id: null, // No specific club yet, this invite is for creating a new one
-          user_id: null, // Unassigned
-          department: ClubDepartment.Management, // Fixed for club registration
-          permission_level: PermissionLevel.Admin, // Fixed for club registration
+          club_id: null, // Isso agora é permitido
+          user_id: null, // Não atribuído
+          department: ClubDepartment.Management, // Fixo para registro de clube
+          permission_level: PermissionLevel.Admin, // Fixo para registro de clube
           status: 'pending',
           invite_code: newInviteCode,
           invited_by: user.id,
@@ -86,7 +86,8 @@ const ClubInviteManager = () => {
       if (error) throw error;
 
       toast({ title: "Convite Gerado!", description: "Um novo link de convite para registro de clube foi criado.", });
-      await fetchInvites(); // Refresh the list
+      setGeneratedCode(newInviteCode); // Exibir o código gerado temporariamente
+      await fetchInvites(); // Atualizar a lista
     } catch (error: any) {
       console.error('Error generating invite:', error);
       toast({ title: "Erro", description: error.message || "Não foi possível gerar o convite.", variant: "destructive" });
@@ -201,6 +202,26 @@ const ClubInviteManager = () => {
           </Button>
         </CardContent>
       </Card>
+
+      {generatedCode && ( // Exibir o código gerado temporariamente
+        <div className="space-y-2 mt-4 p-4 border rounded-md bg-muted">
+          <Label>Código de Convite Gerado</Label>
+          <div className="flex items-center gap-2">
+            <Input type="text" value={generatedCode} readOnly className="flex-1" />
+            <Button size="sm" variant="outline" onClick={() => copyToClipboard(generatedCode)}>
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <KeyRound className="w-3 h-3" />
+            Compartilhe este código com o novo membro.
+          </p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            Expira em: {format(addDays(new Date(), parseInt(expiresInDays)), 'dd/MM/yyyy')}
+          </p>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
