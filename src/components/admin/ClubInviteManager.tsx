@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { format, addDays } from 'date-fns';
 import { AppClubMembership } from "@/types/app";
 import { ClubDepartment, PermissionLevel, Constants } from "@/integrations/supabase/types";
+import { getDepartmentLabel, getPermissionLabel } from "@/lib/userUtils";
 
 interface ClubInvite extends AppClubMembership {
   clubs: { name: string } | null;
@@ -30,22 +31,30 @@ const ClubInviteManager = () => {
   }, []);
 
   const fetchInvites = async () => {
-    const { data, error } = await supabase
-      .from('club_members')
-      .select(`
-        *,
-        clubs (name)
-      `)
-      .eq('status', 'pending')
-      .is('user_id', null) // Only unassigned invites
-      .eq('department', ClubDepartment.Management) // Only invites for club registration
-      .eq('permission_level', PermissionLevel.Admin) // Only invites for club registration
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Error fetching invites:', error);
-      toast({ title: "Erro", description: "Não foi possível carregar os convites.", variant: "destructive" });
-    } else {
-      setInvites(data as ClubInvite[] || []);
+    setLoading(true); // Definir loading como true no início
+    try {
+      const { data, error } = await supabase
+        .from('club_members')
+        .select(`
+          *,
+          clubs (name)
+        `)
+        .eq('status', 'pending')
+        .is('user_id', null) // Only unassigned invites
+        .eq('department', ClubDepartment.Management) // Only invites for club registration
+        .eq('permission_level', PermissionLevel.Admin) // Only invites for club registration
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching invites:', error);
+        toast({ title: "Erro", description: "Não foi possível carregar os convites.", variant: "destructive" });
+      } else {
+        setInvites(data as ClubInvite[] || []);
+      }
+    } catch (error) {
+      console.error('Unexpected error in fetchInvites:', error);
+      toast({ title: "Erro Inesperado", description: "Ocorreu um erro inesperado ao buscar convites.", variant: "destructive" });
+    } finally {
+      setLoading(false); // Garantir que loading seja sempre definido como false
     }
   };
 
