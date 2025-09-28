@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
 import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard"; // Import ClubMembership from Dashboard
+import CreatePlayerDialog from "@/components/dashboard/CreatePlayerDialog"; // Import the new dialog
 
 interface Player {
   id: string;
@@ -71,6 +72,10 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("basic");
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreatePlayerDialogOpen, setIsCreatePlayerDialogOpen] = useState(false);
+
+  // Determine the primary club ID for player management
+  const primaryClubId = clubMemberships.length > 0 ? clubMemberships[0].club_id : null;
 
   // Form states for different types of information
   const [medicalForm, setMedicalForm] = useState<PlayerMedicalInfo>({
@@ -97,13 +102,13 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   });
 
   useEffect(() => {
-    if (clubMemberships.length > 0) {
+    if (primaryClubId) {
       fetchPlayers();
     } else {
       setPlayers([]); // Clear players if no club membership
       setLoading(false);
     }
-  }, [clubMemberships]); // Depend on clubMemberships prop
+  }, [primaryClubId]); // Depend on primaryClubId
 
   useEffect(() => {
     if (selectedPlayer) {
@@ -138,19 +143,17 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   };
 
   const fetchPlayers = async () => {
-    if (clubMemberships.length === 0) {
+    if (!primaryClubId) {
       setPlayers([]);
       setLoading(false);
       return;
     }
 
     try {
-      const clubIds = clubMemberships.map(m => m.club_id);
-      
       const { data, error } = await supabase
         .from('players')
         .select('*')
-        .in('current_club_id', clubIds)
+        .eq('current_club_id', primaryClubId)
         .order('first_name', { ascending: true });
 
       if (error) throw error;
@@ -257,13 +260,13 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   const canEditTechnical = () => hasPermission('technical', 'write') || hasPermission('scouting', 'write');
 
   const handleSaveMedicalInfo = async () => {
-    if (!selectedPlayer || !canEditMedical() || clubMemberships.length === 0) return;
+    if (!selectedPlayer || !canEditMedical() || !primaryClubId) return;
 
     setIsSaving(true);
     try {
       const payload = {
         player_id: selectedPlayer.id,
-        club_id: clubMemberships[0].club_id,
+        club_id: primaryClubId,
         blood_type: medicalForm.blood_type,
         allergies: medicalForm.allergies,
         medical_history: medicalForm.medical_history,
@@ -297,13 +300,13 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   };
 
   const handleSaveFinancialInfo = async () => {
-    if (!selectedPlayer || !canEditFinancial() || clubMemberships.length === 0) return;
+    if (!selectedPlayer || !canEditFinancial() || !primaryClubId) return;
 
     setIsSaving(true);
     try {
       const payload = {
         player_id: selectedPlayer.id,
-        club_id: clubMemberships[0].club_id,
+        club_id: primaryClubId,
         salary: financialForm.salary,
         contract_value: financialForm.contract_value,
         agent_commission: financialForm.agent_commission,
@@ -336,13 +339,13 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   };
 
   const handleSaveTechnicalInfo = async () => {
-    if (!selectedPlayer || !canEditTechnical() || clubMemberships.length === 0) return;
+    if (!selectedPlayer || !canEditTechnical() || !primaryClubId) return;
 
     setIsSaving(true);
     try {
       const payload = {
         player_id: selectedPlayer.id,
-        club_id: clubMemberships[0].club_id,
+        club_id: primaryClubId,
         scout_id: user?.id, // Assuming the current user is the scout/evaluator
         overall_rating: technicalForm.overall_rating,
         technical_skills: technicalForm.technical_skills,
@@ -401,7 +404,11 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
       'Lateral': 'bg-green-100 text-green-800',
       'Volante': 'bg-purple-100 text-purple-800',
       'Meio-campo': 'bg-orange-100 text-orange-800',
-      'Atacante': 'bg-red-100 text-red-800'
+      'Atacante': 'bg-red-100 text-red-800',
+      'Ponta Direita': 'bg-red-100 text-red-800',
+      'Ponta Esquerda': 'bg-red-100 text-red-800',
+      'Lateral Direito': 'bg-green-100 text-green-800',
+      'Lateral Esquerdo': 'bg-green-100 text-green-800',
     };
     return colors[position as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -440,7 +447,7 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
     );
   }
 
-  if (clubMemberships.length === 0) {
+  if (!primaryClubId) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
@@ -467,7 +474,7 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
             Gerencie informações dos jogadores - {clubMemberships[0]?.clubs.name}
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreatePlayerDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Adicionar Jogador
         </Button>
@@ -887,6 +894,15 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {primaryClubId && (
+        <CreatePlayerDialog
+          open={isCreatePlayerDialogOpen}
+          onOpenChange={setIsCreatePlayerDialogOpen}
+          onPlayerCreated={fetchPlayers} // Refresh players after creation
+          clubId={primaryClubId}
+        />
       )}
     </div>
   );
