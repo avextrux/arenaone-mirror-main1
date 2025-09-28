@@ -85,7 +85,8 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
 
     let nextStep: OnboardingStep = "complete";
 
-    if (!currentProfile.user_type) {
+    // Modificado: Se user_type for null OU 'fan', direcionar para userTypeSetup
+    if (!currentProfile.user_type || currentProfile.user_type === 'fan') {
       nextStep = "userTypeSetup";
     } else {
       const isClubRelatedUser = ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type);
@@ -105,6 +106,7 @@ export const useOnboardingStatus = (): UseOnboardingStatusResult => {
     setOnboardingStep(nextStep);
     setLoading(false);
 
+    // Redirecionamento após o onboarding estar completo
     if (nextStep === "complete" && location.pathname === '/dashboard') {
       if (currentProfile.user_type && ['medical_staff', 'financial_staff', 'technical_staff', 'scout', 'coach', 'club'].includes(currentProfile.user_type) && currentMemberships && currentMemberships.length > 0) {
         navigate('/dashboard/club', { replace: true });

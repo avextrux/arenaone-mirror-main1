@@ -73,7 +73,6 @@ const Dashboard = () => {
   }
 
   if (onboardingStep !== "complete") {
-    console.log("Dashboard.tsx: Onboarding flow active. Step:", onboardingStep);
     return (
       <OnboardingFlow 
         onboardingStep={onboardingStep} 
@@ -97,11 +96,6 @@ const Dashboard = () => {
       </div>
     );
   }
-
-  console.log("Dashboard.tsx: Current profile object:", profile);
-  console.log("Dashboard.tsx: Current profile user_type:", profile.user_type);
-  console.log("Dashboard.tsx: Onboarding step:", onboardingStep);
-  console.log("Dashboard.tsx: Club memberships:", clubMemberships);
 
   return (
     <SidebarProvider>

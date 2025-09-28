@@ -31,6 +31,7 @@ export type UserType =
   | "medical_staff"
   | "financial_staff"
   | "technical_staff"
+  | "fan" // Adicionado 'fan' aqui
 
 // --- MAIN DATABASE TYPE ---
 export type Database = {
@@ -1455,6 +1456,7 @@ export const Constants = {
         "medical_staff",
         "financial_staff",
         "technical_staff",
+        "fan", // Adicionado 'fan' aqui
       ],
     },
   },

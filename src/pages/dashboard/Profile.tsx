@@ -98,8 +98,6 @@ const Profile = () => {
 
       if (data) {
         setProfile(data);
-        console.log("Profile.tsx: Fetched profile data:", data);
-        console.log("Profile.tsx: Profile user_type:", data.user_type);
         setFormData({
           full_name: data.full_name || "",
           bio: data.bio || "",
