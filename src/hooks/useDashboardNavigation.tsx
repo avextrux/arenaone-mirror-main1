@@ -50,7 +50,7 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
       { title: "Meu Dashboard", url: "/dashboard/coach-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
-      { title: "Planos de Treino", url: "/dashboard/coach/training-plans", icon: Activity }, // Nova página
+      { title: "Planos de Treino", url: "/dashboard/coach/training-plans", icon: Activity }, // Habilitado
       { title: "Táticas", url: "/dashboard/tactics", icon: Target, disabled: true },
       { title: "Análises de Jogo", url: "/dashboard/match-analysis", icon: LineChart, disabled: true },
     ],

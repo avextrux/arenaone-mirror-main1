@@ -28,73 +28,41 @@ const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
     if (user) {
       fetchTrainingPlans();
     }
-  }, [user]);
+  }, [user, primaryClubId]); // Adicionar primaryClubId como dependência
 
   const fetchTrainingPlans = async () => {
     setLoading(true);
     try {
-      // This assumes a 'training_plans' table exists. If not, this will need adjustment.
-      // For now, we'll use placeholder data or a simplified fetch.
-      // If 'training_plans' table doesn't exist, we'd need to create it or simulate data.
-      // For this example, let's simulate some data.
-      const simulatedData: TrainingPlan[] = [
-        {
-          id: "tp1",
-          title: "Pré-temporada: Força e Resistência",
-          description: "Foco no desenvolvimento da força muscular e resistência cardiovascular para o início da temporada.",
-          start_date: "2024-07-01",
-          end_date: "2024-07-31",
-          focus_areas: ["Força", "Resistência", "Prevenção de Lesões"],
-          assigned_players: ["player1_id", "player2_id"], // Placeholder IDs
-          coach_id: user?.id || "coach_id_placeholder",
-          created_at: "2024-06-20T10:00:00Z",
-          profiles: { 
-            id: user?.id || "profile_id_placeholder",
-            full_name: user?.user_metadata.full_name || "Meu Perfil",
-            user_type: "coach", // Default user_type
-            verified: true, // Default verified
-            email: user?.email || "coach@example.com" // Default email
-          } as Partial<AppProfile> as AppProfile, // Cast para Partial<AppProfile> e depois para AppProfile
-          players_info: [{ id: "player1_id", first_name: "João", last_name: "Silva" }, { id: "player2_id", first_name: "Pedro", last_name: "Souza" }]
-        },
-        {
-          id: "tp2",
-          title: "Tático: Posição e Transição",
-          description: "Sessões focadas em posicionamento tático e transições ofensivas/defensivas.",
-          start_date: "2024-08-05",
-          end_date: "2024-08-19",
-          focus_areas: ["Tática", "Posicionamento", "Transição"],
-          assigned_players: ["player3_id"], // Placeholder IDs
-          coach_id: user?.id || "coach_id_placeholder",
-          created_at: "2024-08-01T14:30:00Z",
-          profiles: { 
-            id: user?.id || "profile_id_placeholder",
-            full_name: user?.user_metadata.full_name || "Meu Perfil",
-            user_type: "coach", // Default user_type
-            verified: true, // Default verified
-            email: user?.email || "coach@example.com" // Default email
-          } as Partial<AppProfile> as AppProfile, // Cast para Partial<AppProfile> e depois para AppProfile
-          players_info: [{ id: "player3_id", first_name: "Carlos", last_name: "Ferreira" }]
-        }
-      ];
-      setTrainingPlans(simulatedData);
-
-      // If a 'training_plans' table existed, the fetch would look like this:
-      /*
+      // Fetch training plans created by the current user OR for the primary club they belong to
       const { data, error } = await supabase
         .from('training_plans')
         .select(`
           *,
-          profiles (full_name),
-          players (id, first_name, last_name) // Assuming a join table or array of player IDs
+          profiles (id, full_name, user_type, verified, email),
+          players_info:assigned_players (id, first_name, last_name)
         `)
-        .eq('coach_id', user.id) // Or filter by club_id if it's a club-wide plan
+        .or(`coach_id.eq.${user?.id},club_id.eq.${primaryClubId}`)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (error) throw error;
-      setTrainingPlans(data || []);
-      */
+      
+      // Map assigned_players (UUID array) to player objects
+      const plansWithPlayerDetails = await Promise.all((data || []).map(async (plan) => {
+        if (plan.assigned_players && plan.assigned_players.length > 0) {
+          const { data: playersData, error: playersError } = await supabase
+            .from('players')
+            .select('id, first_name, last_name')
+            .in('id', plan.assigned_players);
+          
+          if (playersError) console.error('Error fetching assigned players:', playersError);
+          
+          return { ...plan, players_info: playersData || [] };
+        }
+        return { ...plan, players_info: [] };
+      }));
+
+      setTrainingPlans(plansWithPlayerDetails as TrainingPlan[]);
     } catch (error) {
       console.error('Error fetching training plans:', error);
       toast({
@@ -109,8 +77,8 @@ const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
 
   const filteredPlans = trainingPlans.filter(plan =>
     plan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    plan.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    plan.focus_areas.some(area => area.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    plan.description?.toLowerCase().includes(searchTerm.toLowerCase()) || // description pode ser null
+    plan.focus_areas?.some(area => area.toLowerCase().includes(searchTerm.toLowerCase())) || // focus_areas pode ser null
     plan.players_info?.some(player => `${player.first_name} ${player.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -180,9 +148,11 @@ const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
                   <p>
                     <span className="font-medium">Período:</span> {format(new Date(plan.start_date), 'dd/MM/yyyy')} - {format(new Date(plan.end_date), 'dd/MM/yyyy')}
                   </p>
-                  <p>
-                    <span className="font-medium">Foco:</span> {plan.focus_areas.join(', ')}
-                  </p>
+                  {plan.focus_areas && plan.focus_areas.length > 0 && (
+                    <p>
+                      <span className="font-medium">Foco:</span> {plan.focus_areas.join(', ')}
+                    </p>
+                  )}
                   {plan.players_info && plan.players_info.length > 0 && (
                     <p>
                       <span className="font-medium">Jogadores:</span> {plan.players_info.map(p => `${p.first_name} ${p.last_name}`).join(', ')}

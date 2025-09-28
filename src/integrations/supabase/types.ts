@@ -1232,6 +1232,63 @@ export type Database = {
           },
         ]
       }
+      training_plans: {
+        Row: {
+          assigned_players: string[] | null
+          club_id: string | null
+          coach_id: string
+          created_at: string | null
+          description: string | null
+          end_date: string
+          focus_areas: string[] | null
+          id: string
+          start_date: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_players?: string[] | null
+          club_id?: string | null
+          coach_id: string
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          focus_areas?: string[] | null
+          id?: string
+          start_date: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_players?: string[] | null
+          club_id?: string | null
+          coach_id?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          focus_areas?: string[] | null
+          id?: string
+          start_date?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_plans_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_plans_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transfers: {
         Row: {
           contract_length: number | null
