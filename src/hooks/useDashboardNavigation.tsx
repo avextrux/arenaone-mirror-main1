@@ -15,7 +15,7 @@ interface MenuItem {
 export const useDashboardNavigation = (userType: UserType, clubMemberships: ClubMembership[]): MenuItem[] => {
   const baseItems: MenuItem[] = [
     { title: "Feed", url: "/dashboard", icon: Home },
-    { title: "Rede", url: "/dashboard/network", icon: Network, disabled: true },
+    { title: "Rede", url: "/dashboard/network", icon: Network }, // Habilitado
     { title: "Mensagens", url: "/dashboard/messages", icon: MessageSquare },
     { title: "Notificações", url: "/dashboard/notifications", icon: Bell },
   ];
@@ -36,7 +36,7 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: Club
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Meus Clientes", url: "/dashboard/clients", icon: Users, disabled: true },
       { title: "Contratos", url: "/dashboard/contracts", icon: FileText, disabled: true },
-      { title: "Mercado", url: "/dashboard/market", icon: Trophy },
+      { title: "Mercado", url: "/dashboard/market", icon: Trophy }, // Habilitado
     ],
     coach: [
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
