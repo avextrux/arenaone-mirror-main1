@@ -6,7 +6,7 @@ import { MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AppProfile, AppPost, FeedAuthorProfile } from "@/types/app"; // Importando AppProfile e AppPost
-import { Tables } from "@/integrations/supabase/types"; // Importando Tables
+import { Tables, UserType } from "@/integrations/supabase/types"; // Importando Tables e UserType
 
 interface Post extends AppPost {} // Estender de AppPost
 
@@ -146,7 +146,7 @@ const Feed = ({ profile }: FeedProps) => {
               author={post.profiles || { // Garantir que author seja FeedAuthorProfile
                 id: post.user_id,
                 full_name: "Usuário Desconhecido",
-                user_type: "fan",
+                user_type: UserType.Fan, // Corrigido: Usar UserType.Fan
                 verified: false,
                 email: "unknown@example.com" // Adicionar email para satisfazer FeedAuthorProfile
               }}

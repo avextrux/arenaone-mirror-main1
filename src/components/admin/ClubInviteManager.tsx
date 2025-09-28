@@ -211,7 +211,7 @@ const ClubInviteManager = () => {
                 <SelectContent>
                   {Constants.public.Enums.club_department.map((dept) => (
                     <SelectItem key={dept} value={dept}>
-                      {getDepartmentLabel(dept as ClubDepartment)}
+                      {getDepartmentLabel(dept)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -229,7 +229,7 @@ const ClubInviteManager = () => {
                 <SelectContent>
                   {Constants.public.Enums.permission_level.map((level) => (
                     <SelectItem key={level} value={level}>
-                      {getPermissionLabel(level as PermissionLevel)}
+                      {getPermissionLabel(level)}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Search, LayoutDashboard, DollarSign, HeartPulse, BookOpen, ClipboardList, GraduationCap, Handshake, Lightbulb, LineChart, ShieldCheck, TrendingUp, Megaphone, Newspaper, Camera, Video, MapPin, Smile, PlusCircle, Bell, Target } from "lucide-react";
+import { Chrome as Home, Users, MessageSquare, Briefcase, Calendar, ChartBar as BarChart3, Settings, User, Trophy, PenTool, Activity, FileText, Building, Stethoscope, Calculator, UserCheck, Search, LayoutDashboard, DollarSign, HeartPulse, BookOpen, ClipboardList, GraduationCap, Handshake, Lightbulb, LineChart, ShieldCheck, TrendingUp, Megaphone, Newspaper, Camera, Video, MapPin, Smile, PlusCircle, Bell, Target, Shield, KeyRound } from "lucide-react";
 import { LucideProps } from "lucide-react";
 import { ForwardRefExoticComponent, RefAttributes } from "react";
 import { UserType } from "@/integrations/supabase/types";
@@ -22,7 +22,7 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
   ];
 
   const userSpecificItems: Record<UserType, MenuItem[]> = {
-    player: [
+    [UserType.Player]: [
       { title: "Meu Dashboard", url: "/dashboard/player-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Estatísticas", url: "/dashboard/stats", icon: BarChart3, disabled: true },
@@ -30,7 +30,7 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
       { title: "Treinamento", url: "/dashboard/training", icon: Activity, disabled: true },
       { title: "Saúde", url: "/dashboard/medical", icon: HeartPulse, disabled: true },
     ],
-    club: [
+    [UserType.Club]: [
       { title: "Dashboard do Clube", url: "/dashboard/club-home", icon: LayoutDashboard },
       { title: "Gestão do Clube", url: "/dashboard/club", icon: Building },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
@@ -39,14 +39,14 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
       { title: "Relatórios", url: "/dashboard/reports", icon: FileText, disabled: true },
       { title: "Táticas", url: "/dashboard/tactics", icon: Target, disabled: true },
     ],
-    agent: [
+    [UserType.Agent]: [
       { title: "Meu Dashboard", url: "/dashboard/agent-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Meus Clientes", url: "/dashboard/clients", icon: Users, disabled: true },
       { title: "Contratos", url: "/dashboard/contracts", icon: FileText, disabled: true },
       { title: "Oportunidades", url: "/dashboard/opportunities", icon: Briefcase, disabled: true },
     ],
-    coach: [
+    [UserType.Coach]: [
       { title: "Meu Dashboard", url: "/dashboard/coach-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
@@ -54,14 +54,14 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
       { title: "Táticas", url: "/dashboard/tactics", icon: Target, disabled: true },
       { title: "Análises de Jogo", url: "/dashboard/match-analysis", icon: LineChart, disabled: true },
     ],
-    scout: [
+    [UserType.Scout]: [
       { title: "Meu Dashboard", url: "/dashboard/scout-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
       { title: "Relatórios de Scouting", url: "/dashboard/scout/reports", icon: ClipboardList }, // Nova página
       { title: "Análises de Mercado", url: "/dashboard/market-analysis", icon: LineChart, disabled: true },
     ],
-    medical_staff: [
+    [UserType.MedicalStaff]: [
       { title: "Meu Dashboard", url: "/dashboard/medical-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
@@ -69,7 +69,7 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
       { title: "Exames Médicos", url: "/dashboard/medical-exams", icon: HeartPulse, disabled: true },
       { title: "Planos de Recuperação", url: "/dashboard/recovery-plans", icon: ShieldCheck, disabled: true },
     ],
-    financial_staff: [
+    [UserType.FinancialStaff]: [
       { title: "Meu Dashboard", url: "/dashboard/financial-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
@@ -77,7 +77,7 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
       { title: "Contratos", url: "/dashboard/contracts", icon: FileText, disabled: true },
       { title: "Orçamento", url: "/dashboard/budget", icon: Calculator, disabled: true },
     ],
-    technical_staff: [
+    [UserType.TechnicalStaff]: [
       { title: "Meu Dashboard", url: "/dashboard/technical-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Jogadores", url: "/dashboard/players", icon: Users },
@@ -85,19 +85,19 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
       { title: "Relatórios Técnicos", url: "/dashboard/technical-reports", icon: FileText, disabled: true },
       { title: "Ferramentas", url: "/dashboard/tools", icon: Lightbulb, disabled: true },
     ],
-    journalist: [
+    [UserType.Journalist]: [
       { title: "Meu Dashboard", url: "/dashboard/journalist-home", icon: LayoutDashboard },
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Artigos", url: "/dashboard/articles", icon: Newspaper, disabled: true },
       { title: "Entrevistas", url: "/dashboard/interviews", icon: Megaphone, disabled: true },
       { title: "Eventos", url: "/dashboard/events", icon: Calendar, disabled: true },
     ],
-    fan: [ // Adicionado para o tipo 'fan'
+    [UserType.Fan]: [ // Adicionado para o tipo 'fan'
       { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
       { title: "Notícias", url: "/dashboard/feed", icon: Newspaper },
     ],
-    admin: [ // Adicionado para o tipo 'admin'
-      { title: "Meu Perfil", url: "/dashboard/profile", icon: User },
+    [UserType.Admin]: [ // Adicionado para o tipo 'admin'
+      { title: "Dashboard Admin", url: "/admin-dashboard", icon: LayoutDashboard },
       { title: "Gerenciar Convites", url: "/admin-dashboard/club-invites", icon: KeyRound },
       { title: "Moderação do Site", url: "/admin-dashboard/moderation", icon: Shield },
       { title: "Configurações", url: "/admin-dashboard/settings", icon: Settings, disabled: true },
@@ -107,6 +107,6 @@ export const useDashboardNavigation = (userType: UserType, clubMemberships: AppC
   // Combine base items with user-specific items
   return [
     ...baseItems,
-    ...(userSpecificItems[userType] || userSpecificItems.player) // Fallback para player se userType não for encontrado
+    ...(userSpecificItems[userType] || userSpecificItems[UserType.Player]) // Fallback para player se userType não for encontrado
   ];
 };

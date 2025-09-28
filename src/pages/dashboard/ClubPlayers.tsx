@@ -209,23 +209,23 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
     }
   };
 
-  const hasPermission = (department: ClubDepartment, minLevel: PermissionLevel = 'read') => {
+  const hasPermission = (department: ClubDepartment, minLevel: PermissionLevel = PermissionLevel.Read) => {
     const membership = clubMemberships.find(m => m.department === department);
     if (!membership) return false;
 
-    const levels: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
+    const levels: Record<PermissionLevel, number> = { [PermissionLevel.Read]: 1, [PermissionLevel.Write]: 2, [PermissionLevel.Admin]: 3 };
     const userLevel = levels[membership.permission_level] || 0;
     const requiredLevel = levels[minLevel] || 1;
 
     return userLevel >= requiredLevel;
   };
 
-  const canViewMedical = () => hasPermission('medical');
-  const canEditMedical = () => hasPermission('medical', 'write');
-  const canViewFinancial = () => hasPermission('financial');
-  const canEditFinancial = () => hasPermission('financial', 'write');
-  const canViewTechnical = () => hasPermission('technical') || hasPermission('scouting');
-  const canEditTechnical = () => hasPermission('technical', 'write') || hasPermission('scouting', 'write');
+  const canViewMedical = () => hasPermission(ClubDepartment.Medical);
+  const canEditMedical = () => hasPermission(ClubDepartment.Medical, PermissionLevel.Write);
+  const canViewFinancial = () => hasPermission(ClubDepartment.Financial);
+  const canEditFinancial = () => hasPermission(ClubDepartment.Financial, PermissionLevel.Write);
+  const canViewTechnical = () => hasPermission(ClubDepartment.Technical) || hasPermission(ClubDepartment.Scouting);
+  const canEditTechnical = () => hasPermission(ClubDepartment.Technical, PermissionLevel.Write) || hasPermission(ClubDepartment.Scouting, PermissionLevel.Write);
 
   const handleSaveMedicalInfo = async () => {
     if (!selectedPlayer || !canEditMedical() || !primaryClubId) return;
