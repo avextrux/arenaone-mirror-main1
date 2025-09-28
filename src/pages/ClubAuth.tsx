@@ -152,7 +152,14 @@ const ClubAuth = () => {
       if (!authResult.user) {
         throw new Error("Falha ao autenticar o usuário. Por favor, tente novamente.");
       }
-      managerUserId = authResult.user.id; // Use the ID directly from the authResult
+      managerUserId = authResult.user.id;
+
+      // Explicitly get session to ensure client is updated and has the latest token
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !currentSession || currentSession.user.id !== managerUserId) {
+        console.error("Session check failed:", sessionError);
+        throw new Error("Erro de sessão: Não foi possível confirmar a autenticação do usuário. Por favor, tente novamente.");
+      }
 
       // 3. Upload Club Logo
       let logoUrl: string | null = null;
