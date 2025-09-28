@@ -231,7 +231,7 @@ const Profile = () => {
         console.error('Profile.tsx: Error updating profile:', profileError);
         toast({
           title: "Erro ao atualizar perfil",
-          description: `Ocorreu um erro ao salvar suas informações: ${profileError.message}. Verifique as políticas de RLS para a tabela 'profiles'.`,
+          description: `Ocorreu um erro ao salvar suas informações: ${profileError.message}.`, // Exibir mensagem de erro do Supabase
           variant: "destructive",
         });
         return;
@@ -254,7 +254,7 @@ const Profile = () => {
           console.error('Profile.tsx: Error updating player profile:', playerError);
           toast({
             title: "Erro ao atualizar perfil de jogador",
-            description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerError.message}. Verifique as políticas de RLS para a tabela 'players'.`,
+            description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerError.message}.`, // Exibir mensagem de erro do Supabase
             variant: "destructive",
           });
           return;
