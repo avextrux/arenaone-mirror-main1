@@ -101,18 +101,9 @@ export interface AppScoutReport extends Tables<'scout_reports'> {
   profiles: AppProfile | null;
 }
 
-// Plano de Treino (definido manualmente, pois 'training_plans' não está em supabase/types.ts)
-export interface AppTrainingPlan {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  focus_areas: string[];
-  assigned_players: string[]; // Player IDs
-  coach_id: string;
-  created_at: string;
-  profiles: TrainingPlanProfile | null; // Agora usa TrainingPlanProfile
+// Plano de Treino
+export interface AppTrainingPlan extends Tables<'training_plans'> { // Estende Tables<'training_plans'>
+  profiles: TrainingPlanProfile | null; // Sobrescreve 'profiles' com o tipo mais específico
   players_info?: Array<{ id: string; first_name: string; last_name: string }>;
 }
 

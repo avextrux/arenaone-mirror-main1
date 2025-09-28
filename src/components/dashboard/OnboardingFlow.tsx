@@ -23,25 +23,27 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
   const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
     if (!user) return;
     try {
-      // Update generic profile data
+      // Prepare profile data, converting empty strings to null for optional fields
+      const updatedProfileData = {
+        user_type: userType as UserType,
+        bio: profileData.bio || null,
+        location: profileData.location || null,
+        website: profileData.website || null,
+        specialization: profileData.specialization || null,
+        experience: profileData.experience || null,
+        achievements: profileData.achievements || null
+      };
+
       const { error: profileUpdateError } = await supabase
         .from('profiles')
-        .update({
-          user_type: userType as UserType,
-          bio: profileData.bio,
-          location: profileData.location,
-          website: profileData.website,
-          specialization: profileData.specialization,
-          experience: profileData.experience,
-          achievements: profileData.achievements
-        })
+        .update(updatedProfileData)
         .eq('id', user.id);
 
       if (profileUpdateError) {
         console.error('Error updating profile:', profileUpdateError);
         toast({
           title: "Erro ao atualizar perfil",
-          description: "Ocorreu um erro ao salvar suas informações.",
+          description: `Ocorreu um erro ao salvar suas informações: ${profileUpdateError.message || JSON.stringify(profileUpdateError)}.`,
           variant: "destructive",
         });
         return;
@@ -60,25 +62,28 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
           throw fetchPlayerError;
         }
 
+        // Prepare player data, converting empty strings to null for optional fields
+        const playerPayload = {
+          profile_id: user.id,
+          first_name: user.user_metadata.full_name?.split(' ')[0] || '', // Assuming full_name is in user_metadata
+          last_name: user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
+          date_of_birth: profileData.date_of_birth || null,
+          nationality: profileData.nationality || null,
+          position: profileData.position || null,
+          preferred_foot: profileData.preferred_foot || null,
+          // Other player fields can be null initially or set to defaults
+        };
+
         if (!existingPlayer) {
           const { error: playerInsertError } = await supabase
             .from('players')
-            .insert([{
-              profile_id: user.id,
-              first_name: user.user_metadata.full_name.split(' ')[0] || '', // Assuming full_name is in user_metadata
-              last_name: user.user_metadata.full_name.split(' ').slice(1).join(' ') || '',
-              date_of_birth: profileData.date_of_birth,
-              nationality: profileData.nationality,
-              position: profileData.position,
-              preferred_foot: profileData.preferred_foot || null,
-              // Other player fields can be null initially or set to defaults
-            }]);
+            .insert([playerPayload]);
 
           if (playerInsertError) {
             console.error('Error creating player entry:', playerInsertError);
             toast({
               title: "Erro ao criar perfil de jogador",
-              description: "Ocorreu um erro ao salvar suas informações de jogador.",
+              description: `Ocorreu um erro ao salvar suas informações de jogador: ${playerInsertError.message || JSON.stringify(playerInsertError)}.`,
               variant: "destructive",
             });
             return;
@@ -87,19 +92,14 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
           // If player entry already exists, update it
           const { error: playerUpdateError } = await supabase
             .from('players')
-            .update({
-              date_of_birth: profileData.date_of_birth,
-              nationality: profileData.nationality,
-              position: profileData.position,
-              preferred_foot: profileData.preferred_foot || null,
-            })
+            .update(playerPayload)
             .eq('profile_id', user.id);
 
           if (playerUpdateError) {
             console.error('Error updating player entry:', playerUpdateError);
             toast({
               title: "Erro ao atualizar perfil de jogador",
-              description: "Ocorreu um erro ao atualizar suas informações de jogador.",
+              description: `Ocorreu um erro ao atualizar suas informações de jogador: ${playerUpdateError.message || JSON.stringify(playerUpdateError)}.`,
               variant: "destructive",
             });
             return;
@@ -114,6 +114,11 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
       refetchStatus();
     } catch (error) {
       console.error('Error in handleUserTypeSetup:', error);
+      toast({
+        title: "Erro inesperado",
+        description: `Ocorreu um erro inesperado durante a configuração do perfil: ${error instanceof Error ? error.message : JSON.stringify(error)}.`,
+        variant: "destructive",
+      });
     }
   };
 

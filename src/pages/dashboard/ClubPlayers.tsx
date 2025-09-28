@@ -13,54 +13,18 @@ import { Search, Plus, User, MapPin, Calendar, Stethoscope, Calculator, FileText
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { ClubDepartment, PermissionLevel } from "@/integrations/supabase/types"; // Import types
-import { ClubMembership as DashboardClubMembership } from "@/pages/Dashboard"; // Import ClubMembership from Dashboard
+import { ClubDepartment, PermissionLevel, TablesInsert, Json } from "@/integrations/supabase/types"; // Import types, including Json and TablesInsert
+import { AppClubMembership, AppPlayer, AppPlayerMedicalInfo, AppPlayerFinancialInfo, AppPlayerTechnicalReport } from "@/types/app"; // Importar tipos centralizados
 import CreatePlayerDialog from "@/components/dashboard/CreatePlayerDialog"; // Import the new dialog
 
-interface Player {
-  id: string;
-  first_name: string;
-  last_name: string;
-  nationality: string;
-  position: string;
-  date_of_birth: string;
-  height: number | null;
-  weight: number | null;
-  market_value: number | null;
-  current_club_id: string | null;
-  contract_start: string | null;
-  contract_end: string | null;
-  preferred_foot: string | null;
-}
+interface Player extends AppPlayer {} // Usar AppPlayer
 
-interface PlayerMedicalInfo {
-  id?: string;
-  blood_type: string | null;
-  allergies: string[] | null;
-  medical_history: string | null;
-  last_medical_exam: string | null;
-  fitness_level: number | null;
-}
-
-interface PlayerFinancialInfo {
-  id?: string;
-  salary: number | null;
-  contract_value: number | null;
-  agent_commission: number | null;
-  bonuses: any | null; // JSON type
-}
-
-interface PlayerTechnicalReport {
-  id?: string;
-  overall_rating: number | null;
-  technical_skills: any | null; // JSON type
-  strengths: string[] | null;
-  weaknesses: string[] | null;
-  detailed_notes: string | null;
-}
+interface PlayerMedicalInfo extends AppPlayerMedicalInfo {} // Usar AppPlayerMedicalInfo
+interface PlayerFinancialInfo extends AppPlayerFinancialInfo {} // Usar AppPlayerFinancialInfo
+interface PlayerTechnicalReport extends AppPlayerTechnicalReport {} // Usar AppPlayerTechnicalReport
 
 interface ClubPlayersProps {
-  clubMemberships: DashboardClubMembership[]; // Use the imported type
+  clubMemberships: AppClubMembership[]; // Usar AppClubMembership
 }
 
 const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
@@ -78,7 +42,7 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
   const primaryClubId = clubMemberships.length > 0 ? clubMemberships[0].club_id : null;
 
   // Form states for different types of information
-  const [medicalForm, setMedicalForm] = useState<PlayerMedicalInfo>({
+  const [medicalForm, setMedicalForm] = useState<Partial<AppPlayerMedicalInfo>>({ // Usar Partial<AppPlayerMedicalInfo>
     blood_type: "",
     allergies: [],
     medical_history: "",
@@ -86,14 +50,14 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
     fitness_level: 5
   });
 
-  const [financialForm, setFinancialForm] = useState<PlayerFinancialInfo>({
+  const [financialForm, setFinancialForm] = useState<Partial<AppPlayerFinancialInfo>>({ // Usar Partial<AppPlayerFinancialInfo>
     salary: null,
     contract_value: null,
     agent_commission: null,
     bonuses: null
   });
 
-  const [technicalForm, setTechnicalForm] = useState<PlayerTechnicalReport>({
+  const [technicalForm, setTechnicalForm] = useState<Partial<AppPlayerTechnicalReport>>({ // Usar Partial<AppPlayerTechnicalReport>
     overall_rating: 5,
     technical_skills: null,
     strengths: [],
@@ -157,7 +121,7 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
         .order('first_name', { ascending: true });
 
       if (error) throw error;
-      setPlayers(data || []);
+      setPlayers(data as Player[] || []); // Cast para Player[]
     } catch (error) {
       console.error('Error fetching players:', error);
       toast({
@@ -209,7 +173,9 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
           salary: financialData.salary,
           contract_value: financialData.contract_value,
           agent_commission: financialData.agent_commission,
-          bonuses: financialData.bonuses
+          bonuses: (financialData.bonuses && typeof financialData.bonuses === 'object' && 'description' in financialData.bonuses)
+            ? { description: (financialData.bonuses as { description?: string }).description || '' }
+            : null
         });
       } else {
         setFinancialForm(prev => ({ ...prev, id: undefined })); // Reset ID if no data
@@ -230,7 +196,9 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
         setTechnicalForm({
           id: technicalData.id,
           overall_rating: technicalData.overall_rating || 5,
-          technical_skills: technicalData.technical_skills,
+          technical_skills: (technicalData.technical_skills && typeof technicalData.technical_skills === 'object' && 'description' in technicalData.technical_skills)
+            ? { description: (technicalData.technical_skills as { description?: string }).description || '' }
+            : null,
           strengths: technicalData.strengths || [],
           weaknesses: technicalData.weaknesses || [],
           detailed_notes: technicalData.detailed_notes || ""
@@ -343,25 +311,24 @@ const ClubPlayers = ({ clubMemberships }: ClubPlayersProps) => {
 
     setIsSaving(true);
     try {
-      const payload = {
+      const payload: TablesInsert<'player_technical_reports'> = { // Explicitly type payload
         player_id: selectedPlayer.id,
         club_id: primaryClubId,
-        scout_id: user?.id, // Assuming the current user is the scout/evaluator
+        scout_id: user?.id || '', // Assuming user.id is always available here, or provide a fallback
         overall_rating: technicalForm.overall_rating,
-        technical_skills: technicalForm.technical_skills,
+        technical_skills: technicalForm.technical_skills as Json | null, // Explicitly cast to Json | null
         strengths: technicalForm.strengths,
         weaknesses: technicalForm.weaknesses,
         detailed_notes: technicalForm.detailed_notes,
         recommendation: 'monitor', // Default recommendation
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        // created_at and updated_at are handled by database defaults/triggers
       };
 
       // For technical reports, we usually insert a new one rather than upserting an existing one,
       // as each report is a new evaluation.
       const { error } = await supabase
         .from('player_technical_reports')
-        .insert([payload]);
+        .insert([payload]); // Pass as an array
 
       if (error) throw error;
 
