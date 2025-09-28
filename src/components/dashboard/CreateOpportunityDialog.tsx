@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { AppOpportunity } from "@/types/app"; // Importar AppOpportunity
+import { TablesInsert } from "@/integrations/supabase/types"; // Importar TablesInsert
 
 interface CreateOpportunityDialogProps {
   onOpportunityCreated: () => void;
@@ -40,14 +41,32 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
   const handleCreateOpportunity = async () => {
     if (!user) return;
 
+    // Basic validation for required fields in the database
+    if (!opportunityForm.title || !opportunityForm.description || !opportunityForm.opportunity_type) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha o Título, Descrição e Tipo da oportunidade.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      // Create a payload that strictly matches the insert type, omitting 'profiles'
+      const payload: TablesInsert<'opportunities'> = {
+        title: opportunityForm.title,
+        description: opportunityForm.description,
+        opportunity_type: opportunityForm.opportunity_type,
+        location: opportunityForm.location || null,
+        salary_range: opportunityForm.salary_range || null,
+        deadline: opportunityForm.deadline || null,
+        poster_id: user.id,
+      };
+
       const { error } = await supabase
         .from('opportunities')
-        .insert([{
-          ...opportunityForm,
-          poster_id: user.id
-        }]);
+        .insert([payload]);
 
       if (error) {
         console.error('Error creating opportunity:', error);
@@ -104,13 +123,13 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
               <Input
                 id="title"
                 placeholder="Ex: Meio-campo para clube europeu"
-                value={opportunityForm.title}
+                value={opportunityForm.title || ""}
                 onChange={(e) => setOpportunityForm(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="opportunity_type">Tipo</Label>
-              <Select value={opportunityForm.opportunity_type} onValueChange={(value) => setOpportunityForm(prev => ({ ...prev, opportunity_type: value }))}>
+              <Select value={opportunityForm.opportunity_type || ""} onValueChange={(value) => setOpportunityForm(prev => ({ ...prev, opportunity_type: value }))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
@@ -130,7 +149,7 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
             <Textarea
               id="description"
               placeholder="Descreva os detalhes da oportunidade..."
-              value={opportunityForm.description}
+              value={opportunityForm.description || ""}
               onChange={(e) => setOpportunityForm(prev => ({ ...prev, description: e.target.value }))}
               className="min-h-[100px]"
             />
@@ -142,7 +161,7 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
               <Input
                 id="location"
                 placeholder="Ex: Madrid, Espanha"
-                value={opportunityForm.location}
+                value={opportunityForm.location || ""}
                 onChange={(e) => setOpportunityForm(prev => ({ ...prev, location: e.target.value }))}
               />
             </div>
@@ -151,7 +170,7 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
               <Input
                 id="salary_range"
                 placeholder="Ex: €50k - €100k"
-                value={opportunityForm.salary_range}
+                value={opportunityForm.salary_range || ""}
                 onChange={(e) => setOpportunityForm(prev => ({ ...prev, salary_range: e.target.value }))}
               />
             </div>
@@ -160,7 +179,7 @@ const CreateOpportunityDialog = ({ onOpportunityCreated }: CreateOpportunityDial
               <Input
                 id="deadline"
                 type="date"
-                value={opportunityForm.deadline}
+                value={opportunityForm.deadline || ""}
                 onChange={(e) => setOpportunityForm(prev => ({ ...prev, deadline: e.target.value }))}
               />
             </div>

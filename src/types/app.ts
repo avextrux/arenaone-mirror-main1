@@ -5,7 +5,18 @@ export interface AppProfile extends Tables<'profiles'> {
   full_name: NonNullable<Tables<'profiles'>['full_name']>;
   user_type: NonNullable<Tables<'profiles'>['user_type']>;
   verified: NonNullable<Tables<'profiles'>['verified']>;
+  email: NonNullable<Tables<'profiles'>['email']>; // Adicionado para garantir que email não seja nulo
   // Outros campos podem ser adicionados aqui se forem sempre esperados como não-nulos na UI
+}
+
+// Perfil de autor para o feed, um subconjunto de AppProfile
+export interface FeedAuthorProfile {
+  id: string;
+  full_name: NonNullable<Tables<'profiles'>['full_name']>;
+  avatar_url?: Tables<'profiles'>['avatar_url'];
+  user_type: NonNullable<Tables<'profiles'>['user_type']>;
+  verified: NonNullable<Tables<'profiles'>['verified']>;
+  email: NonNullable<Tables<'profiles'>['email']>;
 }
 
 // Membro do clube com informações do clube aninhadas
@@ -63,8 +74,22 @@ export interface AppScoutReport extends Tables<'scout_reports'> {
   profiles: AppProfile | null;
 }
 
-// Plano de Treino (se a tabela existir, caso contrário, é um tipo customizado)
-export interface AppTrainingPlan extends Tables<'training_plans'> { // Assumindo que 'training_plans' existe
+// Plano de Treino (definido manualmente, pois 'training_plans' não está em supabase/types.ts)
+export interface AppTrainingPlan {
+  id: string;
+  title: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  focus_areas: string[];
+  assigned_players: string[]; // Player IDs
+  coach_id: string;
+  created_at: string;
   profiles: AppProfile | null;
   players_info?: Array<{ id: string; first_name: string; last_name: string }>;
+}
+
+// Post estendido com o perfil do autor
+export interface AppPost extends Tables<'posts'> {
+  profiles: FeedAuthorProfile | null;
 }

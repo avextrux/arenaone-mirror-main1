@@ -179,10 +179,18 @@ const CreateClubDialog = ({ open, onOpenChange, onClubCreated }: CreateClubDialo
         onClubCreated(newClub, { // Create a dummy membership for state update
           id: uuidv4(), // Generate a temporary ID
           club_id: newClub.id,
-          user_id: user.id, // Adicionado user_id aqui
+          user_id: user.id,
           department: 'management',
           permission_level: 'admin',
           status: 'accepted',
+          accepted_at: new Date().toISOString(), // Adicionado
+          created_at: new Date().toISOString(), // Adicionado
+          invited_at: new Date().toISOString(), // Adicionado
+          invited_by: user.id, // Adicionado
+          invite_code: null, // Adicionado
+          expires_at: null, // Adicionado
+          used: true, // Adicionado
+          updated_at: new Date().toISOString(), // Adicionado
           clubs: { name: newClub.name, logo_url: newClub.logo_url }
         });
       }

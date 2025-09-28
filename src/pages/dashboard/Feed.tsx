@@ -5,11 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { AppProfile } from "@/types/app"; // Importando AppProfile
+import { AppProfile, AppPost, FeedAuthorProfile } from "@/types/app"; // Importando AppProfile e AppPost
+import { Tables } from "@/integrations/supabase/types"; // Importando Tables
 
-interface Post extends Tables<'posts'> { // Estender de Tables<'posts'>
-  profiles?: AppProfile; // Usar AppProfile para o perfil do autor
-}
+interface Post extends AppPost {} // Estender de AppPost
 
 interface FeedProps {
   profile: AppProfile | null; // Usar AppProfile
@@ -35,10 +34,12 @@ const Feed = ({ profile }: FeedProps) => {
       .select(`
         *,
         profiles (
+          id,
           full_name,
           avatar_url,
           user_type,
-          verified
+          verified,
+          email
         )
       `)
       .order('created_at', { ascending: false })
@@ -100,7 +101,7 @@ const Feed = ({ profile }: FeedProps) => {
 
       setPosts(prev => prev.map(post => 
         post.id === postId 
-          ? { ...post, likes_count: Math.max(0, (post.likes_count || 0) - 1) } // Adicionado null check
+          ? { ...post, likes_count: Math.max(0, (post.likes_count || 0) - 1) }
           : post
       ));
     } else {
@@ -115,7 +116,7 @@ const Feed = ({ profile }: FeedProps) => {
 
       setPosts(prev => prev.map(post => 
         post.id === postId 
-          ? { ...post, likes_count: (post.likes_count || 0) + 1 } // Adicionado null check
+          ? { ...post, likes_count: (post.likes_count || 0) + 1 }
           : post
       ));
     }
@@ -132,7 +133,11 @@ const Feed = ({ profile }: FeedProps) => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <CreatePost 
-        user={profile} // Passar o objeto profile diretamente
+        user={{
+          name: profile.full_name,
+          avatar: profile.avatar_url || undefined,
+          userType: profile.user_type,
+        }}
         onPost={handleCreatePost}
       />
 
@@ -142,19 +147,19 @@ const Feed = ({ profile }: FeedProps) => {
             <FeedPost
               key={post.id}
               id={post.id}
-              author={post.profiles || { // Garantir que author seja AppProfile
+              author={post.profiles || { // Garantir que author seja FeedAuthorProfile
                 id: post.user_id,
                 full_name: "Usuário Desconhecido",
                 user_type: "fan",
                 verified: false,
-                email: "" // Adicionar email para satisfazer AppProfile
+                email: "unknown@example.com" // Adicionar email para satisfazer FeedAuthorProfile
               }}
               content={post.content}
-              postType={post.post_type || "post"} // Fallback para post_type
-              likes={post.likes_count || 0} // Fallback para likes_count
-              comments={post.comments_count || 0} // Fallback para comments_count
-              shares={post.shares_count || 0} // Fallback para shares_count
-              timestamp={post.created_at || new Date().toISOString()} // Fallback para created_at
+              postType={post.post_type || "post"}
+              likes={post.likes_count || 0}
+              comments={post.comments_count || 0}
+              shares={post.shares_count || 0}
+              timestamp={post.created_at || new Date().toISOString()}
               isLiked={likedPosts.has(post.id)}
               onLike={() => handleLikePost(post.id)}
               onComment={() => {}}

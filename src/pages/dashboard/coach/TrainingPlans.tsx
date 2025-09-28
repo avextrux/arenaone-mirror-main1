@@ -7,30 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
-import { ClubMembership } from "@/pages/Dashboard";
+import { AppClubMembership, AppTrainingPlan } from "@/types/app"; // Importar AppClubMembership e AppTrainingPlan
 
-interface TrainingPlan {
-  id: string;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  focus_areas: string[];
-  assigned_players: string[]; // Player IDs
-  coach_id: string;
-  created_at: string;
-  profiles: {
-    full_name: string;
-  } | null;
-  players_info?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-  }[];
-}
+interface TrainingPlan extends AppTrainingPlan {} // Usar AppTrainingPlan
 
 interface TrainingPlansProps {
-  clubMemberships: ClubMembership[];
+  clubMemberships: AppClubMembership[];
 }
 
 const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
@@ -66,7 +48,13 @@ const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
           assigned_players: ["player1_id", "player2_id"], // Placeholder IDs
           coach_id: user?.id || "coach_id_placeholder",
           created_at: "2024-06-20T10:00:00Z",
-          profiles: { full_name: user?.user_metadata.full_name || "Meu Perfil" },
+          profiles: { 
+            id: user?.id || "profile_id_placeholder",
+            full_name: user?.user_metadata.full_name || "Meu Perfil",
+            user_type: "coach", // Default user_type
+            verified: true, // Default verified
+            email: user?.email || "coach@example.com" // Default email
+          },
           players_info: [{ id: "player1_id", first_name: "João", last_name: "Silva" }, { id: "player2_id", first_name: "Pedro", last_name: "Souza" }]
         },
         {
@@ -79,7 +67,13 @@ const TrainingPlans = ({ clubMemberships }: TrainingPlansProps) => {
           assigned_players: ["player3_id"], // Placeholder IDs
           coach_id: user?.id || "coach_id_placeholder",
           created_at: "2024-08-01T14:30:00Z",
-          profiles: { full_name: user?.user_metadata.full_name || "Meu Perfil" },
+          profiles: { 
+            id: user?.id || "profile_id_placeholder",
+            full_name: user?.user_metadata.full_name || "Meu Perfil",
+            user_type: "coach", // Default user_type
+            verified: true, // Default verified
+            email: user?.email || "coach@example.com" // Default email
+          },
           players_info: [{ id: "player3_id", first_name: "Carlos", last_name: "Ferreira" }]
         }
       ];
