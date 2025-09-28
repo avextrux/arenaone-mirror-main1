@@ -20,6 +20,7 @@ import CoachDashboardHome from "@/pages/dashboard/CoachDashboardHome";
 import ScoutDashboardHome from "@/pages/dashboard/ScoutDashboardHome";
 import MedicalStaffDashboardHome from "@/pages/dashboard/MedicalStaffDashboardHome";
 import FinancialStaffDashboardHome from "@/pages/dashboard/FinancialStaffDashboardHome";
+import TechnicalStaffDashboardHome from "@/pages/dashboard/TechnicalStaffDashboardHome"; // Importar TechnicalStaffDashboardHome
 import JournalistDashboardHome from "@/pages/dashboard/JournalistDashboardHome";
 
 // Importar as novas páginas especializadas

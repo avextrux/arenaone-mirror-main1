@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { ClubMembership } from "@/pages/Dashboard";
+import { Badge } from "@/components/ui/badge"; // Importando Badge
 
 interface PlayerInjury {
   id: string;
