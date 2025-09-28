@@ -60,7 +60,10 @@ export interface AppNotification extends Tables<'notifications'> {}
 export interface AppTransfer extends Tables<'transfers'> {}
 
 // Informações Médicas do Jogador
-export interface AppPlayerMedicalInfo extends Tables<'player_medical_info'> {}
+export interface AppPlayerMedicalInfo extends Tables<'player_medical_info'> {
+  // Refinando o tipo de 'injuries_history' se for um array de objetos com estrutura conhecida
+  // Por exemplo: injuries_history?: Array<{ type: string; body_part: string; severity: string; diagnosis_date: string; recovery_date_estimate?: string; status: string; notes?: string }>;
+}
 
 // Informações Financeiras do Jogador
 export interface AppPlayerFinancialInfo extends Omit<Tables<'player_financial_info'>, 'bonuses'> {
@@ -97,3 +100,6 @@ export interface AppTrainingPlan {
 export interface AppPost extends Tables<'posts'> {
   profiles: FeedAuthorProfile | null;
 }
+
+// Estatísticas do Jogador
+export interface AppPlayerStats extends Tables<'player_stats'> {}
