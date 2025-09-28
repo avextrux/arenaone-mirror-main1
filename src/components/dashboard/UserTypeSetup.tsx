@@ -7,8 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User } from "lucide-react"; // Removido Calendar, Flag, Footprints pois são específicos do player e tratados no OnboardingFlow
-import { userTypeOptions, getSpecializationPlaceholder } from "@/lib/userTypeUtils";
+import { User, Calendar, Flag, Footprints } from "lucide-react"; // Mantendo apenas os ícones específicos do player
+import { userTypeOptions, getSpecializationPlaceholder } from "@/lib/userTypeUtils"; // Importando do novo utilitário
 
 interface UserTypeSetupProps {
   onComplete: (userType: string, profileData: any) => Promise<void>;
@@ -24,8 +24,7 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
     specialization: "",
     experience: "",
     achievements: "",
-    // Player specific fields - estes campos são coletados aqui, mas a lógica de persistência
-    // para a tabela 'players' é tratada no OnboardingFlow.tsx
+    // Player specific fields
     date_of_birth: "",
     nationality: "",
     position: "",
@@ -209,7 +208,7 @@ const UserTypeSetup = ({ onComplete }: UserTypeSetupProps) => {
                 id="location"
                 placeholder="Ex: São Paulo, Brasil"
                 value={profileData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
+                onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
               />
             </div>
 

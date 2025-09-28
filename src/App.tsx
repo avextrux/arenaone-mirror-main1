@@ -8,15 +8,14 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import AdminProtectedRoute from "@/components/AdminProtectedRoute";
+import AdminProtectedRoute from "@/components/AdminProtectedRoute"; // Importar AdminProtectedRoute
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import EmailConfirmationSuccess from "./pages/EmailConfirmationSuccess";
-import RegistrationSuccess from "./pages/RegistrationSuccess";
 import ClubAuth from "./pages/ClubAuth";
-import AdminAuth from "./pages/AdminAuth";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminAuth from "./pages/AdminAuth"; // Importar AdminAuth
+import AdminDashboard from "./pages/AdminDashboard"; // Importar AdminDashboard
 
 const queryClient = new QueryClient();
 
@@ -31,11 +30,10 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/club-auth" element={<ClubAuth />} />
-            <Route path="/admin-auth" element={<AdminAuth />} />
+            <Route path="/admin-auth" element={<AdminAuth />} /> {/* Nova rota para login de admin */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/email-confirmation-success" element={<EmailConfirmationSuccess />} />
-            <Route path="/registration-success" element={<RegistrationSuccess />} />
             
             <Route 
               path="/dashboard/*" 
@@ -48,12 +46,13 @@ const App = () => (
             <Route 
               path="/admin-dashboard/*" 
               element={
-                <AdminProtectedRoute>
+                <AdminProtectedRoute> {/* Proteger o dashboard de admin */}
                   <AdminDashboard />
                 </AdminProtectedRoute>
               } 
             />
             <Route path="/404" element={<NotFound />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<Navigate to="/404" replace />} />
           </Routes>
         </BrowserRouter>

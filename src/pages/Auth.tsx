@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles, Building } from "lucide-react";
-// Removido UserType e userTypeOptions, pois não são usados diretamente aqui.
+import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles, Building } from "lucide-react"; // Adicionado Building
+import { UserType, Constants } from "@/integrations/supabase/types";
+import { userTypeOptions } from "@/lib/userTypeUtils"; // Importando do novo utilitário
 
 // Esquema de validação para o formulário de REGISTRO
 const signUpSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").max(100, "Senha muito longa"),
+  // fullName e userType removidos do esquema de validação de registro
 });
 
 // Esquema de validação para o formulário de LOGIN
@@ -28,6 +31,7 @@ const Auth = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    // fullName e userType removidos do estado inicial
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -35,47 +39,36 @@ const Auth = () => {
 
   const { signUp, signIn, resendConfirmation, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
-    // Se o usuário já estiver logado e tentar acessar /auth, redirecionar para o dashboard
-    if (user && location.pathname === '/auth') {
-      console.log("Auth.tsx: Usuário já logado, redirecionando para /dashboard.");
-      navigate("/dashboard", { replace: true });
+    if (user) {
+      navigate("/dashboard");
     }
-  }, [user, navigate, location.pathname]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
     setLoading(true);
-    console.log(`Auth.tsx: Tentando ${isSignUp ? 'registrar' : 'logar'}...`);
 
     try {
       if (isSignUp) {
+        // Validação para o formulário de REGISTRO
         signUpSchema.parse({ 
           email: formData.email.trim(), 
           password: formData.password, 
         });
-        const result = await signUp(formData.email.trim(), formData.password);
-        if (!result.error) {
-          console.log("Auth.tsx: Registro bem-sucedido, navegando para /registration-success.");
-          navigate("/registration-success");
-        } else {
-          console.error("Auth.tsx: Erro no registro:", result.error);
-        }
+        // Chamada signUp sem fullName e userType
+        await signUp(formData.email.trim(), formData.password);
       } else {
+        // Validação para o formulário de LOGIN
         signInSchema.parse({ 
           email: formData.email.trim(), 
           password: formData.password 
         });
         const result = await signIn(formData.email.trim(), formData.password);
         
-        if (result.user) {
-          console.log("Auth.tsx: Login bem-sucedido, navegando para /dashboard.");
-          navigate("/dashboard"); // Redireciona diretamente para o dashboard
-        } else if (result.error) {
-          console.error("Auth.tsx: Erro no login:", result.error);
+        if (result.error) {
           if (result.error.message.includes("Email not confirmed") || 
               result.error.message.includes("email_not_confirmed")) {
             setShowResendButton(true);
@@ -92,13 +85,9 @@ const Auth = () => {
           }
         });
         setErrors(fieldErrors);
-        console.error("Auth.tsx: Erro de validação Zod:", fieldErrors);
-      } else {
-        console.error("Auth.tsx: Erro inesperado no handleSubmit:", error);
       }
     } finally {
       setLoading(false);
-      console.log(`Auth.tsx: Submit finalizado para ${isSignUp ? 'registro' : 'login'}.`);
     }
   };
 
@@ -111,7 +100,6 @@ const Auth = () => {
 
   const handleResendConfirmation = async () => {
     setLoading(true);
-    console.log("Auth.tsx: Reenviando email de confirmação...");
     await resendConfirmation(formData.email.trim());
     setLoading(false);
   };
@@ -263,6 +251,7 @@ const Auth = () => {
 
               <TabsContent value="signup" className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Nome Completo e Tipo de Usuário removidos do formulário de registro */}
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                     <div className="relative">
