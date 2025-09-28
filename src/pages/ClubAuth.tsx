@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
-import { useOnboardingStatus } from "@/hooks/useOnboardingStatus"; // Importar useOnboardingStatus
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, Building, Flag, Calendar, Globe, Upload, FileText, Image as ImageIcon, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +42,7 @@ const ClubAuth = () => {
   const [loading, setLoading] = useState(false);
 
   const { signUp, signIn, user } = useAuth();
-  const { refetchStatus } = useOnboardingStatus(); // Usar refetchStatus
+  const { refetchStatus } = useOnboardingStatus();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -82,7 +82,7 @@ const ClubAuth = () => {
     const filePath = `club_logos/${userId}/${fileName}`;
 
     const { data, error } = await supabase.storage
-      .from('club-logos')
+      .from('club-logos') // Certifique-se de que este bucket existe e tem RLS configurado
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
@@ -180,7 +180,7 @@ const ClubAuth = () => {
 
       // 3. Upload da Logo do Clube
       let logoUrl: string | null = null;
-      if (logoFile) {
+      if (logoFile) { // Adicionado check para logoFile
         logoUrl = await uploadLogo(logoFile, managerUserId);
         console.log("ClubAuth: Logo carregada, URL:", logoUrl);
       }

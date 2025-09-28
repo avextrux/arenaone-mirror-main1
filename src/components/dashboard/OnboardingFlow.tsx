@@ -140,6 +140,7 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
       return <UserTypeSetup onComplete={handleUserTypeSetupComplete} />;
     case "clubInvite":
       console.log("OnboardingFlow: Renderizando ClubInviteSetup. Profile user_type:", profile?.user_type);
+      // Garantir que profile.user_type seja passado, com fallback para UserType.Fan
       return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || UserType.Fan} />;
     case "complete":
       console.log("OnboardingFlow: Onboarding completo, navegando para /dashboard.");

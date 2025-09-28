@@ -1386,6 +1386,51 @@ export type Database = {
       [_ in never]: never
     }
   }
+  storage: {
+    Buckets: {
+      avatars: {
+        // [custom type for public.avatars]
+        File: {
+          name: string
+          id: string
+          updated_at: string
+          created_at: string
+          last_accessed_at: string
+          metadata: {
+            eTag: string
+            size: number
+            mimetype: string
+            cacheControl: string
+            lastModified: string
+            contentLength: number
+            uploadedAt: string
+            path: string
+          }
+          path_tokens: string[]
+        }
+      }
+      "club-logos": { // NOVO: Adicionado bucket para logos de clubes
+        File: {
+          name: string
+          id: string
+          updated_at: string
+          created_at: string
+          last_accessed_at: string
+          metadata: {
+            eTag: string
+            size: number
+            mimetype: string
+            cacheControl: string
+            lastModified: string
+            contentLength: number
+            uploadedAt: string
+            path: string
+          }
+          path_tokens: string[]
+        }
+      }
+    }
+  }
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">

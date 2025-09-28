@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UserType } from "@/integrations/supabase/types"; // Importar UserType
+import { UserType } from "@/integrations/supabase/types";
 
 const adminSignInSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email muito longo"),
@@ -111,7 +111,6 @@ const AdminAuth = () => {
       }
     } finally {
       setLoading(false);
-      console.log("AdminAuth.tsx: Submit finalizado.");
     }
   };
 

@@ -5,12 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles, Building } from "lucide-react";
-import { UserType, Constants } from "@/integrations/supabase/types";
-import { userTypeOptions } from "@/lib/userTypeUtils";
+// Removido UserType e userTypeOptions, pois não são usados diretamente aqui.
 
 // Esquema de validação para o formulário de REGISTRO
 const signUpSchema = z.object({
