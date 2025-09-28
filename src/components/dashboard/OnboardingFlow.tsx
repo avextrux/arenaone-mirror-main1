@@ -4,14 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import UserTypeSetup from "@/components/dashboard/UserTypeSetup";
 import ClubInviteSetup from "@/components/dashboard/ClubInviteSetup";
-// import CreateClubDialog from "@/components/dashboard/CreateClubDialog"; // Removido
 import { UserType } from "@/integrations/supabase/types";
-import { AppProfile, AppClubMembership } from "@/types/app"; // Importar os tipos centralizados
+import { AppProfile, AppClubMembership } from "@/types/app";
 
 interface OnboardingFlowProps {
   onboardingStep: "userTypeSetup" | "clubInvite" | "complete";
-  profile: AppProfile | null; // Usar AppProfile
-  clubMemberships: AppClubMembership[]; // Usar AppClubMembership
+  profile: AppProfile | null;
+  clubMemberships: AppClubMembership[];
   refetchStatus: () => Promise<void>;
 }
 
@@ -23,7 +22,6 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
   const handleUserTypeSetupComplete = async (userType: string, profileData: any) => {
     if (!user) return;
     try {
-      // Prepare profile data, converting empty strings to null for optional fields
       const updatedProfileData = {
         user_type: userType as UserType,
         bio: profileData.bio || null,
@@ -49,7 +47,6 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
         return;
       }
 
-      // If user is a player, also create an entry in the players table
       if (userType === 'player') {
         const { data: existingPlayer, error: fetchPlayerError } = await supabase
           .from('players')
@@ -57,21 +54,19 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
           .eq('profile_id', user.id)
           .single();
 
-        if (fetchPlayerError && fetchPlayerError.code !== 'PGRST116') { // PGRST116 means no rows found
+        if (fetchPlayerError && fetchPlayerError.code !== 'PGRST116') {
           console.error('Error checking existing player entry:', fetchPlayerError);
           throw fetchPlayerError;
         }
 
-        // Prepare player data, converting empty strings to null for optional fields
         const playerPayload = {
           profile_id: user.id,
-          first_name: user.user_metadata.full_name?.split(' ')[0] || '', // Assuming full_name is in user_metadata
+          first_name: user.user_metadata.full_name?.split(' ')[0] || '',
           last_name: user.user_metadata.full_name?.split(' ').slice(1).join(' ') || '',
           date_of_birth: profileData.date_of_birth || null,
           nationality: profileData.nationality || null,
           position: profileData.position || null,
           preferred_foot: profileData.preferred_foot || null,
-          // Other player fields can be null initially or set to defaults
         };
 
         if (!existingPlayer) {
@@ -89,7 +84,6 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
             return;
           }
         } else {
-          // If player entry already exists, update it
           const { error: playerUpdateError } = await supabase
             .from('players')
             .update(playerPayload)
@@ -130,26 +124,11 @@ const OnboardingFlow = ({ onboardingStep, profile, clubMemberships, refetchStatu
     refetchStatus();
   };
 
-  // Removido handleClubCreated, pois a criação de clube agora é feita em ClubAuth.tsx
-  // const handleClubCreated = async (newClub: any, newMembership: AppClubMembership) => {
-  //   toast({
-  //     title: "Clube criado!",
-  //     description: "Seu perfil de clube foi criado com sucesso.",
-  //   });
-  //   refetchStatus();
-  // };
-
   switch (onboardingStep) {
     case "userTypeSetup":
       return <UserTypeSetup onComplete={handleUserTypeSetupComplete} />;
-    case "createClub":
-      // Usuários do tipo 'club' agora se registram via /club-auth, então este passo não é mais necessário aqui.
-      // Se um usuário chegar aqui com user_type 'club' e sem clube, algo deu errado no ClubAuth.
-      // Redirecionar para o dashboard, onde o DashboardRouter pode lidar com a falta de clube.
-      navigate('/dashboard', { replace: true });
-      return null;
     case "clubInvite":
-      return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || UserType.Fan} />; // Corrigido: fallback para UserType.Fan
+      return <ClubInviteSetup onComplete={handleClubInviteSetupComplete} userType={profile?.user_type || UserType.Fan} />;
     case "complete":
       navigate('/dashboard', { replace: true });
       return null;
